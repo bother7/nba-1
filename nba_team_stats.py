@@ -1,3 +1,5 @@
+#!/usr/bin/python
+
 '''
 nba_team_stats.py
 Downloads and saves daily team stats
@@ -7,6 +9,7 @@ from collections import OrderedDict
 import datetime
 import logging
 import pickle
+import time
 
 from NBAComParser import NBAComParser
 from NBAComScraper import NBAComScraper
@@ -78,7 +81,7 @@ if __name__ == '__main__':
 
     seasons = nba_seasons()
 
-    for seas in seasons[0:2]:
+    for seas in seasons:
         season_code = seas.get('season', None)
 
         if season_code:
@@ -92,10 +95,11 @@ if __name__ == '__main__':
                 season_dates = date_list(season_end, season_start)
 
                 # probably want ordered dict for values so in date order from 1st day of season to last???
-                for datestr in [datetime.datetime.strftime(d, '%Y-%m-%d') for d in season_dates[0:2]]:
+                for datestr in [datetime.datetime.strftime(d, '%Y-%m-%d') for d in season_dates]:
                     content = get_teamstats_day(s, season={'code': season_code, 'start': season_start, 'end': season_end, 'day': datestr})
                     results.setdefault(season_code, {})
                     results[season_code][datestr] = content
+		    time.sleep(1)
 
 with open('nba_team_stats.pkl', 'wb') as outfile:
     pickle.dump(results, outfile)
