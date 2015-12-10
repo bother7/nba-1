@@ -1,11 +1,3 @@
-# -*- coding: utf-8 -*-
-'''
-NBAComParser.py
-
-
-'''
-
-
 import json
 import logging
 from math import modf
@@ -74,44 +66,26 @@ class NBAComParser:
         # ship it
         return players, teams
 
-    def player_stats(self,content,stat_date=None):
+    def leaguegamelog_players(self, content):
+        '''
+        URL: http://stats.nba.com/stats/leaguegamelog?Direction=DESC&Season=2015-16&Counter=0&Sorter=PTS&
+        LeagueID=00&PlayerOrTeam=P&SeasonType=Regular+Season
+        '''
+        player_games = []
 
-        ps = []
-
-        # now parse, return list of dictionaries which represent players
         try:
             parsed = json.loads(content)
             result_set = parsed['resultSets'][0]
+            headers = [h.lower() for h in result_set['headers']]
 
             for row_set in result_set['rowSet']:
-                p = dict(zip(result_set['headers'], row_set))
-
-                if stat_date:
-                    p['STATDATE'] = stat_date
-
-                if 'MIN' in p:
-                    p['SEC_PLAYED'], p['MIN_PLAYED'] = modf(p['MIN'])
-
-                ps.append(p)
+                player_game = dict(zip(headers,row_set))
+                player_games.append(player_game)
 
         except:
-            logging.exception('player_stats failed')
+            logging.exception('leaguegamelog_players failed')
 
-        return ps
-
-    def player_info(self,content):
-
-        player_info = None
-
-        try:
-            parsed = json.loads(content)
-            result_set = parsed['resultSets'][0]
-            player_info = dict(zip(result_set['headers'],result_set['rowSet'][0]))
-
-        except:
-            logging.exception('player_game_logs failed')
-
-        return player_info
+        return player_games
 
     def player_game_logs(self,content,player_info=None,season=None):
 
@@ -148,6 +122,45 @@ class NBAComParser:
 
         # ship it
         return player_gl
+
+    def player_info(self,content):
+
+        player_info = None
+
+        try:
+            parsed = json.loads(content)
+            result_set = parsed['resultSets'][0]
+            player_info = dict(zip(result_set['headers'],result_set['rowSet'][0]))
+
+        except:
+            logging.exception('player_game_logs failed')
+
+        return player_info
+
+    def player_stats(self,content,stat_date=None):
+
+        ps = []
+
+        # now parse, return list of dictionaries which represent players
+        try:
+            parsed = json.loads(content)
+            result_set = parsed['resultSets'][0]
+
+            for row_set in result_set['rowSet']:
+                p = dict(zip(result_set['headers'], row_set))
+
+                if stat_date:
+                    p['STATDATE'] = stat_date
+
+                if 'MIN' in p:
+                    p['SEC_PLAYED'], p['MIN_PLAYED'] = modf(p['MIN'])
+
+                ps.append(p)
+
+        except:
+            logging.exception('player_stats failed')
+
+        return ps
 
     def players (self,content):
 

@@ -1,11 +1,6 @@
 '''
 NBAComScraper
 
-Usage:
-
-    s = NBAComScraper()
-    content = s.team_dashboard(team_id='1610612738', season='2015-16')
-
 '''
 
 from datetime import date, timedelta
@@ -17,6 +12,11 @@ from EWTScraper import EWTScraper
 
 
 class NBAComScraper(EWTScraper):
+    '''
+    Usage:
+        s = NBAComScraper()
+        content = s.team_dashboard(team_id='1610612738', season='2015-16')
+    '''
 
     def __init__(self,**kwargs):
 

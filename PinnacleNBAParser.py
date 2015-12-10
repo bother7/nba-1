@@ -28,9 +28,11 @@ class PinnacleNBAParser():
 
         s = PinnacleNBAScraper()
         xml = s.odds()
-
         games = p.odds(xml)
-        p.to_csv(games)
+        p.to_csv(games, date)
+        p.to_tsv(games, date)
+        p.to_fw(games, date)
+
     '''
 
     def __init__(self, **kwargs):
@@ -217,16 +219,50 @@ class PinnacleNBAParser():
         # sort results and then return
         return self._sort_games(games, games_no_totals)
 
-    def to_csv (self, games):
+    def to_csv (self, games, datestr):
         '''
         Takes list of game dictionaries, outputs csv
         '''
 
         lines = []
-        lines.append(', '.join(self.game_keys))
+        headers = ['date'] + self.game_keys
+        lines.append(', '.join(headers))
 
         for game in games:
-            lines.append(', '.join([str(game.get(gk, None)) for gk in self.game_keys]))
+            values = [datestr] + [str(game.get(gk, None)) for gk in self.game_keys]
+            lines.append(', '.join(values))
+
+        return '\n'.join(lines)
+
+    def to_fw (self, games, datestr):
+        '''
+        Takes list of game dictionaries, outputs fixed-width table
+        '''
+
+        lines = []
+        headers = ['date'] + self.game_keys
+        formatstr = ' '.join(['{:12s}'] * len(headers))       
+        lines.append(formatstr.format(*headers))
+
+        for game in games:
+            values = [datestr] + [str(game.get(gk, None)) for gk in self.game_keys]
+            formatstr = ' '.join(['{:12s}'] * len(values))       
+            lines.append(formatstr.format(*values))
+
+        return '\n'.join(lines)
+
+    def to_tsv (self, games, datestr):
+        '''
+        Takes list of game dictionaries, outputs csv
+        '''
+
+        lines = []
+        headers = ['date'] + self.game_keys
+        lines.append('\t'.join(headers))
+
+        for game in games:
+            values = [datestr] + [str(game.get(gk, None)) for gk in self.game_keys]
+            lines.append('\t'.join(values))
 
         return '\n'.join(lines)
 

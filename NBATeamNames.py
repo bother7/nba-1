@@ -27,6 +27,41 @@ class NBATeamNames:
 
         logging.getLogger(__name__).addHandler(logging.NullHandler())
 
+        self.city_names = {
+            'Atlanta': 'ATL',
+            'Boston': 'BOS',
+            'Brooklyn': 'BKN',
+            'Charlotte': 'CHA',
+            'Chicago': 'CHI',
+            'Cleveland': 'CLE',
+            'Dallas': 'DAL',
+            'Denver': 'DEN',
+            'Detroit': 'DET',
+            'Golden State': 'GSW',
+            'Houston': 'HOU',
+            'Indiana': 'IND',
+            'LA Clippers': 'LAC',
+            'LA Lakers': 'LAL',
+            'Memphis': 'MEM',
+            'Miami': 'MIA',
+            'Milwaukee': 'MIL',
+            'Minnesota': 'MIN',
+            'New Jersey': 'NJN',
+            'New Orleans': 'NOP',
+            'New York': 'NYK',
+            'Oklahoma City': 'OKC',
+            'Orlando': 'ORL',
+            'Philadelphia': 'PHI',
+            'Phoenix': 'PHX',
+            'Portland': 'POR',
+            'Sacramento': 'SAC',
+            'San Antonio': 'SAS',
+            'Seattle': 'SEA',
+            'Toronto': 'TOR',
+            'Utah': 'UTA',
+            'Washington': 'WAS'
+        }
+
         self.long_names = {
             'Atlanta Hawks': 'ATL',
             'Boston Celtics': 'BOS',
@@ -46,15 +81,19 @@ class NBATeamNames:
             'Miami Heat': 'MIA',
             'Milwaukee Bucks': 'MIL',
             'Minnesota Timberwolves': 'MIN',
+            'New Jersey Nets': 'NJN',
+            'New Orleans Hornets': 'NOH',
             'New Orleans Pelicans': 'NOP',
             'New York Knicks': 'NYK',
             'Oklahoma City Thunder': 'OKC',
             'Orlando Magic': 'ORL',
             'Philadelphia 76ers': 'PHI',
-            'Phoenix Suns': 'PHO',
+            'Phoenix Suns': 'PHX',
             'Portland Trail Blazers': 'POR',
             'Sacramento Kings': 'SAC',
-            'San Antonio Spurs': 'SAN',
+            'San Antonio Spurs': 'SAS',
+            'Seattle Sonics': 'SEA',
+            'Seattle Supersonics': 'SEA',
             'Toronto Raptors': 'TOR',
             'Utah Jazz': 'UTA',
             'Washington Wizards': 'WAS'
@@ -95,6 +134,9 @@ class NBATeamNames:
 
         self.nbacom_names = {v:k for k,v in self.nbacom_codes.items()}
         self.short_names = {v:k for k,v in self.long_names.items()}
+
+    def city_to_short(self, name):
+        return self.city_names.get(name, None)
 
     def long_to_short(self, name):
         return self.long_names.get(name, None)
