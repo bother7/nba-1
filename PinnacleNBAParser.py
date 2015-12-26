@@ -181,6 +181,9 @@ class PinnacleNBAParser():
         game_date_cst in YYYY-MM-DD format
         '''
 
+        # TODO:
+            # need to filter based on <league>NBA</league> and <league>Live NBA</league>
+        
         games = []
         games_no_totals = []
 

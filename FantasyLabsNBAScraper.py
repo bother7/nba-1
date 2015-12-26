@@ -24,7 +24,7 @@ class FantasyLabsNBAScraper(EWTScraper):
     def __init__(self,**kwargs):
 
         '''
-        EWTScraper parameters: 'dldir', 'expire_time', 'headers', 'keyprefix', 'mc', 'use_cache'
+        EWTScraper parameters: 'expire_time', 'headers', 'use_cache'
         '''
 
         # see http://stackoverflow.com/questions/8134444
@@ -97,7 +97,7 @@ class FantasyLabsNBAScraper(EWTScraper):
 
         else:
             # have to add today's date in mm_dd_yyyy format to URL
-            content = self.get(url.format(model_day))
+            content = self.get_json(url=url.format(model_day))
 
             if not content:
                 logging.error('could not get content from url: {0}'.format(url))
@@ -134,7 +134,7 @@ class FantasyLabsNBAScraper(EWTScraper):
         '''
 
         url = 'http://www.fantasylabs.com/api/sportevents/2/{0}'.format(game_date)
-        content = self.get(url)
+        content = self.get_json(url)
 
         if not content:
             logging.error('could not get content from url: {0}'.format(url))
@@ -155,7 +155,7 @@ class FantasyLabsNBAScraper(EWTScraper):
 
         for d in self._date_list(end_date, start_date):
             datestr = datetime.strftime(d, '%m_%d_%Y')
-            contents[datestr] = self.game_day(game_date=datestr)
+            contents[datestr] = self.games_day(game_date=datestr)
 
         return contents
 
@@ -171,7 +171,7 @@ class FantasyLabsNBAScraper(EWTScraper):
 
         day = datetime.strftime(datetime.today(), '%m_%d_%Y')
         url = 'http://www.fantasylabs.com/api/sportevents/2/{0}'.format(day)
-        content = self.get(url)
+        content = self.get_json(url)
 
         if not content:
             logging.error('could not get content from url: {0}'.format(url))

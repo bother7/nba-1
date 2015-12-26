@@ -1,9 +1,7 @@
-import json
 import logging
-import pprint
 
 
-class FantasyLabsNBAParser():
+class FantasyLabsNBAParser(object):
     '''
     FantasyLabsNBAParser
 
@@ -12,7 +10,7 @@ class FantasyLabsNBAParser():
         games = p.games(games_json)
         model = p.model(model_json)
 
-        for model_json) in models:
+        for model_json in models:
             p.model(model_json)
 
     TODO: can make FantasyLabsParser base class
@@ -26,7 +24,6 @@ class FantasyLabsNBAParser():
 
         logging.getLogger(__name__).addHandler(logging.NullHandler())
                         
-
     def games(self, content, **kwargs):
         '''
         Parses json that is list of games
@@ -45,23 +42,17 @@ class FantasyLabsNBAParser():
 
         games = []
 
-        try:
-            parsed = json.loads(content)
-
-        except:
-            logging.error('parser.today(): could not parse json')
-            return None
-
-        if parsed:
-            for item in parsed:
-                game = {k:v for k,v in item.items() if not k in omit}
-                games.append(game)
+        for item in content:
+            game = {k:v for k,v in item.items() if not k in omit}
+            games.append(game)
             
         return games
 
-    def model(self, content):
+    def model(self, content, site=None):
         '''
         Parses json associated with model (player stats / projections)
+        The model has 3 dicts for each player: DraftKings, FanDuel, Yahoo
+        SourceIds: 4 is DK, 11 is Yahoo, 3 is FD
 
         Usage:
             model = p.model(model_json)
@@ -70,36 +61,45 @@ class FantasyLabsNBAParser():
 
         '''
 
-        players = []
+        players = {}
         omit_properties = ['IsLocked']
         omit_other = ['ErrorList', 'LineupCount', 'CurrentExposure', 'ExposureProbability', 'IsExposureLocked', 'Positions', 'PositionCount', 'Exposure', 'IsLiked', 'IsExcluded']
 
-        try:
-            parsed = json.loads(content)
+        for playerdict in content:
+            player = {}
 
-        except:
-            logging.error('could not parse json')
+            for k,v in playerdict.items():
 
-        if parsed:
-            for playerdict in parsed:
-                player = {}
+                if k == 'Properties':
 
-                for k,v in playerdict.items():
+                    for k2,v2 in v.items():
 
-                    if k == 'Properties':
+                        if not k2 in omit_properties:
+                            player[k2] = v2
 
-                        for k2,v2 in v.items():
+                elif not k in omit_other:
+                    player[k] = v
 
-                            if not k2 in omit_properties:
-                                player[k2] = v2
+            # test if already have this player
+            # use list where 0 index is DK, 1 FD, 2 Yahoo
+            pid = player.get('PlayerId', None)
+            pid_players = players.get(pid, [])
+            pid_players.append(player)
+            players[pid] = pid_players
 
-                    elif not k in omit_other:
-                        player[k] = v
+        if site:
+            site_players = []
+            
+            site_ids = {'dk': 4, 'fd': 3, 'yahoo': 11}               
 
-                players.append(player)
+            for pid, player in players.items():
+                for p in player:
+                    if p.get('SourceId', None) == site_ids.get(site, None):
+                        site_players.append(p)
 
-        return players
+            players = site_players
         
+        return players
 
 if __name__ == "__main__":
     pass

@@ -15,11 +15,7 @@ class ESPNNBAScraper(EWTScraper):
         # see http://stackoverflow.com/questions/8134444
         EWTScraper.__init__(self, **kwargs)
 
-        if 'logger' in kwargs:
-            self.logger = kwargs['logger']
-        else:
-            self.logger = logging.getLogger(__name__) \
-                .addHandler(logging.NullHandler())
+       logging.getLogger(__name__).addHandler(logging.NullHandler())
 
         if 'maxindex' in kwargs:
             self.maxindex = kwargs['maxindex']

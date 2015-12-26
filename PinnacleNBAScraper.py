@@ -25,7 +25,7 @@ class PinnacleNBAScraper(EWTScraper):
         if 'odds_url' in kwargs:
             self.odds_url = kwargs['odds_url']
         else:
-            self.odds_url = 'http://xml.pinnaclesports.com/pinnaclefeed.aspx?sporttype=Basketball&sportsubtype=nba&contest=no'
+            self.odds_url = 'http://xml.pinnaclesports.com/pinnaclefeed.aspx?sporttype=Basketball'
 
     def odds(self):
         return self.get(self.odds_url)

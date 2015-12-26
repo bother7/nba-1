@@ -3,10 +3,7 @@ NBAComScraper
 
 '''
 
-from datetime import date, timedelta
 import logging
-from os.path import expanduser
-from urllib import urlencode
 
 from EWTScraper import EWTScraper
 
@@ -21,7 +18,7 @@ class NBAComScraper(EWTScraper):
     def __init__(self,**kwargs):
 
         '''
-        EWTScraper parameters: 'dldir', 'expire_time', 'headers', 'keyprefix', 'mc', 'use_cache'
+        EWTScraper parameters: 'dldir', 'expire_time', 'headers', 'use_cache'
         '''
 
         # see http://stackoverflow.com/questions/8134444
@@ -29,14 +26,11 @@ class NBAComScraper(EWTScraper):
 
         logging.getLogger(__name__).addHandler(logging.NullHandler())
 
-
-        if 'dldir' in kwargs:
-            self.dldir = kwargs['dldir']
-        else:
-            self.dldir = expanduser('~')
-
     def boxscore(self, game_id, season):
+        '''
 
+        '''
+        
         base_url = 'http://stats.nba.com/stats/boxscoretraditionalv2?'
 
         params = {
@@ -50,19 +44,13 @@ class NBAComScraper(EWTScraper):
           'StartRange': '0'
         }
 
-        url = base_url + urlencode(params)
+        content = self.get_json(url=base_url, payload=params)
 
-        content = self.get(url)
+        if not content: logging.error('could not get content from url: {0}'.format(url))
 
-        # if not from web either, then log an error
-        if not content:
-            logging.error('could not get content from url: {0}'.format(url))
-
-        # ship it
         return content
 
     def player_stats(self, season, **kwargs):
-
         '''
           measure_type allows you to choose between Base and Advanced
           per_mode can be Totals or PerGame
@@ -105,17 +93,9 @@ class NBAComScraper(EWTScraper):
             if params.has_key(key):
                 params[key] = value
 
-        url = base_url + urlencode(params)
+        content = self.get_json(url=base_url, payload=params)
 
-        # get the content from a file, if exists
-        # filename is based on date, new stats file every day
-        #yesterday = date.strftime(date.today() - timedelta(days=1), "%Y-%m-%d")
-        #fn = os.path.join(self.dldir, 'player_stats', "%s_playerstats.json" % yesterday)
-
-        content = self.get(url)
-
-        if not content:
-            logging.error('could not get content from file or url\n' + fn + '\n' + url)
+        if not content: logging.error('could not get content from file or url\n' + fn + '\n' + url)
 
         return content
 
@@ -136,8 +116,7 @@ class NBAComScraper(EWTScraper):
             if params.has_key(key):
                 params[key] = value
 
-        url = base_url + urlencode(params)
-        content = self.get(url)
+        content = self.get_json(url=base_url, payload=params)
 
         if not content:
             logging.error('could not get content: {0}'.format(url))
@@ -169,12 +148,9 @@ class NBAComScraper(EWTScraper):
             if params.has_key(key):
                 params[key] = value
 
-        url = base_url + urlencode(params)
+        content = self.get_json(url=base_url, payload=params)
 
-        content = self.get(url)
-
-        if not content:
-            logging.error('could not get content: {0}'.format(url))
+        if not content: logging.error('could not get content: {0}'.format(base_url))
 
         return content, player_info
 
@@ -193,12 +169,9 @@ class NBAComScraper(EWTScraper):
             if params.has_key(key):
                 params[key] = value
 
-        url = base_url + urlencode(params)
+        content = self.get_json(url=base_url, payload=params)
 
-        content = self.get(url)
-
-        if not content:
-            logging.error('could not get content: {0}'.format(url))
+        if not content: logging.error('could not get content: {0}'.format(base_url))
 
         return content
 
@@ -222,11 +195,9 @@ class NBAComScraper(EWTScraper):
             if params.has_key(key):
                 params[key] = value
 
-        url = base_url + urlencode(params)
-        content = self.get(url)
+        content = self.get_json(url=base_url, payload=params)
 
-        if not content:
-            logging.error('could not get content: {0}'.format(url))
+        if not content: logging.error('could not get content: {0}'.format(base_url))
 
         return content
 
@@ -249,9 +220,7 @@ class NBAComScraper(EWTScraper):
             if params.has_key(key):
                 params[key] = value
 
-        url = base_url + urlencode(params)
-
-        content = self.get(url)
+        content = self.get_json(url=base_url, payload=params)
 
         if not content:
             logging.error('could not get content: {0}'.format(url))
@@ -283,7 +252,7 @@ class NBAComScraper(EWTScraper):
           'PaceAdjust': 'N',
           'PerMode': 'PerGame',
           'Period': '0',
-          'PlusMinus': '',
+          'PlusMinus': 'N',
           'Rank': 'N',
           'Season': season,
           'SeasonSegment': '',
@@ -299,13 +268,11 @@ class NBAComScraper(EWTScraper):
             if params.has_key(key):
                 params[key] = value
 
-        url = base_url + urlencode(params)
-
-        content = self.get(url)
+        content = self.get_json(url=base_url, payload=params)
 
         # if not from web either, then log an error
         if not content:
-            logging.error('could not get content: {0}'.format(url))
+            logging.error('could not get content: {0}'.format(base_url))
 
         return content
 
@@ -320,13 +287,9 @@ class NBAComScraper(EWTScraper):
           'SeasonType': 'Regular Season'
         }
 
-        url = base_url + urlencode(params)
+        content = self.get_json(url=base_url, payload=params)
 
-        content = self.get(url)
-
-        # if not from web either, then log an error
-        if not content:
-            logging.error('could not get content: {0}'.format(url))
+        if not content: logging.error('could not get content: {0}'.format(base_url))
 
         return content
 
@@ -368,13 +331,10 @@ class NBAComScraper(EWTScraper):
             if params.has_key(key):
                 params[key] = value
 
-        url = base_url + urlencode(params)
-
-        content = self.get(url)
+        content = self.get_json(url=base_url, payload=params)
 
         # if not from web either, then log an error
-        if not content:
-            logging.error('could not get content: {0}'.format(url))
+        if not content: logging.error('could not get content: {0}'.format(base_url))
 
         return content
 
@@ -422,12 +382,9 @@ class NBAComScraper(EWTScraper):
             if params.has_key(key):
                 params[key] = value
 
-        url = base_url + urlencode(params)
+        content = self.get_json(url=base_url, payload=params)
 
-        content = self.get(url)
-
-        if not content:
-            logging.error('could not get content: {0}'.format(url))
+        if not content: logging.error('could not get content: {0}'.format(base_url))
 
         return content
 
