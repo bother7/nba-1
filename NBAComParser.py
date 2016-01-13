@@ -24,6 +24,34 @@ class NBAComParser:
 
         logging.getLogger(__name__).addHandler(logging.NullHandler())
 
+    def _fix_linescores(self, linescores):
+        '''
+        Preprocessing for insertion into database
+        '''
+        fixed_linescores = []
+        exclude = ['game_sequence']
+
+        for linescore in linescores:
+            fixed_linescore = {k.lower():v for k,v in linescore.items()}
+            fixed_linescore.pop('game_sequence', None)
+
+            fixed_linescore['team_game_id'] = '{0}:{1}'.format(fixed_linescore['team_id'], fixed_linescore['game_id'])
+            twl = fixed_linescore.get('team_wins_losses', None)
+
+            if twl:
+                wins, losses = twl.split('-')
+
+                if wins and losses:
+                    fixed_linescore['team_wins'] = wins
+                    fixed_linescore['team_losses'] = losses
+
+            fixed_linescores.append(fixed_linescore)
+
+        return fixed_linescores
+
+    def _fix_player_inof(self, player_info):
+        return player_info
+
     def boxscore(self, content, game_date=None):
 
         players = []
@@ -147,10 +175,12 @@ class NBAComParser:
 
     def scoreboard(self,content,game_date=None):
         '''
-        returns {'date': game_date,
-        'game_headers': game_headers.values(),
-        'game_linescores': game_linescores,
-        'standings': standings}
+        Arguments:
+            content(str): json string    
+            game_date(str): date string of the day of scoreboard
+
+        Returns:
+            sb(dict): {'date': game_date, 'game_headers': game_headers.values(), 'game_linescores': game_linescores, 'standings': standings}
         '''
         game_headers = {}
         game_linescores = []
@@ -181,7 +211,8 @@ class NBAComParser:
         for row_set in content['resultSets'][5]['rowSet']:
             standings.append(dict(zip(content['resultSets'][5]['headers'], row_set)))
 
-        return {'date': game_date, 'game_headers': game_headers.values(), 'game_linescores': game_linescores, 'standings': standings}
+        sb = {'date': game_date, 'game_headers': game_headers.values(), 'game_linescores': self._fix_linescores(game_linescores), 'standings': standings}
+        return sb
 
     def season_gamelogs(self,content,season,player_or_team):
 

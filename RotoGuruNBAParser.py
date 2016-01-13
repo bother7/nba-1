@@ -95,7 +95,7 @@ class RotoGuruNBAParser:
             dk = p.draftkings(content, 'dk')
 
         '''
-        
+
         players = []
         rows = self._pre_ssv(content)
         header_row = rows.pop(0)
@@ -112,8 +112,8 @@ class RotoGuruNBAParser:
 
             if d:
                 player['game_date'] = datetime.strftime(datetime.strptime(d,'%Y%m%d'),'%Y-%m-%d')               
-                players.append(player)
 
+            ''' NOT NEEDED AT THIS TIME
             # team abbreviations should be uppercase
             t = player.get('team_abbreviation', None)
 
@@ -124,16 +124,20 @@ class RotoGuruNBAParser:
 
             if t:
                 player['opponent_team'] = t.upper()
-
+        
+            points = player.get('points', None)
+            minutes = player.get('min', None)
+            '''
 
             # salary has non-numeric characters
-            points = player.get('points', None)
             salary = player.get('salary', None)
-            minutes = player.get('min', None)
-
+        
             if salary:
-                player['salary'] = int(re.sub("[^0-9]", "", salary))
+                player['salary'] = re.sub("[^0-9]", "", salary)
 
+            players.append(player)
+
+            ''' NOT NEEDED AT THIS TIME
             # player value
             if minutes == 'DNP' or minutes == 'NA':
                 pass
@@ -155,6 +159,7 @@ class RotoGuruNBAParser:
                 
             if not starter or player['starter'] == '':
                 player['starter'] = 0
+            '''
                 
         return players
         

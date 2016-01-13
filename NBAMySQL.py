@@ -59,7 +59,9 @@ class NBAMySQL(object):
         
         sql = '''
             DROP TABLE IF EXISTS `current_season_player_gamelogs`;
-            CREATE TABLE `current_season_player_gamelogs` (`player_gamelogs_id` int(11) NOT NULL AUTO_INCREMENT, `season_id` varchar(255) DEFAULT NULL, `player_id` varchar(255) DEFAULT NULL, `player_name` varchar(255) DEFAULT NULL, `team_abbreviation` varchar(255) DEFAULT NULL, `team_name` varchar(255) DEFAULT NULL, `game_id` varchar(255) DEFAULT NULL, `game_date` varchar(255) DEFAULT NULL, `matchup` varchar(255) DEFAULT NULL, `wl` enum('W','L') DEFAULT NULL, `min` smallint(6) DEFAULT NULL, `fgm` smallint(6) DEFAULT NULL, `fga` smallint(6) DEFAULT NULL, `fg_pct` float DEFAULT NULL, `fg3m` smallint(6) DEFAULT NULL, `fg3a` smallint(6) DEFAULT NULL, `fg3_pct` float DEFAULT NULL, `ftm` smallint(6) DEFAULT NULL, `fta` smallint(6) DEFAULT NULL, `ft_pct` float DEFAULT NULL, `oreb` smallint(6) DEFAULT NULL, `dreb` smallint(6) DEFAULT NULL, `reb` smallint(6) DEFAULT NULL, `ast` smallint(6) DEFAULT NULL, `stl` smallint(6) DEFAULT NULL, `blk` smallint(6) DEFAULT NULL, `tov` smallint(6) DEFAULT NULL, `pf` smallint(6) DEFAULT NULL, `pts` smallint(6) DEFAULT NULL, `plus_minus` smallint(6) DEFAULT NULL, `dk_points` float DEFAULT '0', `fd_points` float DEFAULT '0', PRIMARY KEY (`player_gamelogs_id`), KEY `player_name` (`player_name`), KEY `dk_points` (`dk_points`), KEY `game_id` (`game_id`), KEY `team_abbreviation` (`team_abbreviation`), KEY `player_id_dk_points` (`player_id`,`dk_points`)) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+            CREATE TABLE `current_season_player_gamelogs` (
+            `player_gamelogs_id` int(11) NOT NULL AUTO_INCREMENT, `season_id` int(11) DEFAULT NULL, `player_id` int(11) DEFAULT NULL, `player_name` varchar(250) DEFAULT NULL, `team_abbreviation` varchar(5) DEFAULT NULL, `team_name` varchar(50) DEFAULT NULL, `game_id` int(11) DEFAULT NULL, `game_date` datetime DEFAULT NULL, `matchup` varchar(255) DEFAULT NULL, `wl` enum('W','L') DEFAULT NULL, `min` smallint(6) DEFAULT NULL, `fgm` smallint(6) DEFAULT NULL, `fga` smallint(6) DEFAULT NULL, `fg_pct` float DEFAULT NULL, `fg3m` smallint(6) DEFAULT NULL, `fg3a` smallint(6) DEFAULT NULL, `fg3_pct` float DEFAULT NULL, `ftm` smallint(6) DEFAULT NULL, `fta` smallint(6) DEFAULT NULL, `ft_pct` float DEFAULT NULL, `oreb` smallint(6) DEFAULT NULL, `dreb` smallint(6) DEFAULT NULL, `reb` smallint(6) DEFAULT NULL, `ast` smallint(6) DEFAULT NULL, `stl` smallint(6) DEFAULT NULL, `blk` smallint(6) DEFAULT NULL, `tov` smallint(6) DEFAULT NULL, `pf` smallint(6) DEFAULT NULL, `pts` smallint(6) DEFAULT NULL, `plus_minus` smallint(6) DEFAULT NULL, `dk_points` decimal(10,0) DEFAULT '0', `fd_points` decimal(10,0) DEFAULT '0', PRIMARY KEY (`player_gamelogs_id`), FOREIGN KEY (`game_id`) REFERENCES `games` (`game_id`) ON DELETE SET NULL ON UPDATE SET NULL, KEY `game_id` (`game_id`), KEY `player_id_dk_points` (`player_id`,`dk_points`), KEY `dk_points` (`dk_points`,`player_name`,`player_id`), KEY `team_abbreviation` (`team_abbreviation`,`player_name`,`dk_points`), KEY `team_abbreviation_game_id` (`team_abbreviation`,`game_id`,`player_id`), KEY `team_abbreviation_game_id_date` (`team_abbreviation`,`game_id`,`game_date`), KEY `team_game_date` (`team_abbreviation`,`game_date`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
         '''
 
         cursor.execute(sql)
@@ -76,6 +78,27 @@ class NBAMySQL(object):
         sql = 'INSERT INTO %s ( %s ) VALUES ( %s )' % (table_name, columns, placeholders)
         cursor.execute(sql, dict_to_insert.values())
         cursor.close()
+
+    def call(self, procedure_name, params=None):
+        '''
+        Calls stored procedure, returns resultset (if any)
+        TODO: generate SQL for params
+        '''
+        
+        cursor = self.conn.cursor()
+
+        if not params: 
+            sql = '''CALL {0}()'''.format(procedure_name)
+            cursor.execute(sql)
+
+        else:
+            raise ValueError('Cannot pass parameters at this time')
+
+        # this needs to improve, should have method for testing if procedure returns results
+        try:
+            return cursor.fetchall()
+        except:
+            pass
 
     def insert_dicts(self, dicts_to_insert, table_name):
         '''
@@ -163,7 +186,24 @@ class NBAMySQL(object):
             else:
                 self._backup_compress(dirname, bfile)
 
-    def select_dict(self, db, sql):
+    def players_to_add(self):
+
+        sql = '''
+            SELECT  DISTINCT player_id, player_name
+            FROM    current_season_player_gamelogs AS c
+            WHERE   NOT EXISTS
+                    (
+                    SELECT  1
+                    FROM    players p
+                    WHERE   p.person_id = c.player_id
+                    )
+        '''
+
+        cursor = self.conn.cursor(MySQLdb.cursors.DictCursor)
+        cursor.execute(sql)
+        return cursor.fetchall()
+
+    def select_dict(self, sql):
         '''
         Generic routine to get list of dictionaries from mysql table
         '''

@@ -1,8 +1,7 @@
 from __future__ import print_function, division
 import logging
+import os
 import random
-
-import MySQLdb  
 
 from NBAComParser import NBAComParser
 from NBAComScraper import NBAComScraper
@@ -16,6 +15,9 @@ class NBAComAgent(object):
 
     Examples:
         a = NBAComAgent()
+        gamelogs = a.dfs_player_gamelogs('2015-16')
+        site = a.website(webdir='/var/www/nbadata')
+
     '''
 
     def __init__(self, db=True, safe=True):
@@ -46,10 +48,11 @@ class NBAComAgent(object):
 
         gls = self.parser.player_game_logs(content=self.scraper.season_gamelogs(season, 'P'))
 
+	# need to remove video_available column AND leading zeroes from game_id
         for gl in gls:
             player = gl
             player['dk_points'] = self.dfs.dk_points(player)
-            player['fd_points'] = self.dfs.fd_points(player)
+            player['fd_points'] = self.dfs.fd_points(player)           
             player.pop('video_available'.upper(), None)
             player_gamelogs.append(player)
 
@@ -65,9 +68,53 @@ class NBAComAgent(object):
         self.nbadb.insert_dicts(player_gamelogs, table_name)
 
         return player_gamelogs
+
+    def game_linescores(self, dates, table_name):
+        '''
+        Fetches linescores and inserts into table_name (either current_season_game_linescores or game_linescores)
+        '''       
+
+        scoreboards = []
         
+        for day in dates:
+            game_date = datetime.datetime.strftime(day, '%Y-%m-%d')
+            scoreboard_json = scraper.scoreboard(game_date=game_date)
+            scoreboard = parser.scoreboard(scoreboard_json, game_date=game_date)
+            scoreboards.append(scoreboard)
+
+        linescores = []
+
+        for scb in scoreboards:
+            linescores += scb.get('game_linescores', [])
+
+        self.nbadb.insert_dicts(linescores, table_name)
+
+    def website(self, webdir):
+        '''
+        Generates static website to upload to S3 bucket
+        ''' 
+        # player_gamelogs
+        sql = '''SELECT * FROM current_season_player_gamelogs'''
+        gamelogs = self.nbadb.select_dict(sql)
+
+        # TODO: create table `current_season_team_gamelogs`
+        # team_gamelogs
+        sql = '''SELECT * FROM current_season_team_gamelogs'''
+        gamelogs = self.nbadb.select_dict(sql)
+        
+        # daily fantasy (dfs_season procedure updates the relevant tables)
+        self.nbadb.call(procedure_name='dfs_season')
+        sql = '''SELECT * FROM tmptbl_dfs_season'''
+        dfs_season = self.nbadb.select_dict(sql)
+
+        sql = '''SELECT * FROM tmptbl_dfs_today'''
+        dfs_today = self.nbadb.select_dict(sql)
+
+        print(random.choice(dfs_season))
+        print(random.choice(dfs_today))
+
+        #########################################
+        # generate the HTML or other files here #
+
 if __name__ == '__main__':
-    a = NBAComAgent()
-    gl = a.dfs_player_gamelogs('2015-16')
-    print(random.choice(gl))
-    #pass
+    pass    

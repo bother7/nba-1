@@ -1,3 +1,4 @@
+from decimal import *
 import logging
 
 
@@ -7,6 +8,7 @@ class NBADailyFantasy:
     def __init__(self, **kwargs):
 
         logging.getLogger(__name__).addHandler(logging.NullHandler())
+        getcontext().prec = 3
 
     def dk_points(self, player):
         '''
@@ -35,11 +37,11 @@ class NBADailyFantasy:
         elif over_ten == 2:
             dkpts += 1.5
 
-        return dkpts
+        return Decimal(dkpts)
 
     def fd_points(self, player):
         '''
-        Calculates fanduel NBA points, including 2x and 3x bonus
+        Calculates fanduel NBA points
         '''
     
         fd_points = 0
@@ -50,7 +52,7 @@ class NBADailyFantasy:
         fd_points += player.get('blk'.upper(), 0) * 2
         fd_points -= player.get('tov'.upper(), 0)
 
-        return fd_points
+        return Decimal(fd_points)
 
 if __name__ == '__main__':
     pass
