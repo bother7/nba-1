@@ -6,7 +6,7 @@ import subprocess
 import tarfile
 
 import psycopg2
-
+import psycopg2.extras
 
 class NBAPostgres(object):
 
@@ -36,60 +36,64 @@ class NBAPostgres(object):
     def create_current_season_player_gamelogs(self):
         '''
         Drops then creates table `current_season_player_gamelogs`
-        TODO: adapt to postgresql
-        '''
+        TODO: adapt to postgresql table structure
         cursor = self.conn.cursor()
         
         sql = '''
-            DROP TABLE IF EXISTS `current_season_player_gamelogs`;
-            CREATE TABLE `current_season_player_gamelogs` (
-            `player_gamelogs_id` int(11) NOT NULL AUTO_INCREMENT, `season_id` int(11) DEFAULT NULL, `player_id` int(11) DEFAULT NULL, `player_name` varchar(250) DEFAULT NULL, `team_abbreviation` varchar(5) DEFAULT NULL, `team_name` varchar(50) DEFAULT NULL, `game_id` int(11) DEFAULT NULL, `game_date` datetime DEFAULT NULL, `matchup` varchar(255) DEFAULT NULL, `wl` enum('W','L') DEFAULT NULL, `min` smallint(6) DEFAULT NULL, `fgm` smallint(6) DEFAULT NULL, `fga` smallint(6) DEFAULT NULL, `fg_pct` float DEFAULT NULL, `fg3m` smallint(6) DEFAULT NULL, `fg3a` smallint(6) DEFAULT NULL, `fg3_pct` float DEFAULT NULL, `ftm` smallint(6) DEFAULT NULL, `fta` smallint(6) DEFAULT NULL, `ft_pct` float DEFAULT NULL, `oreb` smallint(6) DEFAULT NULL, `dreb` smallint(6) DEFAULT NULL, `reb` smallint(6) DEFAULT NULL, `ast` smallint(6) DEFAULT NULL, `stl` smallint(6) DEFAULT NULL, `blk` smallint(6) DEFAULT NULL, `tov` smallint(6) DEFAULT NULL, `pf` smallint(6) DEFAULT NULL, `pts` smallint(6) DEFAULT NULL, `plus_minus` smallint(6) DEFAULT NULL, `dk_points` decimal(10,0) DEFAULT '0', `fd_points` decimal(10,0) DEFAULT '0', PRIMARY KEY (`player_gamelogs_id`), FOREIGN KEY (`game_id`) REFERENCES `games` (`game_id`) ON DELETE SET NULL ON UPDATE SET NULL, KEY `game_id` (`game_id`), KEY `player_id_dk_points` (`player_id`,`dk_points`), KEY `dk_points` (`dk_points`,`player_name`,`player_id`), KEY `team_abbreviation` (`team_abbreviation`,`player_name`,`dk_points`), KEY `team_abbreviation_game_id` (`team_abbreviation`,`game_id`,`player_id`), KEY `team_abbreviation_game_id_date` (`team_abbreviation`,`game_id`,`game_date`), KEY `team_game_date` (`team_abbreviation`,`game_date`)
-            ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
         '''
 
         cursor.execute(sql)
         cursor.close()
+        '''
+        pass
         
     def _insert_dict(self, dict_to_insert, table_name):
         '''
         Generic routine to insert dictionary into mysql table
+        TODO: not sure what purpose serving - not called by insert_dicts
         '''
 
         cursor = self.conn.cursor()
         placeholders = ', '.join(['%s'] * len(dict_to_insert))
         columns = ', '.join(dict_to_insert.keys())
         sql = 'INSERT INTO %s ( %s ) VALUES ( %s )' % (table_name, columns, placeholders)
+        logging.debug('insert statement is {0}'.format(sql))
         cursor.execute(sql, dict_to_insert.values())
         cursor.close()
 
     def insert_dicts(self, dicts_to_insert, table_name):
         '''
         Generic routine to insert dictionary into mysql table
+        Will rollback with any errors
+
+        Arguments:
+            dicts_to_insert(list): list of dictionaries to insert, keys match columns
+            table_name(str): name of database table
+
+        Returns:
+            None
         '''
 
-        #cursor = self.conn.cursor()
+        cursor = self.conn.cursor()
         placeholders = ', '.join(['%s'] * len(dicts_to_insert[0]))
         columns = ', '.join(dicts_to_insert[0].keys())
         sql = 'INSERT INTO %s ( %s ) VALUES ( %s )' % (table_name, columns, placeholders)
-        print sql
-        pprint.pprint(dicts_to_insert)
 
-        '''
         try:
             for dict_to_insert in dicts_to_insert:
-                #if len(dict_to_insert) > 0:
-                #    cursor.execute(sql, dict_to_insert.values())
+                cursor.execute(sql, dict_to_insert.values())
 
-            #self.conn.commit()
-            
+            self.conn.commit()
+                
         except Exception as e:
-            logging.error(dict_to_insert)
-            #logging.exception('insert_dicts failed: {0}'.format(e.message))      
-            #self.conn.rollback()
+            logging.error('insert statement is {0}'.format(sql))
+            logging.error(pprint.pformat(dict_to_insert))
+            logging.exception('insert_dicts failed: {0}'.format(e.message))
+            self.conn.rollback()
 
         finally:
             cursor.close()
-        '''
+                
     def postgres_backup_db(self, dbname, dirname=None):
         '''
         Compressed backup of database
@@ -97,6 +101,9 @@ class NBAPostgres(object):
         Args:
             dbname (str): the name of the database
             dirname (str): the name of the backup dirnameectory, default is home
+
+        Returns:
+            None           
         '''
 
         bdate = datetime.datetime.now().strftime('%Y%m%d%H%M')
@@ -125,6 +132,9 @@ class NBAPostgres(object):
             dbname (str): the name of the mysql database
             dbname (str): the name of the mysql database table
             dirname (str): the name of the backup dirnameectory, default is home
+
+        Returns:
+            None           
         '''
 
         bdate = datetime.datetime.now().strftime('%Y%m%d%H%M')
@@ -146,6 +156,7 @@ class NBAPostgres(object):
     def players_to_add(self):
         '''
         TODO: Adapt to postgres
+        Purpose is to compare current_season_gamelogs and players tables to see if missing players in latter
         '''
 
         sql = '''
@@ -165,11 +176,19 @@ class NBAPostgres(object):
 
     def select_dict(self, sql):
         '''
-        Generic routine to get list of dictionaries from mysql table
+        Generic routine to get list of dictionaries from table
+
+        Arguments:
+            sql (str): the select statement you want to execute
+
+        Returns:
+            results (list): list of dictionaries representing rows in table
         '''
-        cursor = self.conn.cursor(MySQLdb.cursors.DictCursor)
+        
+        cursor = self.conn.cursor(cursor_factory = psycopg2.extras.RealDictCursor)
         cursor.execute(sql)
-        return cursor.fetchall()
+        results = cursor.fetchall()
+        return results
 
 if __name__ == '__main__':
     pass

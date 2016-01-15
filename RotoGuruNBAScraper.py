@@ -61,7 +61,7 @@ class RotoGuruNBAScraper(EWTScraper):
         else:
             params = default_params
 
-        content = self.get(url=url, payload=params)
+        content = self.get(url=base_url, payload=params)
 
         if not content:
             logging.error('data_day: could not get {0}'.format(url))
@@ -89,7 +89,7 @@ class RotoGuruNBAScraper(EWTScraper):
             'scsv': '1'
         }
 
-        content = self.get(url=url, payload=params)
+        content = self.get(url=base_url, payload=params)
 
         if not content:
             logging.error('salaries_day: could not get {0}'.format(url))

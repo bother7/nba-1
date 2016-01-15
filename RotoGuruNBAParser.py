@@ -15,9 +15,8 @@ class RotoGuruNBAParser:
         from RotoGuruNBAScraper import RotoGuruNBAScraper
         s = RotoGuruNBAScraper()
         content = s.salaries_day('2015-12-09', 'dk')
-
-        pprint.pprint(p.salaries(content, site))
-
+        salaries = p.salaries(content, site)
+        players = p.players(content, site)
     '''
 
     def __init__(self):
@@ -25,164 +24,145 @@ class RotoGuruNBAParser:
 
     def _pre_ssv(self, content):
         '''
-        On rotoguru, the ssv list is enclosed in a <pre> block
+        Parses rotoguru <pre> block into a list of ssv lines
+        
+        Arguments:
+            content (str): HTML string
+
+        Returns:
+            rows (list): each item is a string of semicolon-separated values
         '''
 
+        # rotoguru encloses SSV lines in a <pre> block, need to get that first and then split on newline
         pattern = re.compile(r'<pre>(Date;.*?)</pre>',  re.IGNORECASE | re.MULTILINE | re.DOTALL)
         match = re.search(pattern, content)
 
         if match:
             ssv = match.group(1)
-            return ssv.split('\n')
+            rows = ssv.split('\n')
+            return rows
 
         else:
-            return None
-            
-        return rows
+            return None           
 
-    def _salaries_headers(self, row):
+    def _salaries_headers(self, row=None):
         '''
-        Date;GID;Pos;Name;Starter;DK Pts;DK Salary;Team;H/A;Oppt;Team Score;Oppt Score;Minutes;Stat line
+        Provides headers for salaries method
+
+        Arguments:
+            row (str): string of semicolon-separated values
+
+        Returns:
+            headers (list): list of strings, each representing header / column name
         '''
 
-        return ['game_date', 'rotoguru_gid', 'pos', 'player_name', 'starter', 'points', 'salary', 'team_abbreviation',
-                'venue', 'opponent_team', 'team_score', 'opponent_score', 'min', 'stat_line']
+        if row:
+            pass
+            #Original rotoguru headers --- Date;GID;Pos;Name;Starter;DK Pts;DK Salary;Team;H/A;Oppt;Team Score;Oppt Score;Minutes;Stat line
+            #return ['game_date', 'rotoguru_gid', 'site_player_position', 'site_player_name', 'starter', 'points', 'salary', 'team_abbreviation',
+            #    'venue', 'opponent_team', 'team_score', 'opponent_score', 'min', 'stat_line']
         
+        else:
+            return ['game_date', 'rotoguru_gid', 'site_position', 'site_player_name', 'starter', 'points', 'salary', 'team_abbreviation', 'venue', 'opponent_team', 'team_score', 'opponent_score', 'min', 'stat_line']
 
-    def data(self, content):    
+    def players(self, content, site):
+        '''
+        Returns list of dictionaries with player salary/points information from rotoguru
+
+        Arguments:
+            content (str): HTML string
+            site (str): name of site ('dk', 'fd', 'yh', etc.)
+
+        Returns:
+            players (list): list of dictionaries representing player & his salary on a given date on a given site
+
+        Usage:
+            players = p.players(content, 'dk')
+            
         '''
 
+        pass
+            
+        ''' NOT NEEDED AT THIS TIME
+        # team abbreviations should be uppercase
+        t = player.get('team_abbreviation', None)
+
+        if t:
+            player['team_abbreviation'] = t.upper()
+
+        t = player.get('opponent_team', None)
+
+        if t:
+            player['opponent_team'] = t.upper()
+    
+        points = player.get('points', None)
+        minutes = player.get('min', None)
+
         '''
-        players = []
 
-        # odd error in content - uses ", instead of semicolon
-        content = content.replace('",', ';')    
+        ''' NOT NEEDED AT THIS TIME
+        # player value
+        if minutes == 'DNP' or minutes == 'NA':
+            pass
+            
+        else:
+            try:
+                player['points_per_minute'] = float(points)/float(minutes)
+                player['multiple'] = float(points)/(player['salary']/1000)
 
-        # they have HIDEOUS html in these files
-        # first have to find where the good stuff starts and ends
-        match = re.search(r'(gid;.*?)<br>\n(.*?)<br>\s+<hr>', content, re.MULTILINE|re.DOTALL|re.IGNORECASE)
+            except:
+                logging.error('could not convert {0} {1}'.format(points, minutes))
 
-        if match:
-            # group 1 is gid;xxx;final_header
-            header_line = match.group(1)
+        # fix missing - want NULL value instead of empty string
+        stat_line = player.get('stat_line', None)
+        starter = player.get('starter', None)
 
-            # group 2 is everything else; will have to split on <br> and newline
-            player_lines = match.group(2).split("<br>\n")
-
-            # header_line should be semi-colon separated data
-            if header_line:
-                header_parts = header_line.split(';')
-                logging.debug("header parts\n % s" % pprint.pformat(header_parts))
-                headers = [re.sub('\s+', '_', p).strip() for p in header_parts]
-
-            # each player_line is semi-colon separated, need to remove whitespace
-            # use ordered collection for debugging ease (parameter order in GET)
-            # but can also use an ordinary dictionary
-            if player_lines:
-                for pl in player_lines:
-                    player_parts = [p.strip() for p in pl.split(';')]
-                    player = dict(zip(headers, player_parts))
-                    players.append(player)
-
-        return players
-
+        if not stat_line or stat_line == '':
+            player['stat_line'] = None
+            
+        if not starter or player['starter'] == '':
+            player['starter'] = 0
+        '''             
+        
     def salaries(self, content, site):
         '''
         Returns list of dictionaries with player salary information
 
-        Usage:
-            players = p.salaries(content, 'dk')
-            dk = p.draftkings(content, 'dk')
+        Arguments:
+            content (str): HTML string
+            site (str): name of site ('dk', 'fd', 'yh', etc.)
 
+        Returns:
+            salaries (list): list of dictionaries representing player & his salary on a given date on a given site
+
+        Usage:
+            salaries = p.salaries(content, 'dk')
+            
         '''
 
-        players = []
+        sals = []
         rows = self._pre_ssv(content)
-        header_row = rows.pop(0)
-        headers = self._salaries_headers(header_row)
+        headers = self._salaries_headers()
+        wanted = ['game_date', 'site_position', 'site_player_name', 'salary']
             
-        for row in rows:
+        for row in rows[1:]:
             cells = row.split(';')
-            player = dict(zip(headers, cells))
-            player['site'] = site
+            sal = {k:v for k,v in dict(zip(headers, cells)).iteritems() if k in wanted}
+            sal['site'] = site
 
-            # fix gamedate
-            # mysql default is YYYY-MM-DD
-            d = player.get('game_date', None)
+            # fix gamedate to YYYY-MM-DD
+            d = sal.get('game_date', None)
 
             if d:
-                player['game_date'] = datetime.strftime(datetime.strptime(d,'%Y%m%d'),'%Y-%m-%d')               
-
-            ''' NOT NEEDED AT THIS TIME
-            # team abbreviations should be uppercase
-            t = player.get('team_abbreviation', None)
-
-            if t:
-                player['team_abbreviation'] = t.upper()
-
-            t = player.get('opponent_team', None)
-
-            if t:
-                player['opponent_team'] = t.upper()
-        
-            points = player.get('points', None)
-            minutes = player.get('min', None)
-            '''
+                sal['game_date'] = datetime.strftime(datetime.strptime(d,'%Y%m%d'),'%Y-%m-%d')               
 
             # salary has non-numeric characters
-            salary = player.get('salary', None)
+            if sal.get('salary', None):
+                sal['salary'] = re.sub("[^0-9]", "", sal['salary'])
+
+            sals.append(sal)
+
+        return sals
         
-            if salary:
-                player['salary'] = re.sub("[^0-9]", "", salary)
-
-            players.append(player)
-
-            ''' NOT NEEDED AT THIS TIME
-            # player value
-            if minutes == 'DNP' or minutes == 'NA':
-                pass
-                
-            else:
-                try:
-                    player['points_per_minute'] = float(points)/float(minutes)
-                    player['multiple'] = float(points)/(player['salary']/1000)
-
-                except:
-                    logging.error('could not convert {0} {1}'.format(points, minutes))
-
-            # fix missing - want NULL value instead of empty string
-            stat_line = player.get('stat_line', None)
-            starter = player.get('starter', None)
-
-            if not stat_line or stat_line == '':
-                player['stat_line'] = None
-                
-            if not starter or player['starter'] == '':
-                player['starter'] = 0
-            '''
-                
-        return players
-        
-    def draftkings(self, lines):    
-        '''
-        
-        '''
-        players = []
-
-        # header_line should be semi-colon separated data
-        #header_line = [p.strip() for p in lines.pop(0).split(';')]
-        #headers = [re.sub('\s+', '_', p).strip() for p in header_line.split(';')]
-        headers = [p.strip() for p in lines.pop(0).split(';')]
-                
-        # each player_line is semi-colon separated, need to remove whitespace
-        # use ordered collection for debugging ease (parameter order in GET)
-        # but can also use an ordinary dictionary
-        for line in lines:
-            player_parts = [p.strip() for p in line.split(';')]
-            player = dict(zip(headers, player_parts))
-            players.append(player)
-
-        return players
-
 if __name__ == '__main__':  
     pass
