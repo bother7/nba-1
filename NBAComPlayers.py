@@ -5,6 +5,7 @@ from NBAComScraper import NBAComScraper
 from NBAComParser import NBAComParser
 from NBAPostgres import NBAPostgres
 
+from NameMatcher import match_player
 
 class NBAComPlayers(object):
     '''
