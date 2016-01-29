@@ -8,7 +8,7 @@ import json
 import logging
 import os
 
-from NBAPostgres import NBAPostgres
+from nba.db import postgres
 
 class NBAGames():
     '''
@@ -41,7 +41,7 @@ class NBAGames():
         '''
 
         if not self._pg:
-            self._pg = NBAComPostrges()
+            self._pg = postgres.NBAComPostrges()
 
         try:
             sql = """SELECT gamecode, game_id, visitor_team_id, home_team_id FROM games"""
