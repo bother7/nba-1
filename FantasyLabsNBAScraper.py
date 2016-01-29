@@ -1,5 +1,6 @@
-from datetime import datetime
+import datetime
 import logging
+import time
 
 from EWTScraper import EWTScraper
 
@@ -52,14 +53,14 @@ class FantasyLabsNBAScraper(EWTScraper):
         '''
         if isinstance(d1, basestring):
             try:
-                d1 = datetime.strptime(d1, '%m_%d_%Y')
+                d1 = datetime.datetime.strptime(d1, '%m_%d_%Y')
 
             except:
                 logging.error('{0} is not in %m_%d_%Y format'.format(d1))
                 
         if isinstance(d2, basestring):
             try:
-                d2 = datetime.strptime(d2, '%m_%d_%Y')
+                d2 = datetime.datetime.strptime(d2, '%m_%d_%Y')
 
             except:
                 logging.error('{0} is not in %m_%d_%Y format'.format(d1))
@@ -87,7 +88,7 @@ class FantasyLabsNBAScraper(EWTScraper):
         if 'model_day' in kwargs:
             model_day = kwargs['model_day']
         else:
-            model_day=datetime.strftime(datetime.today(),'%m_%d_%Y')
+            model_day=datetime.datetime.strftime(datetime.today(),'%m_%d_%Y')
 
         content = None       
         url = self.model_urls.get(model_name, None)
@@ -118,7 +119,7 @@ class FantasyLabsNBAScraper(EWTScraper):
         contents = {}
 
         for d in self._date_list(end_date, start_date):
-            datestr = datetime.strftime(d, '%m_%d_%Y')
+            datestr = datetime.datetime.strftime(d, '%m_%d_%Y')
             contents[datestr] = self.model(model_day=datestr)
 
         return contents
@@ -154,7 +155,7 @@ class FantasyLabsNBAScraper(EWTScraper):
         contents = {}
 
         for d in self._date_list(end_date, start_date):
-            datestr = datetime.strftime(d, '%m_%d_%Y')
+            datestr = datetime.datetime.strftime(d, '%m_%d_%Y')
             contents[datestr] = self.games_day(game_date=datestr)
 
         return contents
@@ -169,7 +170,7 @@ class FantasyLabsNBAScraper(EWTScraper):
             
         '''
 
-        day = datetime.strftime(datetime.today(), '%m_%d_%Y')
+        day = datetime.datetime.strftime(datetime.today(), '%m_%d_%Y')
         url = 'http://www.fantasylabs.com/api/sportevents/2/{0}'.format(day)
         content = self.get_json(url)
 

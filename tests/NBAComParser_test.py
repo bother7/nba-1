@@ -53,11 +53,11 @@ class NBAComScraper_test(unittest.TestCase):
     info = self.nbp.player_info(self.player_info_data())
     self.assertIn('LAST_NAME', info, "info should have last name")
 
-  def player_game_logs_data(self,fn='player_game_logs.json'):
+  def player_game_logs_data(self,fn='player_gamelogs.json'):
     return self._get_from_file(fn)
 
   def test_player_game_logs(self):
-    gl = self.nbp.player_game_logs(self.player_game_logs_data(),season='2014-15')
+    gl = self.nbp.player_gamelogs(self.player_game_logs_data(), season='2014-15')
     self.assertIn('Game_ID', gl[0], "game_logs should have game_id")
 
   def player_data(self,fn='players.json'):

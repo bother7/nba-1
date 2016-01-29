@@ -1,47 +1,26 @@
+from collections import OrderedDict
 import datetime
 import logging
-import json
-
-import memcache
-import MySQLdb
-import MySQLdb.cursors
 
 
 class NBASeasons():
     '''
-    Used to return data about seasons
-    TODO: this doesn't do much besides return an entire dictionary
-    
+    Finds NBA season start and end dates
+
+    Usage:
+        nbas = NBASeasons()
+        current = nbas.season ('2015-16') # current is dict with start, end keys
+        seas = nbas.in_what_season('2014-10-31') # seas is dict with start, end keys
+        end = nbas.season_end('2015-16') # end is a datetime object representing last day of the season
+        
     '''
 
-    def __init__(self,**kwargs):
+    def __init__(self):
 
         logging.getLogger(__name__).addHandler(logging.NullHandler())
 
-        if 'expire_time' in kwargs:
-            self.expire_time = kwargs['expire_time']
-        else:
-            self.expire_time = 3600
-
-        if 'keyprefix' in kwargs:
-            self.keyprefix = kwargs['keyprefix']
-        else:
-            self.keyprefix = 'nbadotcom-games'
-
-        if 'mc' in kwargs:
-            self.mc = mc
-        else:
-            self.mc = memcache.Client(['127.0.0.1:11211'], debug=0)
-
-        if 'use_cache' in kwargs:
-          self.use_cache = kwargs['use_cache']
-        else:
-          self.use_cache = True
-
-        if 'seasons' in kwargs:
-            self._seasons = kwargs['seasons']
-        else:
-            self._seasons = {
+        # see https://docs.python.org/2/library/collections.html#collections.OrderedDict
+        d = {
             "2015-16": {"start": datetime.datetime.strptime("10-27-2015", "%m-%d-%Y"), "end": datetime.datetime.strptime("04-13-2016", "%m-%d-%Y")},
             "2014-15": {"start": datetime.datetime.strptime("10-28-2014", "%m-%d-%Y"), "end": datetime.datetime.strptime("04-15-2015", "%m-%d-%Y")},
             "2013-14": {"start": datetime.datetime.strptime("10-29-2013", "%m-%d-%Y"), "end": datetime.datetime.strptime("04-16-2014", "%m-%d-%Y")},
@@ -63,105 +42,48 @@ class NBASeasons():
             "1997-98": {"start": datetime.datetime.strptime("10-31-1997", "%m-%d-%Y"), "end": datetime.datetime.strptime("04-19-1998", "%m-%d-%Y")},
             "1996-97": {"start": datetime.datetime.strptime("11-01-1996", "%m-%d-%Y"), "end": datetime.datetime.strptime("04-20-1997", "%m-%d-%Y")}
         }
-          
-        # http://stackoverflow.com/questions/8134444/python-constructor-of-derived-class
-        self.__dict__.update(kwargs)
 
-    def _cache_get(self, key = 'nbadotcom_game_list'):
-
-        try:
-            val = self.mc.get(key)
-            logging.debug('got %s from cache' % key)
-
-        except:
-            val = None
-            
-        return val 
-
-    def _cache_put(self, content, key='nbadotcom_game_list'):
-
-        try:
-            status = self.mc.set(key, content, time=self.expire_time)
-            logging.debug('saved %s to cache' % key)
-
-        except:
-            status = None
-
-        return status
-
-    def _db_setup(self):
-        host = os.environ['MYSQL_NBA_HOST']
-        user = os.environ['MYSQL_NBA_USER']
-        password = os.environ['MYSQL_NBA_PASSWORD']
-        database = os.environ['MYSQL_NBA_DATABASE']
-
-        try:
-            db = MySQLdb.connect(host=host, user=user, passwd=password, db=database, cursorclass=MySQLdb.cursors.DictCursor)
-
-        except:
-            db = None
-
-        return db
+        self._seasons = OrderedDict(sorted(d.items(), reverse=True))
 
     def in_what_season(self, day):
-        season = None
-        # TODO: takes a date, returns the season in YYYY-YY format
-        return season
+        
+        if isinstance(day, basestring):
+            day = datetime.datetime.strptime(day, '%Y-%m-%d')
+        
+        for season in self._seasons:
+            start = self.season_start(season)
+            end = self.season_end(season)
+            
+            if (day >= start) & (day <= end):
+                return season
+
+        return None
 
     def season(self, key):
         '''
-        Should return a dictionary having keys start and end
+        Returns dictionary having keys start and end
         '''
-        return self._seasons.get(key, None)
+        return self._seasons.get(key)
+
+    def season_start(self, key):
+        '''
+        Returns value for start key
+        '''
+        s = self._seasons.get(key)
+        return s.get('start')
+
+    def season_end(self, key):
+        '''
+        Returns value for end key
+        '''
+        s = self._seasons.get(key)
+        return s.get('end')
         
     def seasons(self, fn=None):
         '''
-        Probably won't need the other stuff, but have as a skeleton
+        Returns OrderedDict of all seasons
         '''
-
-        # try dict
-        seasons = self._seasons
+        return self._seasons
         
-        # try cache
-        if not seasons:
-            try:
-                seasons = self._cache_get()
-
-            except:
-                pass
-            
-        # try file if can't get from cache
-        if not seasons:
-            if os.path.isfile(fn):
-                try:
-                    with open(fn, 'r') as infile:
-                        seasons = json.load(infile)
-
-                        if seasons:
-                            self._cache_put(seasons)
-
-                except:
-                    pass
-                
-        # if no file, try database
-        if not seasons:
-            tbl = 'seasons'
-            
-            try:
-                db = self._db_setup()
-                c = db.cursor()
-                c.execute('select * from {0}'.format(tbl))
-                seasons = c.fetchall()
-
-                if seasons:
-                    self._cache_put(seasons)
-
-                db.close()
-                
-            except:
-                pass
-            
-        return seasons
-
 if __name__ == '__main__':
     pass

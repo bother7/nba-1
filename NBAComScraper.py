@@ -23,7 +23,6 @@ class NBAComScraper(EWTScraper):
 
         # see http://stackoverflow.com/questions/8134444
         EWTScraper.__init__(self, **kwargs)
-
         logging.getLogger(__name__).addHandler(logging.NullHandler())
 
     def boxscore(self, game_id, season):

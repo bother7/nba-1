@@ -3,7 +3,6 @@ import logging
 import os
 import pprint
 import subprocess
-import tarfile
 
 import psycopg2
 import psycopg2.extras
@@ -33,20 +32,7 @@ class NBAPostgres(object):
         if with_db:
             self.conn = psycopg2.connect('dbname={0} user={1}'.format(self.database, self.user))
 
-    def create_current_season_player_gamelogs(self):
-        '''
-        Drops then creates table `current_season_player_gamelogs`
-        TODO: adapt to postgresql table structure
-        cursor = self.conn.cursor()
-        
-        sql = '''
-        '''
 
-        cursor.execute(sql)
-        cursor.close()
-        '''
-        pass
-        
     def _insert_dict(self, dict_to_insert, table_name):
         '''
         Generic routine to insert dictionary into mysql table
@@ -57,9 +43,19 @@ class NBAPostgres(object):
         placeholders = ', '.join(['%s'] * len(dict_to_insert))
         columns = ', '.join(dict_to_insert.keys())
         sql = 'INSERT INTO %s ( %s ) VALUES ( %s )' % (table_name, columns, placeholders)
-        logging.debug('insert statement is {0}'.format(sql))
-        cursor.execute(sql, dict_to_insert.values())
-        cursor.close()
+
+        try:
+            cursor.execute(sql, dict_to_insert.values())
+            self.conn.commit()
+
+        except Exception as e:
+            logging.error('insert statement is {0}'.format(sql))
+            logging.error(pprint.pformat(dict_to_insert))
+            logging.exception('insert_dicts failed: {0}'.format(e.message))
+            self.conn.rollback()
+
+        finally:
+            cursor.close()
 
     def insert_dicts(self, dicts_to_insert, table_name):
         '''
@@ -115,15 +111,15 @@ class NBAPostgres(object):
         else:
             dirname = os.path.expanduser('~')
 
-        cmd = ['pg_dump', "--compress=9", "--file=" + bfile, dbname]
-        p = subprocess.Popen(cmd, stdout=dumpfile)
+        cmd = ['pg_dump', "-Upostgres", "--compress=9", "--file=" + bfile, dbname]
+        p = subprocess.Popen(cmd)
         retcode = p.wait()
 
         if retcode > 0:
             print('Error:', dbname, 'backup error')
 
 
-    def postgres_backup_table(self, dbname, tablename, dirname=None):
+    def postgres_backup_table(self, dbname, tablename, username='postgres'):
         '''
         Compressed backup of mysql database table
         Based on https://mcdee.com.au/python-mysql-backup-script/
@@ -138,41 +134,14 @@ class NBAPostgres(object):
         '''
 
         bdate = datetime.datetime.now().strftime('%Y%m%d%H%M')
-        bfile = '{0}_{1}.sql'.format(dbname ,bdate)
+        bfile = '{0}_{1}_{2}.sql.gz'.format(dbname, tablename, bdate)
 
-        if dirname and os.path.exists(dirname):
-            pass
-
-        else:
-            dirname = os.path.expanduser('~')
-
-        cmd = ['pg_dump', "--compress=9", "--file=" + bfile, dbname]
-        p = subprocess.Popen(cmd, stdout=dumpfile)
+        cmd = ['pg_dump', "--table=" + tablename, "--username=" + username, "--compress=9", "--file=" + bfile, dbname]
+        p = subprocess.Popen(cmd)
         retcode = p.wait()
 
         if retcode > 0:
             print('Error:', dbname, 'backup error')
-
-    def players_to_add(self):
-        '''
-        TODO: Adapt to postgres
-        Purpose is to compare current_season_gamelogs and players tables to see if missing players in latter
-        '''
-
-        sql = '''
-            SELECT  DISTINCT player_id, player_name
-            FROM    current_season_player_gamelogs AS c
-            WHERE   NOT EXISTS
-                    (
-                    SELECT  1
-                    FROM    players p
-                    WHERE   p.person_id = c.player_id
-                    )
-        '''
-
-        cursor = self.conn.cursor()
-        cursor.execute(sql)
-        return cursor.fetchall()
 
     def select_dict(self, sql):
         '''
@@ -186,9 +155,66 @@ class NBAPostgres(object):
         '''
         
         cursor = self.conn.cursor(cursor_factory = psycopg2.extras.RealDictCursor)
-        cursor.execute(sql)
-        results = cursor.fetchall()
-        return results
+
+        try:
+            cursor.execute(sql)
+            return cursor.fetchall()
+
+        except Exception as e:
+            logging.error('sql statement failed: {0}'.format(sql))
+            return None
+
+        finally:
+            cursor.close()
+
+    def select_scalar(self, sql):
+        '''
+        Generic routine to get a single value from a table
+
+        Arguments:
+            sql (str): the select statement you want to execute
+
+        Returns:
+            result: type depends on the query
+        '''
+
+        cursor = self.conn.cursor()
+
+        try:
+            cursor.execute(sql)
+            return cursor.fetchone()[0]
+
+        except Exception as e:
+            logging.error('sql statement failed: {0}'.format(sql))
+            return None
+
+        finally:
+            cursor.close()
+
+    def update(self, sql):
+        '''
+        Generic routine to update table
+        Will rollback with any errors
+
+        Arguments:
+            sql(str): UPDATE statement
+
+        Returns:
+            None
+        '''
+
+        cursor = self.conn.cursor()
+
+        try:
+            cursor.execute(sql)
+            self.conn.commit()
+                
+        except Exception as e:
+            logging.exception('update failed: {0}'.format(e.message))
+            self.conn.rollback()
+
+        finally:
+            cursor.close()
 
 if __name__ == '__main__':
     pass

@@ -7,7 +7,7 @@ from NBAPostgres import NBAPostgres
 
 from NameMatcher import match_player
 
-class NBAComPlayers(object):
+class NBAPlayers(object):
     '''
     Utility function for comparing players from different sites and updating players table
     

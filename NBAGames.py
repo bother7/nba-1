@@ -1,117 +1,125 @@
+try:
+    import cPickle as pickle
+except:
+    import pickle
+
 import csv
-import logging
 import json
-import memcache
+import logging
 import os
 
-import MySQLdb
-import MySQLdb.cursors
+from NBAPostgres import NBAPostgres
 
 class NBAGames():
+    '''
+    Provides lookup table for games. Can use "gamecode" format to figure out nbacom_game_id, visitor_team_id, home_team_id
+    Can create from file or from database table
 
-    def __init__(self,**kwargs):
+    Usage:
+        g = NBAGames()
+        games = g.games()
+        gamecode = '20150101/CLECHI'
+        game_ids = g.game_ids(gamecode)
+    '''
+
+
+    def __init__(self):
 
         logging.getLogger(__name__).addHandler(logging.NullHandler())
+        self._games = {}
 
-        if 'expire_time' in kwargs:
-            self.expire_time = kwargs['expire_time']
-        else:
-            self.expire_time = 3600
 
-        if 'keyprefix' in kwargs:
-            self.keyprefix = kwargs['keyprefix']
-        else:
-            self.keyprefix = 'nbadotcom-games'
+    def _games_from_db(self, table_name):
+        '''
+        Gets nba games from database table
 
-        if 'mc' in kwargs:
-            self.mc = mc
-        else:
-            self.mc = memcache.Client(['127.0.0.1:11211'], debug=0)
+        Arguments:
+            table_name(str): database table with games data
 
-        if 'use_cache' in kwargs:
-          self.use_cache = kwargs['use_cache']
-        else:
-          self.use_cache = True
+        Returns:
+            games(dict): key is gamecode, value is dict with keys nbacom_game_id, visitor_team_id, home_team_id
+        '''
 
-        # http://stackoverflow.com/questions/8134444/python-constructor-of-derived-class
-        self.__dict__.update(kwargs)
-
-    def _cache_get(self, key = 'nbadotcom_game_list'):
+        if not self._pg:
+            self._pg = NBAComPostrges()
 
         try:
-            val = self.mc.get(key)
-            logging.debug('got %s from cache' % key)
+            sql = """SELECT gamecode, game_id, visitor_team_id, home_team_id FROM games"""
+            self._games = self._pg.select_dict(sql)
 
         except:
-            val = None
-            
-        return val 
+            logging.exception('could not get games from table {0}'.format(table_name))
 
-    def _cache_put(self, content, key='nbadotcom_game_list'):
-
-        try:
-            status = self.mc.set(key, content, time=self.expire_time)
-            logging.debug('saved %s to cache' % key)
-
-        except:
-            status = None
-
-        return status
-
-    def _db_setup(self):
-        host = os.environ['MYSQL_NBA_HOST']
-        user = os.environ['MYSQL_NBA_USER']
-        password = os.environ['MYSQL_NBA_PASSWORD']
-        database = os.environ['MYSQL_NBA_DATABASE']
-
-        try:
-            db = MySQLdb.connect(host=host, user=user, passwd=password, db=database, cursorclass=MySQLdb.cursors.DictCursor)
-
-        except:
-            db = None
-
-        return db
+        return self._games
         
-    def games(self, fn='nbadotcom_games.json'):
+    def _games_from_file(self, file_name):
+        '''
+        Gets nba games from file, such as pickle or json
 
-        # try cache
-        try:
-            games = self._cache_get()
+        Arguments:
+            file_name(str): file with games data
 
-        except:
-            pass
-            
-        # try file if can't get from cache
-        if not games:
-            if os.path.isfile(fn):
-                try:
-                    with open(fn, 'r') as infile:
-                        games = json.load(infile)
+        Returns:
+            games(dict): key is gamecode, value is dict with keys nbacom_game_id, visitor_team_id, home_team_id
+        '''
+        
+        fname, fextension = os.path.splitext(file_name)
 
-                        if games:
-                            self._cache_put(games)
-
-                except:
-                    pass
-                
-        # if no file, try database
-        if not games:
-
+        if fextension == '.pkl':
             try:
-                db = self._db_setup()
-                c = db.cursor()
-                c.execute('select * from games')
-                games = c.fetchall()
+                with open(file_name, 'rb') as infile:
+                    self._games = pickle.load(infile)
 
-                if games:
-                    self._cache_put(games)
-
-                db.close()
-                
             except:
-                pass
+                logging.exception('could not load games from pickle file')
+        
+        elif fextension == '.json':
+            try:
+                with open(file_name, 'r') as infile:
+                    self._games = json.load(infile)
+
+            except:
+                logging.exception('could not load games from json file')
+
+        return self._games
+
+    def game_ids(self, gamecode):
+        '''
+        Provides lookup dictionary for game information based on gamecode ('20150101/CLECHI')
+
+        Arguments:
+            gamecode(str): in YYYYMMDD/VISHOM format
+
+        Returns:
+            game_ids(dict): keys are nbacom_game_id, visitor_team_id, home_team_id
+
+        '''
+
+        return self._games.get(gamecode, None)
+       
+    def games(self,file_name=None,table_name=None):
+        '''
+        Dictionary of gamecode: {nbacom_game_id, visitor_team_id, home_team_id}
+
+        Arguments:
+            file_name(str): file with games datastructure
+            table_name(str): database table for games (typically 'games')
+
+        Returns:
+            games(dict): keys are gamecode, values are dict with keys nbacom_game_id, visitor_team_id, home_team_id
+
+        '''
+
+        if not self._games:
+            if file_name:
+                self._games = self._games_from_file(file_name)
+
+            elif table_name:
+                if not self._db:
+                    self._db = postgres.NBAComPostrges()
+                self._games = self._games_from_db(table_name)
             
-        return games
+        return self._games
 
 if __name__ == '__main__':
     pass

@@ -48,6 +48,7 @@ class RotoGuruNBAParser:
     def _salaries_headers(self, row=None):
         '''
         Provides headers for salaries method
+        TODO: parse the actual headers rather than pre-supplied headers
 
         Arguments:
             row (str): string of semicolon-separated values

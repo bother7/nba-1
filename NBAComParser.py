@@ -20,7 +20,7 @@ class NBAComParser:
 
     '''
 
-    def __init__(self, **kwargs):
+    def __init__(self):
 
         logging.getLogger(__name__).addHandler(logging.NullHandler())
 
@@ -84,14 +84,14 @@ class NBAComParser:
 
             teams.append(team)
 
-        # ship it
         return players, teams
 
-    def leaguegamelog_players(self, content):
-        '''
-        URL: http://stats.nba.com/stats/leaguegamelog?Direction=DESC&Season=2015-16&Counter=0&Sorter=PTS&
+    '''
+    I think this is a duplicate of player_gamelogs
+     URL: http://stats.nba.com/stats/leaguegamelog?Direction=DESC&Season=2015-16&Counter=0&Sorter=PTS&
         LeagueID=00&PlayerOrTeam=P&SeasonType=Regular+Season
-        '''
+
+    def leaguegamelog_players(self, content):
         player_games = []
 
         result_set = content['resultSets'][0]
@@ -102,36 +102,26 @@ class NBAComParser:
             player_games.append(player_game)
 
         return player_games
+    '''
 
-    def player_game_logs(self,content,player_info=None,season=None):
+    def player_gamelogs(self, content):
+        '''
+        Parses content from nba.com 'leaguegamelog' endpoint (scraper already parses JSON)
+
+        Arguments:
+            content(dict): parsed JSON
+
+        Returns:
+            player_gl(list): list of gamelog dictionaries
+        '''
 
         player_gl =[]
-
         result_set = content['resultSets'][0]
 
         for row_set in result_set['rowSet']:
             game_log = dict(zip(result_set['headers'], row_set))
-
-            # add season & year to player_game_logs
-            if season:
-                game_log['SEASON'] = season
-                game_log['YEAR'] = season.split("-")[0]
-
-            # add info from commonplayerinfo to player_game_logs
-            if player_info:
-                if 'DISPLAY_FIRST_LAST' in player_info:
-                    game_log['DISPLAY_FIRST_LAST'] = player_info['DISPLAY_FIRST_LAST']
-
-                if 'DISPLAY_LAST_COMMA_FIRST' in player_info:
-                    game_log['DISPLAY_LAST_COMMA_FIRST'] = player_info['DISPLAY_LAST_COMMA_FIRST']
-
-                if 'DISPLAY_FI_LAST' in player_info:
-                    game_log['DISPLAY_FI_LAST'] = player_info['DISPLAY_FI_LAST']
-
             player_gl.append(game_log)
-            logging.debug(game_log)
 
-        # ship it
         return player_gl
 
     def player_info(self,content):
@@ -214,7 +204,7 @@ class NBAComParser:
         sb = {'date': game_date, 'game_headers': game_headers.values(), 'game_linescores': self._fix_linescores(game_linescores), 'standings': standings}
         return sb
 
-    def season_gamelogs(self,content,season,player_or_team):
+    def season_gamelogs(self,content,player_or_team):
 
         gamelogs =[]
 
@@ -225,7 +215,6 @@ class NBAComParser:
 
             for result in results['rowSet']:
                 gamelog = dict(zip(headers, result))
-                gamelog['season'] = season
 
                 # add opponent_score
                 points = gamelog.get('pts', None)
@@ -233,20 +222,6 @@ class NBAComParser:
 
                 if points and plus_minus:
                     gamelog['opponent_pts'] = points - plus_minus
-
-                # add away/home teams, 3 fields
-                pattern = re.compile(r'([A-Z]+)\s+[@|vs\.]+\s+([A-Z]+)')
-                match = re.search(pattern, gamelog['matchup'])
-
-                if match:
-                    gamelog['away_team_abbreviation'] = match.group(1)
-                    gamelog['home_team_abbreviation'] = match.group(2)
-
-                    if gamelog['away_team_abbreviation'] == gamelog['team_abbreviation']:
-                        gamelog['home_away'] = 'A'
-
-                    elif gamelog['home_team_abbreviation'] == gamelog['team_abbreviation']:
-                        gamelog['home_away'] = 'H'
 
                 gamelogs.append(gamelog)
 

@@ -1,3 +1,5 @@
+import copy
+import json
 import logging
 
 
@@ -48,16 +50,22 @@ class FantasyLabsNBAParser(object):
             
         return games
 
-    def model(self, content, site=None):
+    def model(self, model_day, site, gamedate):
         '''
         Parses json associated with model (player stats / projections)
         The model has 3 dicts for each player: DraftKings, FanDuel, Yahoo
         SourceIds: 4 is DK, 11 is Yahoo, 3 is FD
 
+        Arguments:
+            model_day: list of dict representing player model
+
+        Returns:
+            players: list of parsed models
+            
         Usage:
-            model = p.model(model_json)
-            model = p.model(model_json, omit_properties=[])
-            model = p.model(model_json, omit_other=[])
+            model = p.model(model_day)
+            model = p.model(model_day, omit_properties=[])
+            model = p.model(model_day, omit_other=[])
 
         '''
 
@@ -65,10 +73,10 @@ class FantasyLabsNBAParser(object):
         omit_properties = ['IsLocked']
         omit_other = ['ErrorList', 'LineupCount', 'CurrentExposure', 'ExposureProbability', 'IsExposureLocked', 'Positions', 'PositionCount', 'Exposure', 'IsLiked', 'IsExcluded']
 
-        for playerdict in content:
-            player = {}
+        for md in model_day:
+            player = {'site': site, 'gamedate': gamedate}
 
-            for k,v in playerdict.items():
+            for k,v in md.items():
 
                 if k == 'Properties':
 
