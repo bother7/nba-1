@@ -1,9 +1,9 @@
 import logging
 import time
 
-from NBAComScraper import NBAComScraper
-from NBAComParser import NBAComParser
-from NBAPostgres import NBAPostgres
+from nba.scrapers.nbacom import NBAComScraper
+from nba.parsers.nbacom import NBAComParser
+from nba.db.pgsql import NBAPostgres
 
 from NameMatcher import match_player
 

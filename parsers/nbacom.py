@@ -53,16 +53,35 @@ class NBAComParser:
         return player_info
 
     def boxscore(self, content, game_date=None):
+        '''
+        Represents single nba.com boxscore
+
+        Arguments:
+            content(dict): parsed json
+            game_date(str): string representing date of game for boxscore
+
+        Returns:
+            players(list): dictionary of stats for each player
+            teams(list): dictionary of stats for each team
+            starter_bench(list): dictionary of stats broken down by starter/bench
+        '''
 
         players = []
         teams = []
+        starter_bench = []
 
-        player_results, team_results = content['resultSets']
+        for rs in content['resultSets']:
+            if rs.get('name') == 'PlayerStats':
+                player_results = rs
+            elif rs.get('name') == 'TeamStats':
+                team_results = rs
+            elif rs.get('name') == 'TeamStarterBenchStats':
+                starter_bench_results = rs
 
         # add game_date for convenience
         # standardize on TOV rather than TO; playerstats uses TOV
-        for row_set in player_results['rowSet']:
-            player = dict(zip(player_results['headers'], row_set))
+        for row_set in player_results.get('rowSet'):
+            player = dict(zip(player_results.get('headers'), row_set))
 
             if game_date:
                 player['GAME_DATE'] = game_date
@@ -84,29 +103,20 @@ class NBAComParser:
 
             teams.append(team)
 
-        return players, teams
+        # starter_bench
+        for result in starter_bench_results['rowSet']:
+            sb = dict(zip(team_results['headers'], result))
 
-    '''
-    I think this is a duplicate of player_gamelogs
-     URL: http://stats.nba.com/stats/leaguegamelog?Direction=DESC&Season=2015-16&Counter=0&Sorter=PTS&
-        LeagueID=00&PlayerOrTeam=P&SeasonType=Regular+Season
+            if game_date:
+                sb['GAME_DATE'] = game_date
 
-    def leaguegamelog_players(self, content):
-        player_games = []
+            starter_bench.append(sb)
 
-        result_set = content['resultSets'][0]
-        headers = [h.lower() for h in result_set['headers']]
+        return players, teams, starter_bench
 
-        for row_set in result_set['rowSet']:
-            player_game = dict(zip(headers,row_set))
-            player_games.append(player_game)
-
-        return player_games
-    '''
-
-    def player_gamelogs(self, content):
+    def one_player_gamelogs(self, content):
         '''
-        Parses content from nba.com 'leaguegamelog' endpoint (scraper already parses JSON)
+        Parses gamelogs for one player
 
         Arguments:
             content(dict): parsed JSON
@@ -124,16 +134,70 @@ class NBAComParser:
 
         return player_gl
 
-    def player_info(self,content):
+    def one_team_gamelogs(self,content):
+        '''
+        Parses gamelogs for one team
 
-        player_info = None
+        Arguments:
+            content(dict): parsed JSON
+
+        Returns:
+            team_gl(list): list of gamelog dictionaries
+
+        '''
+
+        team_gl =[]
+        result_set = content['resultSets'][0]
+
+        for row_set in result_set['rowSet']:
+            game_log = dict(zip(result_set['headers'], row_set))
+            team_gl.append(game_log)
+
+        return team_gl
+
+    def player_info(self,content):
+        '''
+        Dictionary about individual player, includes name, id, etc.
+
+        Arguments:
+            content(dict): json parsed into dictionary
+
+        Returns:
+            dictionary about individual player, includes name, id, etc.
+        '''
+        result_set = content['resultSets'][0]
+        headers = result_set.get('headers')
+        rowset = result_set.get('rowSet')
+
+        if headers and rowset:
+            return dict(zip(headers,rowset[0]))
+
+        else:
+            raise ValueError('player_info failed: no headers or rowset')
+
+    def players (self,content):
+
+        p = []
 
         result_set = content['resultSets'][0]
-        player_info = dict(zip(result_set['headers'],result_set['rowSet'][0]))
 
-        return player_info
+        for row_set in result_set['rowSet']:
+            p.append(dict(zip(result_set['headers'], row_set)))
 
-    def player_stats(self,content,stat_date=None):
+        return p
+
+    def playerstats(self,content,stat_date=None):
+        '''
+        Document has one line of stats per player
+
+        Arguments:
+            content(dict): parsed json from nba.com
+            stat_date(str): in YYYY-YY format (2015-16)
+
+        Returns:
+            ps(list): list of dictionaries, each one is a player's stats
+
+        '''
 
         ps = []
 
@@ -151,17 +215,6 @@ class NBAComParser:
             ps.append(p)
 
         return ps
-
-    def players (self,content):
-
-        p = []
-
-        result_set = parsed['resultSets'][0]
-
-        for row_set in result_set['rowSet']:
-            p.append(dict(zip(result_set['headers'], row_set)))
-
-        return p
 
     def scoreboard(self,content,game_date=None):
         '''
@@ -211,19 +264,27 @@ class NBAComParser:
         if player_or_team == 'T':
 
             results = content['resultSets'][0]
-            headers = [h.lower() for h in results['headers']]
+            headers = results['headers']
 
             for result in results['rowSet']:
                 gamelog = dict(zip(headers, result))
 
                 # add opponent_score
-                points = gamelog.get('pts', None)
-                plus_minus = gamelog.get('plus_minus', None)
+                points = gamelog.get('PTS', None)
+                plus_minus = gamelog.get('PLUS_MINUS', None)
 
                 if points and plus_minus:
-                    gamelog['opponent_pts'] = points - plus_minus
+                    gamelog['OPPONENT_PTS'] = points - plus_minus
 
                 gamelogs.append(gamelog)
+
+        elif player_or_team == 'P':
+            result_set = content['resultSets'][0]
+            headers = result_set.get('headers')
+
+            for row_set in result_set['rowSet']:
+                player_game = dict(zip(headers,row_set))
+                gamelogs.append(player_game)
 
         return gamelogs
 
@@ -269,25 +330,6 @@ class NBAComParser:
 
         return dashboard
 
-    def team_game_logs(self,content,season=None):
-        '''
-
-        '''
-        team_gl =[]
-
-        result_set = content['resultSets'][0]
-
-        for row_set in result_set['rowSet']:
-            game_log = dict(zip(result_set['headers'], row_set))
-
-            if season:
-                game_log['SEASON'] = season
-                game_log['YEAR'] = season.split("-")[0]
-
-            team_gl.append(game_log)
-
-        return team_gl
-
     def team_opponent_dashboard(self, content):
         '''
         Returns list of dictionaries, stats of opponents vs. each team
@@ -303,7 +345,18 @@ class NBAComParser:
 
         return teams
 
-    def team_stats(self,content,stat_date=None):
+    def teams(self, content):
+        '''
+        Returns list of string - "1610612737","ATL"
+        TODO: parse this into dictionaries
+        '''
+
+        teams = {}
+        pattern = re.compile(r'("(\d{10})","(\w{3})"),conf')
+
+        return {match[2]: match[1] for match in re.findall(pattern, content)}
+
+    def teamstats(self,content,stat_date=None):
 
         ts = []
 
@@ -318,17 +371,6 @@ class NBAComParser:
             ts.append(t)
 
         return ts
-
-    def teams(self, content):
-        '''
-        Returns list of string - "1610612737","ATL"
-        TODO: parse this into dictionaries
-        '''
-
-        teams = {}
-        pattern = re.compile(r'("(\d{10})","(\w{3})"),conf')
-
-        return {match[2]: match[1] for match in re.findall(pattern, content)}
 
 if __name__ == "__main__":
     pass

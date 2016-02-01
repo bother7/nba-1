@@ -27,7 +27,14 @@ class NBAComScraper(EWTScraper):
 
     def boxscore(self, game_id, season):
         '''
+        Boxscore from a single game
 
+        Arguments:
+            game_id: numeric identifier of game
+            season: string in YYYY-YY format (2015-16)
+
+        Returns:
+            content: python data structure of json documnt
         '''
         
         base_url = 'http://stats.nba.com/stats/boxscoretraditionalv2?'
@@ -45,20 +52,113 @@ class NBAComScraper(EWTScraper):
 
         content = self.get_json(url=base_url, payload=params)
 
-        if not content: logging.error('could not get content from url: {0}'.format(url))
+        if not content: logging.error('could not get content from url: {0}'.format(base_url))
 
         return content
 
-    def player_stats(self, season, **kwargs):
+    def one_player_gamelogs(self, player_id, season, **kwargs):
+
+        # step two: get player_gamelogs
+        base_url = 'http://stats.nba.com/stats/playergamelog?'
+
+        params = {
+          'LeagueID': '00',
+          'PlayerID': player_id,
+          'Season': season,
+          'SeasonType': 'Regular Season'
+        }
+
+        # override defaults with **kwargs
+        for key, value in kwargs.iteritems():
+            if params.has_key(key):
+                params[key] = value
+
+        content = self.get_json(url=base_url, payload=params)
+
+        if not content: logging.error('could not get content: {0}'.format(base_url))
+
+        return content
+
+    def one_team_gamelogs(self, team_id, season):
+
+        base_url = 'http://stats.nba.com/stats/teamgamelog?'
+
+        params = {
+          'LeagueID': '00',
+          'TeamID': team_id,
+          'Season': season,
+          'SeasonType': 'Regular Season'
+        }
+
+        content = self.get_json(url=base_url, payload=params)
+
+        if not content: logging.error('could not get content: {0}'.format(base_url))
+
+        return content
+
+    def player_info(self, player_id, season, **kwargs):
+
+        player_info = None
+        base_url = 'http://stats.nba.com/stats/commonplayerinfo?'
+
+        params = {
+          'LeagueID': '00',
+          'PlayerID': player_id,
+          'Season': season,
+          'SeasonType': 'Regular Season'
+        }
+
+        # override defaults with **kwargs
+        for key, value in kwargs.iteritems():
+            if params.has_key(key):
+                params[key] = value
+
+        content = self.get_json(url=base_url, payload=params)
+
+        if not content:
+            logging.error('could not get content: {0}'.format(url))
+
+        return content
+
+    def players (self, season, **kwargs):
+
+        base_url = 'http://stats.nba.com/stats/commonallplayers?'
+
+        params = {
+          'IsOnlyCurrentSeason': '0',
+          'LeagueID': '00',
+          'Season': season,
+        }
+
+        # override defaults with **kwargs
+        for key, value in kwargs.iteritems():
+            if params.has_key(key):
+                params[key] = value
+
+        content = self.get_json(url=base_url, payload=params)
+
+        if not content: logging.error('could not get content: {0}'.format(base_url))
+
+        return content
+
+    def playerstats(self, season, **kwargs):
         '''
-          measure_type allows you to choose between Base and Advanced
-          per_mode can be Totals or PerGame
-          date_from and date_to allow you to select a specific day or a range of days
-          last_n_games allows picking 3, 5, 10, etc. game window='2014-15',per_mode='Totals',season_type='Regular Season',date_from='',date_to='',measure_type='Base',
-        last_n_games=0,month=0,opponent_team_id=0
+        Document has one line of stats per player
+
+        Arguments:
+            season(str): such as 2015-16
+
+        Returns:
+            content: parsed json response from nba.com
         '''
 
         base_url = 'http://stats.nba.com/stats/leaguedashplayerstats?'
+
+        # measure_type allows you to choose between Base and Advanced
+        # per_mode can be Totals or PerGame
+        # date_from and date_to allow you to select a specific day or a range of days
+        # last_n_games allows picking 3, 5, 10, etc. game window='2014-15',per_mode='Totals',season_type='Regular Season',date_from='',date_to='',measure_type='Base',
+        # last_n_games=0,month=0,opponent_team_id=0
 
         params = {
           'DateFrom': '',
@@ -95,82 +195,6 @@ class NBAComScraper(EWTScraper):
         content = self.get_json(url=base_url, payload=params)
 
         if not content: logging.error('could not get content from file or url\n' + fn + '\n' + url)
-
-        return content
-
-    def player_info(self, player_id, season, **kwargs):
-
-        player_info = None
-        base_url = 'http://stats.nba.com/stats/commonplayerinfo?'
-
-        params = {
-          'LeagueID': '00',
-          'PlayerID': player_id,
-          'Season': season,
-          'SeasonType': 'Regular Season'
-        }
-
-        # override defaults with **kwargs
-        for key, value in kwargs.iteritems():
-            if params.has_key(key):
-                params[key] = value
-
-        content = self.get_json(url=base_url, payload=params)
-
-        if not content:
-            logging.error('could not get content: {0}'.format(url))
-
-        return content
-
-    def player_game_logs(self, player_id, season, **kwargs):
-
-        # NOTE: need 2nd URL to match up player info to PlayerID
-        # http://stats.nba.com/stats/commonplayerinfo?LeagueID=00&PlayerID=203112&SeasonType=Regular+Season
-        # then call URL for the gamelogs
-        # http://stats.nba.com/stats/playergamelog?LeagueID=00&PlayerID=203112&Season=2014-15&SeasonType=Regular+Season
-
-        # step one: get commonplayerinfo
-        player_info = self.player_info(player_id)
-
-        # step two: get player_gamelogs
-        base_url = 'http://stats.nba.com/stats/playergamelog?'
-
-        params = {
-          'LeagueID': '00',
-          'PlayerID': player_id,
-          'Season': season,
-          'SeasonType': 'Regular Season'
-        }
-
-        # override defaults with **kwargs
-        for key, value in kwargs.iteritems():
-            if params.has_key(key):
-                params[key] = value
-
-        content = self.get_json(url=base_url, payload=params)
-
-        if not content: logging.error('could not get content: {0}'.format(base_url))
-
-        return content, player_info
-
-    def players (self, season, **kwargs):
-
-        base_url = 'http://stats.nba.com/stats/commonallplayers?'
-
-        params = {
-          'IsOnlyCurrentSeason': '0',
-          'LeagueID': '00',
-          'Season': season,
-        }
-
-        # override defaults with **kwargs
-        for key, value in kwargs.iteritems():
-            if params.has_key(key):
-                params[key] = value
-
-        content = self.get_json(url=base_url, payload=params)
-
-        if not content: logging.error('could not get content: {0}'.format(base_url))
 
         return content
 
@@ -275,23 +299,6 @@ class NBAComScraper(EWTScraper):
 
         return content
 
-    def team_game_logs(self, team_id, season):
-
-        base_url = 'http://stats.nba.com/stats/teamgamelog?'
-
-        params = {
-          'LeagueID': '00',
-          'TeamID': team_id,
-          'Season': season,
-          'SeasonType': 'Regular Season'
-        }
-
-        content = self.get_json(url=base_url, payload=params)
-
-        if not content: logging.error('could not get content: {0}'.format(base_url))
-
-        return content
-
     def team_opponent_dashboard(self, season, **kwargs):
         '''
         Returns team_opponent stats for every team in league
@@ -337,7 +344,28 @@ class NBAComScraper(EWTScraper):
 
         return content
 
-    def team_stats(self, season, **kwargs):
+    def teams(self):
+        '''
+        nba.com stores team_id and team_code as a variable in a javascript file
+
+        Arguments:
+            None
+
+        Returns:
+            javascript file with js variable containing team_ids and team names
+
+        '''
+
+        url = 'http://stats.nba.com/scripts/custom.min.js'
+        content = self.get(url)
+
+        # if not from web either, then log an error
+        if not content:
+            logging.error('could not get content: {0}'.format(url))
+
+        return content
+
+    def teamstats(self, season, **kwargs):
         '''
           measure_type allows you to choose between Base and Advanced
           per_mode can be Totals or PerGame
@@ -384,21 +412,6 @@ class NBAComScraper(EWTScraper):
         content = self.get_json(url=base_url, payload=params)
 
         if not content: logging.error('could not get content: {0}'.format(base_url))
-
-        return content
-
-    def teams(self):
-        '''
-        Returns javascript file with js variable containing team_ids and team names
-        :return: content(str)
-        '''
-
-        url = 'http://stats.nba.com/scripts/custom.min.js'
-        content = self.get(url)
-
-        # if not from web either, then log an error
-        if not content:
-            logging.error('could not get content: {0}'.format(url))
 
         return content
 

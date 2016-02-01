@@ -1,8 +1,6 @@
-from __future__ import print_function, division
-
 from collections import defaultdict
 import copy
-from datetime import datetime as dt, timedelta
+from datetime import datetime as dt, timedelta, date
 import logging
 import os
 
@@ -12,13 +10,12 @@ try:
 except:
     import pickle
 
-from NBAComParser import NBAComParser
-from NBAComScraper import NBAComScraper
-from NBADailyFantasy import NBADailyFantasy
-from NBAPlayers import NBAPlayers
-from NBAPostgres import NBAPostgres
-from NBASeasons import NBASeasons
-from RotoGuruNBAParser import RotoGuruNBAParser
+from nba.scrapers.nbacom import NBAComScraper
+from nba.parsers.nbacom import NBAComParser
+from nba.daily_fantasy import NBADailyFantasy
+from nba.players import NBAPlayers
+from nba.db.pgsql import NBAPostgres
+from nba.seasons import NBASeasons
 
 
 class NBAComAgent(object):
@@ -60,7 +57,6 @@ class NBAComAgent(object):
         '''
         
         fixed_linescores = []
-        exclude = ['game_sequence']
 
         for linescore in linescores:
             fixed_linescore = {k.lower():v for k,v in linescore.items()}
@@ -79,37 +75,6 @@ class NBAComAgent(object):
             fixed_linescores.append(fixed_linescore)
 
         return fixed_linescores
-
-    def _players_from_csv(self, csv_fname):
-        '''
-        Takes csv file and returns dictionary of name: id
-
-        Arguments:
-            csv_fname (str): name of file to read/parse
-
-        Returns:
-            players (list): list of dicts, key is name, value is id
-
-        Usage:
-            csv_fname = os.path.join(os.path.dirname(__file__), 'players.csv')
-            players = NBAComAgent._players_from_csv(csv_fname)
-
-        '''
-        
-        players = {}
-
-        if os.file.exists(csv_fname):
-            with open(csv_fname, 'rb') as infile:
-                for line in infile:
-                    line = line.strip()
-
-                    if line:
-                        pname, pid = line.split(';')
-                        players[pname] = pid
-        else:
-            raise ValueError('{0} does not exist'.format(csv_fname))
-            
-        return players
 
     def current_season_leaguedashteamstats(self, season, date_from=None, date_to=None):
         '''
@@ -139,9 +104,9 @@ class NBAComAgent(object):
             # do something with what I downloaded
 
         
-    def current_season_player_gamelogs(self, season):
+    def cs_player_gamelogs(self, season):
         '''
-        Fetches player_gamelogs and updates current_season_player_gamelogs table
+        Fetches player_gamelogs and updates cs_player_gamelogs table
 
         Arguments:
              season (str): in YYYY-YY format (2015-16)
@@ -162,10 +127,14 @@ class NBAComAgent(object):
 
         # step two: get player gamelogs from nba.com
         # game_date is in %Y-%m-%d format
-        all_gamelogs = self.parser.player_gamelogs(self.scraper.season_gamelogs(season, 'P'))
+        # don't want partial updates - that is get game from noon when you call it at 5:00 p.m
+        all_gamelogs = self.parser.season_gamelogs(self.scraper.season_gamelogs(season, 'P'), 'P')
+        today = dt.strftime(date.today(), '%Y-%m-%d')
+        all_gamelogs = [gamelog for gamelog in all_gamelogs if not gamelog.get('GAME_DATE') == today]
 
         # step three: filter all_gamelogs by date, only want those newer than latest gamelog in table
         # have to convert to datetime object for comparison
+        # TODO: can possibly use upsert feature in postgres 9.5, make last_gamedate <= instead of <
         for gl in all_gamelogs:
             if last_gamedate < dt.strptime(gl['GAME_DATE'], '%Y-%m-%d'):
                 player = {k.lower().strip(): v for k,v in gl.iteritems() if not k in exclude_keys}
@@ -188,6 +157,7 @@ class NBAComAgent(object):
                     player.pop('team_abbreviation')
                     
                 new_gamelogs.append(player)
+
             else:
                 logging.debug('game is already in db: {0}'.format(gl['GAME_DATE']))
 
@@ -218,7 +188,7 @@ class NBAComAgent(object):
 
         return new_gamelogs
 
-    def current_season_team_gamelogs(self, season):
+    def cs_team_gamelogs(self, season):
         '''
         Fetches team_gamelogs and updates cs_team_gamelogs table
 
@@ -229,18 +199,8 @@ class NBAComAgent(object):
              team_gl (list): player dictionary of stats
         '''
 
-        cstg = self.scraper.season_gamelogs(season='2015-16', player_or_team='T')
         exclude = ['matchup', 'season_id', 'team_name', 'video_available', 'wl']
         team_gl = []
-        all_gamelogs = []
-
-        for gl in self.parser.season_gamelogs(cstg, 'T'):
-            fixed = {k:v for k,v in gl.iteritems() if not k in exclude}
-            fixed['team_code'] = fixed['team_abbreviation']
-            fixed.pop('team_abbreviation')
-            fixed['minutes'] = fixed['min']
-            fixed.pop('min')
-            all_gamelogs.append(fixed)
 
         # figure out the date filter
         # postgres will return object unless use to_char function
@@ -248,23 +208,34 @@ class NBAComAgent(object):
         q = """SELECT to_char(max(game_date), 'YYYYMMDD') from stats.cs_team_gamelogs"""
         last_gamedate = self.nbadb.select_scalar(q)
         last_gamedate = dt.strptime(last_gamedate, '%Y%m%d')
+        today = dt.strftime(date.today(), '%Y-%m-%d')
 
-        # filter all_gamelogs by date, only want those newer than latest gamelog in table
+        # filter all_gamelogs by date, only want those newer than latest gamelog in table but don't want today's gamelogs
         # have to convert to datetime object for comparison
-        for gl in all_gamelogs:
-            if last_gamedate < dt.strptime(gl['game_date'], '%Y-%m-%d'):
-                team_gl.append(player)
-            else:
-                logging.debug('game is already in db: {0}'.format(gl['game_date']))
+        for gl in self.parser.season_gamelogs(self.scraper.season_gamelogs(season='2015-16', player_or_team='T'), 'T'):
 
-        # step four: backup table
+            if gl.get('GAME_DATE') == today:
+                continue
+
+            elif last_gamedate < dt.strptime(gl.get('GAME_DATE'), '%Y-%m-%d'):
+                fixed = {k:v for k,v in gl.iteritems() if not k in exclude}
+                fixed['team_code'] = fixed['team_abbreviation']
+                fixed.pop('team_abbreviation')
+                fixed['minutes'] = fixed['min']
+                fixed.pop('min')
+                team_gl.append(fixed)
+
+            else:
+                logging.debug('game skipped: {0}'.format(gl['game_date']))
+
+         # step four: backup table
         table_name = 'stats.cs_team_gamelogs'
         if self.safe:
             self.nbadb.postgres_backup_table(self.nbadb.database, table_name)
     
         # step five: update table
-        if len(new_gamelogs) > 0:
-            self.nbadb.insert_dicts(new_gamelogs, table_name)
+        if len(team_gl) > 0:
+            self.nbadb.insert_dicts(team_gl, table_name)
 
         return team_gl
 
@@ -441,29 +412,7 @@ class NBAComAgent(object):
 
         return teamgames
 
-    def website(self, webdir):
-        '''
-        Generates static website to upload to S3 bucket
-        ''' 
-        # player_gamelogs
-        sql = '''SELECT * FROM current_season_player_gamelogs'''
-        gamelogs = self.nbadb.select_dict(sql)
-
-        # TODO: create table `current_season_team_gamelogs`
-        # team_gamelogs
-        sql = '''SELECT * FROM current_season_team_gamelogs'''
-        gamelogs = self.nbadb.select_dict(sql)
-        
-        # daily fantasy (dfs_season procedure updates the relevant tables)
-        self.nbadb.call(procedure_name='dfs_season')
-        sql = '''SELECT * FROM tmptbl_dfs_season'''
-        dfs_season = self.nbadb.select_dict(sql)
-
-        sql = '''SELECT * FROM tmptbl_dfs_today'''
-        dfs_today = self.nbadb.select_dict(sql)
-
-        #########################################
-        # generate the HTML or other files here #
-
 if __name__ == '__main__':
-    pass    
+    pass
+
+
