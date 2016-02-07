@@ -167,6 +167,30 @@ class NBAPostgres(object):
         finally:
             cursor.close()
 
+    def select_list(self, sql):
+        '''
+        Generic routine to get list of values from one column of table
+
+        Arguments:
+            sql (str): the select statement you want to execute
+
+        Returns:
+            results (list): list of rows in column
+        '''
+
+        cursor = self.conn.cursor()
+
+        try:
+            cursor.execute(sql)
+            return cursor.fetchall()
+
+        except Exception as e:
+            logging.error('sql statement failed: {0}'.format(sql))
+            return None
+
+        finally:
+            cursor.close()
+
     def select_scalar(self, sql):
         '''
         Generic routine to get a single value from a table

@@ -9,93 +9,49 @@ from NameMatcher import match_player
 
 class NBAPlayers(object):
     '''
-    Utility function for comparing players from different sites and updating players table
-    
+    Provides for updating nba.com players table (stats.players)
+    Also permits cross-reference of player names and player ids from various sites(stats.player_xref)
+
     Usage:
         np = NBAComPlayers(db=True)
         np.missing_players('2015-16')
 
     '''
     
-    def __init__(self, db=False):
+    def __init__(self, db=False, polite=False):
         logging.getLogger(__name__).addHandler(logging.NullHandler())
         self.scraper = NBAComScraper()
         self.parser = NBAComParser()
-        self.polite = False
+        self.polite = polite
+        self.sites = ['dk', 'draftkings', 'draft kings', 'doug', 'dougstats', 'espn', 'fd', 'fanduel', 'fan duel',
+                 'fantasylabs', 'fantasy labs', 'rg', 'rotoguru', 'roto guru']
 
         if db:
             self.nbadb = NBAPostgres()
         else:
             self.nbadb = None
 
-    def missing_players(self, season):
-        '''
-        Looks for missing players by comparing current_season_gamelogs and players tables
-        Fetches player_info by id, inserts player into players table
+    def _dk_name(self, name):
+        return {
+        }.get(name, None)
 
-        Arguments:
-            season (str): example '2015-16' for the current season
+    def _doug_name(self, name):
+        return {
+        }.get(name, None)
 
-        Returns:
-            missing (list): list of dictionaries that represent row in players table
-        '''
+    def _espn_name(self, name):
+        return {
+        }.get(name, None)
 
-        if not self.nbadb:
-            raise ValueError('must call db=True or set self.db value')
+    def _fd_name(self, name):
+        return {
+        }.get(name, None)
 
-        missing = []
+    def _fl_name(self, name):
+        return {
+        }.get(name, None)
 
-        # get list of ids that appear in current_season_gamelogs but not players
-        sql = '''
-            SELECT DISTINCT player_id FROM current_season_player_gamelogs
-            WHERE player_id NOT IN (SELECT DISTINCT person_id FROM players)
-        '''
-        
-        cursor = self.nbadb.conn.cursor()
-        cursor.execute(sql)
-
-        # loop through ids that need to be added and fetch json
-        # nba.com json uses capitalized keys, also I have renamed some in the database
-        # must drop unused keys (those that are not in the players table) otherwise insert_dicts method will fail
-        results = cursor.fetchall()
-
-        if results:
-            for pid in results:
-                content = self.scraper.player_info(pid, season)
-                pi = self.parser.player_info(content)
-                
-                pi = {k.lower(): v for k,v in pi.iteritems()}
-                pi.pop('games_played_flag', None)
-                pi['nbacom_team_id'] = pi.get('team_id', None)
-                pi.pop('team_id', None)
-                pi['nbacom_position'] = pi.get('position', None)
-                pi.pop('position', None)
-
-                if pi.get('height', None):
-                    try:
-                        feet, inches = pi['height'].split('-')
-                        pi['height'] = int(feet)*12 + int(inches)
-
-                    except:
-                        pass
-
-                # have to convert empty strings to None, otherwise insert fails for integer/numeric columns
-                player_info= {}
-                for k,v in pi.iteritems():
-                    if not v:
-                        v = None
-                        
-                    player_info[k] = v
-                    
-                missing.append(player_info)
-
-                if self.polite:
-                    sleep(1)
-                
-        self.nbadb.insert_dicts(missing, 'players')
-        return missing
-
-    def rg_to_nbadotcom(self, name):
+    def _rg_name(self, name):
         return {
             'Amundson, Louis': 'Amundson, Lou',
             'Barea, Jose': 'Barea, Jose Juan',
@@ -130,6 +86,136 @@ class NBAPlayers(object):
             'Williams, Louis': 'Williams, Lou',
             'Williams, Maurice': 'Williams, Mo'
         }.get(name, None)
+
+    def missing_players(self, season):
+        '''
+        Looks for missing players by comparing current_season_gamelogs and players tables
+        Fetches player_info by id, inserts player into players table
+
+        Arguments:
+            season (str): example '2015-16' for the current season
+
+        Returns:
+            missing (list): list of dictionaries that represent row in players table
+        '''
+
+        if not self.nbadb:
+            raise ValueError('missing_players requires a database connection')
+
+        missing = []
+
+        # get list of ids that appear in current_season_gamelogs but not players
+        sql = '''
+            SELECT DISTINCT player_id FROM stats.cs_player_gamelogs
+            WHERE player_id NOT IN (SELECT DISTINCT nbacom_player_id FROM stats.players)
+        '''
+        
+        results = self.nbadb.select_list(sql)
+
+        if results:
+            for pid in results:
+                content = self.scraper.player_info(pid, season)
+                pi = self.parser.player_info(content)
+                
+                pi = {k.lower(): v for k,v in pi.iteritems()}
+                pi.pop('games_played_flag', None)
+                pi['nbacom_team_id'] = pi.get('team_id', None)
+                pi.pop('team_id', None)
+                pi['nbacom_position'] = pi.get('position', None)
+                pi.pop('position', None)
+                pi['nbacom_player_id'] = pi.get('person_id', None)
+                pi.pop('person_id', None)
+
+                if pi.get('height', None):
+                    try:
+                        feet, inches = pi['height'].split('-')
+                        pi['height'] = int(feet)*12 + int(inches)
+
+                    except: pass
+
+                # have to convert empty strings to None, otherwise insert fails for integer/numeric columns
+                player_info= {}
+                for k,v in pi.iteritems():
+                    if not v:
+                        player_info[k] = None
+                    else:
+                        player_info[k] = v
+                missing.append(player_info)
+
+                if self.polite: time.sleep(1)
+
+        if missing: self.nbadb.insert_dicts(missing, 'stats.players')
+
+        return missing
+
+    def nbacom_player(self, site, player_name):
+        '''
+        Returns name and id of player on nba.com
+
+        Arguments:
+            site (str): 'dk', 'fd', 'rg', 'doug', 'espn'
+            player_name (str): 'Kevin Durant', 'Lebron James'
+
+        Returns:
+            player (list): first item is player name, second item is player id
+        '''
+        sites = ['dk', 'draftkings', 'draft kings', 'doug', 'dougstats', 'espn', 'fd', 'fanduel', 'fan duel',
+                 'fantasylabs', 'fantasy labs', 'rg', 'rotoguru', 'roto guru']
+
+        if site.lower() not in sites:
+            # should try name matcher
+            pass
+
+        elif site.lower() == 'dk':
+            return self._dk_name(player_name)
+
+        elif 'doug' in site.lower():
+            return self._doug_name(player_name)
+
+        elif 'espn' in site.lower():
+            return self._espn_name(player_name)
+
+        elif site.lower() == 'fd' or 'duel' in site.lower():
+            return self._fd_name(player_name)
+
+        elif site.lower() == 'fl' or 'labs' in site.lower():
+            return self._fl_name(player_name)
+
+        elif site.lower() == 'rg' or 'guru' in site.lower():
+            return self._rg_name(player_name)
+
+    def site_to_nbacom(self, site):
+        '''
+        Returns dictionary with name of player on site, value is list of name and id of player on nba.com
+
+        Arguments:
+            site (str): 'dk', 'fd', 'rg', 'doug', 'espn'
+
+        Returns:
+            players (dict): key is player name on site, value is list [nbacom_player_name, nbacom_player id]
+        '''
+
+        if site.lower() not in self.sites:
+            # should try name matcher
+            pass
+
+        elif site.lower() == 'dk':
+            return self._dk_name(player_name)
+
+        elif 'doug' in site.lower():
+            return self._doug_name(player_name)
+
+        elif 'espn' in site.lower():
+            return self._espn_name(player_name)
+
+        elif site.lower() == 'fd' or 'duel' in site.lower():
+            return self._fd_name(player_name)
+
+        elif site.lower() == 'fl' or 'labs' in site.lower():
+            return self._fl_name(player_name)
+
+        elif site.lower() == 'rg' or 'guru' in site.lower():
+            return self._rg_name(player_name)
 
 if __name__ == '__main__':
     pass

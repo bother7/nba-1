@@ -9,9 +9,9 @@ import os
 
 import pandas as pd
 
-from NBADailyFantasy import NBADailyFantasy
-from NBAPlayers import NBAPlayers
-from NBASeasons import NBASeasons
+from daily_fantasy import NBADailyFantasy
+from players import NBAPlayers
+from seasons import NBASeasons
 
 
 class NBAAgent(object):
@@ -36,12 +36,12 @@ class NBAAgent(object):
         # kwargs options
 
         if 'safe' in kwargs:
-            self.safe = safe
+            self.safe = kwargs['safe']
         else:
             self.safe = True
 
         if 'db' in kwargs:
-            self.nbadb = db
+            self.nbadb = kwargs['db']
         else:
             self.nbadb = None
 
@@ -129,7 +129,7 @@ class NBAAgent(object):
         else:
             raise ValueError('{0} is not a supported file extension'.format(ext))
 
-    def _save_csv (self, data, csv_fname, sep=';' date_format='%Y-%m-%d'):
+    def _save_csv (self, data, csv_fname, sep=';', date_format='%Y-%m-%d'):
         '''
         Takes datastructure and saves as csv file
 

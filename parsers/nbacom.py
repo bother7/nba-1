@@ -5,7 +5,7 @@ import pprint
 import re
 
 
-class NBAComParser:
+class NBAComParser(object):
     '''
     Parses json endpoints of stats.nba.com into lists of dictionaries
 

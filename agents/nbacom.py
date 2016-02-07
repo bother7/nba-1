@@ -1,8 +1,9 @@
 from collections import defaultdict
 import copy
-from datetime import datetime as dt, timedelta, date
+import datetime
+from datetime import date
+from datetime import timedelta
 import logging
-import os
 
 try:
     import cPickle as pickle
@@ -10,15 +11,12 @@ try:
 except:
     import pickle
 
+from nba.agents.agent import NBAAgent
 from nba.scrapers.nbacom import NBAComScraper
 from nba.parsers.nbacom import NBAComParser
-from nba.daily_fantasy import NBADailyFantasy
-from nba.players import NBAPlayers
-from nba.db.pgsql import NBAPostgres
-from nba.seasons import NBASeasons
 
 
-class NBAComAgent(object):
+class NBAComAgent(NBAAgent):
     '''
     Performs script-like tasks using NBA.com API
     Intended to replace standalone scripts so can use common API and tools
@@ -31,80 +29,12 @@ class NBAComAgent(object):
     '''
 
     def __init__(self, db=True, safe=True):
+        NBAAgent.__init__(self, db=db, safe=safe)
         logging.getLogger(__name__).addHandler(logging.NullHandler())
         self.scraper = NBAComScraper()
         self.parser = NBAComParser()
-        self.dfs = NBADailyFantasy()
-        self.nbap = NBAPlayers()
-        self.safe = safe
-        self.nbas = NBASeasons()
-        
-        if db:
-            self.nbadb = NBAPostgres()
-        else:
-            self.nbadb = None
 
-    def _fix_linescores(self, linescores):
-        '''
-        Removes some keys, changes some keys in linescores dictionary
-
-        Arguments:
-            linescores (list): list of dictionaries, each one represents a game linescore from nba.com
-
-        Returns:
-            fixed_linescores (list): list of dictionaries, with correct keys/key names
-            
-        '''
-        
-        fixed_linescores = []
-
-        for linescore in linescores:
-            fixed_linescore = {k.lower():v for k,v in linescore.items()}
-            fixed_linescore.pop('game_sequence', None)
-
-            fixed_linescore['team_game_id'] = '{0}:{1}'.format(fixed_linescore['team_id'], fixed_linescore['game_id'])
-            twl = fixed_linescore.get('team_wins_losses', None)
-
-            if twl:
-                wins, losses = twl.split('-')
-
-                if wins and losses:
-                    fixed_linescore['team_wins'] = wins
-                    fixed_linescore['team_losses'] = losses
-
-            fixed_linescores.append(fixed_linescore)
-
-        return fixed_linescores
-
-    def current_season_leaguedashteamstats(self, season, date_from=None, date_to=None):
-        '''
-        Fetches leaguedashteamstats and updates cs_leaguedashteamstats table
-
-        Arguments:
-             season (str): in YYYY-YY format (2015-16)
-             date_from (str): in %Y-%m-%d format, default beginning of season
-             date_from (str): in %Y-%m-%d format, default yesterday            
-
-        Returns:
-             teamstats (list): team dictionary of basic and advanced stats
-        '''
-
-        if not date_from:
-            date_from = self.nbas.season_start(season)
-
-        if not date_to:
-            date_to = dt.srftime(dt.today() - timedelta(1), '%Y-%m-%d')
-    
-        # need to get date list here
-        date_range = []
-
-        for d in date_range:
-            ldts_base = self.scraper.team_stats(season, DateFrom=date_from, DateTo=d)
-            ldts_advanced = self.scraper.team_stats(season, DateFrom=date_from, DateTo=d, MeasureType='Advanced')
-            # do something with what I downloaded
-
-        
-    def cs_player_gamelogs(self, season):
+    def cs_player_gamelogs(self, season, date_from=None, date_to=None):
         '''
         Fetches player_gamelogs and updates cs_player_gamelogs table
 
@@ -121,22 +51,26 @@ class NBAComAgent(object):
         # step one: figure out the date filter
         # postgres will return object unless use to_char function
         # then need to convert it to datetime object for comparison
-        q = """SELECT to_char(max(game_date), 'YYYYMMDD') from stats.cs_player_gamelogs"""
-        last_gamedate = self.nbadb.select_scalar(q)
-        last_gamedate = dt.strptime(last_gamedate, '%Y%m%d')
+        if self.nbadb:
+            q = """SELECT to_char(max(game_date), 'YYYYMMDD') from stats.cs_player_gamelogs"""
+            last_gamedate = self.nbadb.select_scalar(q)
+            last_gamedate = datetime.datetime.strptime(last_gamedate, '%Y%m%d')
+
+        else:
+            last_gamedate = datetime.datetime.today() - datetime.timedelta(days=7)
 
         # step two: get player gamelogs from nba.com
         # game_date is in %Y-%m-%d format
         # don't want partial updates - that is get game from noon when you call it at 5:00 p.m
         all_gamelogs = self.parser.season_gamelogs(self.scraper.season_gamelogs(season, 'P'), 'P')
-        today = dt.strftime(date.today(), '%Y-%m-%d')
+        today = datetime.datetime.strftime(date.today(), '%Y-%m-%d')
         all_gamelogs = [gamelog for gamelog in all_gamelogs if not gamelog.get('GAME_DATE') == today]
 
         # step three: filter all_gamelogs by date, only want those newer than latest gamelog in table
         # have to convert to datetime object for comparison
         # TODO: can possibly use upsert feature in postgres 9.5, make last_gamedate <= instead of <
         for gl in all_gamelogs:
-            if last_gamedate < dt.strptime(gl['GAME_DATE'], '%Y-%m-%d'):
+            if last_gamedate < datetime.datetime.strptime(gl['GAME_DATE'], '%Y-%m-%d'):
                 player = {k.lower().strip(): v for k,v in gl.iteritems() if not k in exclude_keys}
                 player['dk_points'] = self.dfs.dk_points(player)
                 player['fd_points'] = self.dfs.fd_points(player)
@@ -166,29 +100,54 @@ class NBAComAgent(object):
         if self.safe:
             self.nbadb.postgres_backup_table(self.nbadb.database, table_name)
     
-        # step five: update table
-        if len(new_gamelogs) > 0:
-            self.nbadb.insert_dicts(new_gamelogs, table_name)
+        if self.nbadb:
+            # step five: update table
+            if len(new_gamelogs) > 0:
+                self.nbadb.insert_dicts(new_gamelogs, table_name)
 
-        # step six: add in missing positions
-        sql = """UPDATE stats.cs_player_gamelogs
-                SET position_group=subquery.position_group, primary_position=subquery.primary_position
-                FROM (SELECT nbacom_player_id as player_id, position_group, primary_position FROM stats.players) AS subquery
-                WHERE (stats.cs_player_gamelogs.position_group IS NULL OR stats.cs_player_gamelogs.primary_position IS NULL) AND stats.cs_player_gamelogs.player_id=subquery.player_id;
-              """
-        self.nbadb.update(sql)
+            # step six: add in missing positions
+            sql = """UPDATE stats.cs_player_gamelogs
+                    SET position_group=subquery.position_group, primary_position=subquery.primary_position
+                    FROM (SELECT nbacom_player_id as player_id, position_group, primary_position FROM stats.players) AS subquery
+                    WHERE (stats.cs_player_gamelogs.position_group IS NULL OR stats.cs_player_gamelogs.primary_position IS NULL) AND stats.cs_player_gamelogs.player_id=subquery.player_id;
+                  """
+            self.nbadb.update(sql)
 
-        # step seven: add in team_ids
-        sql = """UPDATE stats.cs_player_gamelogs
-                SET team_id=subquery.team_id
-                FROM (SELECT nbacom_team_id as team_id, team_code FROM stats.teams) AS subquery
-                WHERE stats.cs_player_gamelogs.team_id IS NULL AND stats.cs_player_gamelogs.team_code=subquery.team_code;
-              """
-        self.nbadb.update(sql)
+            # step seven: add in team_ids
+            sql = """UPDATE stats.cs_player_gamelogs
+                    SET team_id=subquery.team_id
+                    FROM (SELECT nbacom_team_id as team_id, team_code FROM stats.teams) AS subquery
+                    WHERE stats.cs_player_gamelogs.team_id IS NULL AND stats.cs_player_gamelogs.team_code=subquery.team_code;
+                  """
+            self.nbadb.update(sql)
 
         return new_gamelogs
 
-    def cs_team_gamelogs(self, season):
+    def cs_playerstats(self, season, date_from=None, date_to=None):
+        '''
+        Fetches cs_player_stats and updates database table
+
+        Arguments:
+             season (str): in YYYY-YY format (2015-16)
+             date_from (str): in %Y-%m-%d format, default beginning of season
+             date_from (str): in %Y-%m-%d format, default yesterday
+
+        Returns:
+             player_stats (list): player dictionary of basic and advanced stats
+        '''
+
+        if not date_from:
+            date_from = self.nbas.season_start(season)
+
+        if not date_to:
+            date_to = datetime.datetime.strftime(datetime.datetime.today() - timedelta(1), '%Y-%m-%d')
+
+        ps_base = self.parser.playerstats(self.scraper.playerstats(season, DateFrom=date_from, DateTo=date_to))
+        ps_advanced = self.parser.playerstats(self.scraper.playerstats(season, DateFrom=date_from, DateTo=date_to, MeasureType='Advanced'))
+
+        return ps_base, ps_advanced
+
+    def cs_team_gamelogs(self, season, date_from=None, date_to=None):
         '''
         Fetches team_gamelogs and updates cs_team_gamelogs table
 
@@ -201,14 +160,18 @@ class NBAComAgent(object):
 
         exclude = ['matchup', 'season_id', 'team_name', 'video_available', 'wl']
         team_gl = []
+        today = datetime.datetime.strftime(date.today(), '%Y-%m-%d')
 
         # figure out the date filter
         # postgres will return object unless use to_char function
         # then need to convert it to datetime object for comparison
-        q = """SELECT to_char(max(game_date), 'YYYYMMDD') from stats.cs_team_gamelogs"""
-        last_gamedate = self.nbadb.select_scalar(q)
-        last_gamedate = dt.strptime(last_gamedate, '%Y%m%d')
-        today = dt.strftime(date.today(), '%Y-%m-%d')
+        if self.nbadb:
+            q = """SELECT to_char(max(game_date), 'YYYYMMDD') from stats.cs_team_gamelogs"""
+            last_gamedate = self.nbadb.select_scalar(q)
+            last_gamedate = datetime.datetime.strptime(last_gamedate, '%Y%m%d')
+
+        else:
+            last_gamedate = datetime.datetime.today() - datetime.timedelta(days=7)
 
         # filter all_gamelogs by date, only want those newer than latest gamelog in table but don't want today's gamelogs
         # have to convert to datetime object for comparison
@@ -217,8 +180,8 @@ class NBAComAgent(object):
             if gl.get('GAME_DATE') == today:
                 continue
 
-            elif last_gamedate < dt.strptime(gl.get('GAME_DATE'), '%Y-%m-%d'):
-                fixed = {k:v for k,v in gl.iteritems() if not k in exclude}
+            elif last_gamedate < datetime.datetime.strptime(gl.get('GAME_DATE'), '%Y-%m-%d'):
+                fixed = {k.lower():v for k,v in gl.iteritems() if not k in exclude}
                 fixed['team_code'] = fixed['team_abbreviation']
                 fixed.pop('team_abbreviation')
                 fixed['minutes'] = fixed['min']
@@ -226,38 +189,44 @@ class NBAComAgent(object):
                 team_gl.append(fixed)
 
             else:
-                logging.debug('game skipped: {0}'.format(gl['game_date']))
+                logging.debug('game skipped: {0}'.format(gl.get('game_date')))
 
-         # step four: backup table
-        table_name = 'stats.cs_team_gamelogs'
-        if self.safe:
-            self.nbadb.postgres_backup_table(self.nbadb.database, table_name)
-    
-        # step five: update table
-        if len(team_gl) > 0:
-            self.nbadb.insert_dicts(team_gl, table_name)
+        if self.nbadb:
+
+             # step four: backup table
+            table_name = 'stats.cs_team_gamelogs'
+            if self.safe:
+                self.nbadb.postgres_backup_table(self.nbadb.database, table_name)
+
+            # step five: update table
+            if len(team_gl) > 0:
+                self.nbadb.insert_dicts(team_gl, table_name)
 
         return team_gl
 
-    def game_linescores(self, dates, table_name):
+    def cs_team_stats(self, season, date_from=None, date_to=None):
         '''
-        Fetches linescores and inserts into table_name (either current_season_game_linescores or game_linescores)
-        '''       
+        Fetches leaguedashteamstats and updates cs_leaguedashteamstats table
 
-        scoreboards = []
-        
-        for day in dates:
-            game_date = datetime.datetime.strftime(day, '%Y-%m-%d')
-            scoreboard_json = scraper.scoreboard(game_date=game_date)
-            scoreboard = parser.scoreboard(scoreboard_json, game_date=game_date)
-            scoreboards.append(scoreboard)
+        Arguments:
+             season (str): in YYYY-YY format (2015-16)
+             date_from (str): in %Y-%m-%d format, default beginning of season
+             date_from (str): in %Y-%m-%d format, default yesterday
 
-        linescores = []
+        Returns:
+             teamstats (list): team dictionary of basic and advanced stats
+        '''
 
-        for scb in scoreboards:
-            linescores += scb.get('game_linescores', [])
+        if not date_from:
+            date_from = self.nbas.season_start(season)
 
-        self.nbadb.insert_dicts(linescores, table_name)
+        if not date_to:
+            date_to = datetime.datetime.strftime(datetime.datetime.today() - timedelta(1), '%Y-%m-%d')
+
+        ldts_base = self.parser.teamstats(self.scraper.teamstats(season, DateFrom=date_from, DateTo=date_to))
+        ldts_advanced = self.parser.teamstats(self.scraper.teamstats(season, DateFrom=date_from, DateTo=date_to, MeasureType='Advanced'))
+
+        return ldts_base, ldts_advanced
 
     def players_to_add(self):
         '''
@@ -289,74 +258,16 @@ class NBAComAgent(object):
         finally:
             cursor.close()
 
-    def rg_salaries(self, salary_pages, players_fname, site): 
-        '''
-        Parses list of rotoguru pages into list of salary dictionaries
-
-        Arguments:
-            salary_pages (dict): keyed by gamedate, value is HTML
-            players_fname (str): is full path of csv file with players
-            site (str): name of site - dk, fd, yh . . . 
-            
-        Returns:
-            salaries (list): list of salary dictionaries
-            players (dict): keys are player name, values are player id
-            unmatched (defaultdict): keys are playername, values is counter
-            
-        Usage:
-            salaries = NBAComAgent.rotoguru_dfs_salaries(salary_pages, '~/players.csv', 'dk')
-            NBAComAgent.nbadb.insert_dicts(salaries, 'salaries')
-            
-        '''
-        
-        salaries = []
-        players = {}
-        unmatched = defaultdict(int)
-
-        players = self._players_from_csv(players_fname)
-
-        for key in sorted(salary_pages.keys()):
-            daypage = salary_pages.get(key)
-
-            for sal in p.salaries(daypage, site):
-
-                # players is key of nbacom_name and value of nbacom_id
-                # need to match up rotoguru names with these
-                pid = players.get(sal.get('site_player_name'), None)
-
-                # if no match, try conversion dictionary
-                if not pid:
-                    nba_name = self.nbap.rg_to_nbadotcom(sal.get('site_player_name', None))
-                    pid = players.get(nba_name, None)
-
-                # if still no match, warn and don't add to database
-                if not pid:
-                    logging.warning('no player_id for {0}'.format(sal.get('site_player_name')))
-                    unmatched[sal.get('site_player_name')] += 1
-                    continue
-
-                else:
-                    sal['nbacom_player_id'] = pid
-
-                # if no salary, warn and don't add to database    
-                if not sal.get('salary', None):
-                    logging.warning('no salary for {0}'.format(sal.get('site_player_name')))
-                    continue
-
-                salaries.append(sal)               
-
-        return salaries, players, unmatched
-
     def scoreboards(self, season_start, season_end, pkl_fname=None):
         '''
         Downloads and parses range of scoreboards, optionally saves to pickle file
         '''
         scoreboards = []
 
-        for day in reversed(date_list(season_end, season_start)):
+        for day in reversed(self.date_list(season_end, season_start)):
             game_date = datetime.datetime.strftime(day, '%Y-%m-%d')
-            scoreboard_json = scraper.scoreboard(game_date=game_date)
-            scoreboard = parser.scoreboard(scoreboard_json, game_date=game_date)
+            scoreboard_json = self.nbas.scoreboard(game_date=game_date)
+            scoreboard = self.nbap.scoreboard(scoreboard_json, game_date=game_date)
             scoreboards.append(scoreboard)       
 
         if pkl_fname:
@@ -414,5 +325,3 @@ class NBAComAgent(object):
 
 if __name__ == '__main__':
     pass
-
-
