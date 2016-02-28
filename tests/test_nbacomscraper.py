@@ -56,13 +56,6 @@ class NBAComScraper_test(unittest.TestCase):
         self.assertIsNotNone(rs)
         self.assertIsNotNone(rs[0].get('headers', None))
 
-    def test_scoreboard(self):
-        sb = self.nbs.scoreboard('2016-01-28')
-        self.assertIsInstance(sb, dict)
-        rs = sb.get('resultSets', None)
-        self.assertIsNotNone(rs)
-        self.assertIsNotNone(rs[0].get('headers', None))
-
     def test_team_dashboard(self):
         team_id = '1610612765'
         season = '2015-16'

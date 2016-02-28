@@ -12,9 +12,9 @@ except:
     import pickle
 
 from nba.agents.agent import NBAAgent
+from nba.db.nbacom_pgsql import NBAComPg
 from nba.scrapers.nbacom import NBAComScraper
 from nba.parsers.nbacom import NBAComParser
-
 
 class NBAComAgent(NBAAgent):
     '''
@@ -23,16 +23,121 @@ class NBAComAgent(NBAAgent):
 
     Examples:
         a = NBAComAgent()
-        gamelogs = a.current_season_player_gamelogs('2015-16')
-        site = a.website(webdir='/var/www/nbadata')
+        gamelogs = a.cs_player_gamelogs('2015-16')
 
     '''
 
     def __init__(self, db=True, safe=True):
-        NBAAgent.__init__(self, db=db, safe=safe)
+        NBAAgent.__init__(self)
         logging.getLogger(__name__).addHandler(logging.NullHandler())
         self.scraper = NBAComScraper()
         self.parser = NBAComParser()
+        self.safe = safe
+
+        if db:
+            self.nbadb = NBAComPg()
+        else:
+            self.nbadb = None
+
+    def combine_boxscores(self, boxes, advanced_boxes):
+        '''
+        processes result from calling NBAComScraper.boxscores() and boxscores_advanced()
+
+        Arguments:
+            boxscores(list): list of 'base' boxscores
+            boxscores(list): list of 'advanced' boxscores
+
+        Returns:
+            merged_players(list)
+            merged_teams(list)
+        '''
+
+        merged_players = []
+        merged_teams = []
+
+        for gid, box in boxes.iteritems():
+
+            # players and teams are lists of dicts
+            players, teams, starterbench = self.parser.boxscore(box)
+
+            # players_adv and teams_adv are lists of dicts
+            adv_box = advanced_boxes.get(gid)
+            players_adv, teams_adv = self.parser.boxscore_advanced(adv_box)
+
+            # need to transform into dicts
+            players_dict = {p['PLAYER_ID']: p for p in players}
+            players_adv_dict = {p['PLAYER_ID']: p for p in players_adv}
+            teams_dict = {t['TEAM_ID']: t for t in teams}
+            teams_adv_dict = {t['TEAM_ID']: t for t in teams_adv}
+
+            # now loop through players
+            for pid, player in players_dict.iteritems():
+                player_adv = players_adv_dict.get(pid)
+
+                if player_adv:
+                    merged_players.append(self.merge_boxes(player, player_adv))
+
+            # now loop through teams
+            for tid, team in teams_dict.iteritems():
+                team_adv = teams_adv_dict.get(tid)
+
+                if team_adv:
+                    merged_teams.append(self.merge_boxes(team, team_adv))
+
+        self.nbadb.insert_boxscores(merged_players, merged_teams)
+
+
+    def commonallplayers(self, season):
+        '''
+        Solves problem of players changing teams
+        nba.com updates player teams regularly, so i look every day to make sure lists accurate
+        '''
+        game_date = datetime.datetime.today()
+        players = self.parser.players(self.scraper.players(season=season, cs_only='1'))
+
+        to_insert = []
+
+        convert = {
+            "PERSON_ID": 'nbacom_player_id',
+            "DISPLAY_LAST_COMMA_FIRST": '',
+            "DISPLAY_FIRST_LAST": 'display_first_last',
+            "ROSTERSTATUS": 'rosterstatus',
+            "FROM_YEAR": '',
+            "TO_YEAR": '',
+            "PLAYERCODE": '',
+            "TEAM_ID": 'team_id',
+            "TEAM_CITY": '',
+            "TEAM_NAME": '',
+            "TEAM_ABBREVIATION": 'team_code',
+            "TEAM_CODE": '',
+            "GAMES_PLAYED_FLAG": ''
+        }
+
+        '''
+              game_date timestamp without time zone,
+              nbacom_season_id integer,
+              season integer,
+              nbacom_player_id integer,
+              display_first_last character varying(50),
+              team_id integer,
+              team_code character(3),
+              rosterstatus boolean,
+        '''
+
+        for p in players:
+            pti = {'game_date': game_date, 'nbacom_season_id': 22015, 'season': 2016}
+
+            for k,v in p.iteritems():
+                converted = convert.get(k)
+                if converted:
+                    pti[converted] = v
+
+            to_insert.append(pti)
+
+        if self.nbadb:
+            # step five: update table
+            if to_insert:
+                self.nbadb.insert_dicts(to_insert, 'stats.playerteams')
 
     def cs_player_gamelogs(self, season, date_from=None, date_to=None):
         '''
@@ -45,83 +150,19 @@ class NBAComAgent(NBAAgent):
              players (list): player dictionary of stats + dfs points
         '''
 
-        new_gamelogs = []
-        exclude_keys = ['VIDEO_AVAILABLE', 'TEAM_NAME']
+        gamelogs = self.parser.season_gamelogs(self.scraper.season_gamelogs(season, 'P'), 'P')
 
-        # step one: figure out the date filter
-        # postgres will return object unless use to_char function
-        # then need to convert it to datetime object for comparison
-        if self.nbadb:
-            q = """SELECT to_char(max(game_date), 'YYYYMMDD') from stats.cs_player_gamelogs"""
-            last_gamedate = self.nbadb.select_scalar(q)
-            last_gamedate = datetime.datetime.strptime(last_gamedate, '%Y%m%d')
-
-        else:
-            last_gamedate = datetime.datetime.today() - datetime.timedelta(days=7)
-
-        # step two: get player gamelogs from nba.com
-        # game_date is in %Y-%m-%d format
-        # don't want partial updates - that is get game from noon when you call it at 5:00 p.m
-        all_gamelogs = self.parser.season_gamelogs(self.scraper.season_gamelogs(season, 'P'), 'P')
-        today = datetime.datetime.strftime(date.today(), '%Y-%m-%d')
-        all_gamelogs = [gamelog for gamelog in all_gamelogs if not gamelog.get('GAME_DATE') == today]
-
-        # step three: filter all_gamelogs by date, only want those newer than latest gamelog in table
-        # have to convert to datetime object for comparison
-        # TODO: can possibly use upsert feature in postgres 9.5, make last_gamedate <= instead of <
-        for gl in all_gamelogs:
-            if last_gamedate < datetime.datetime.strptime(gl['GAME_DATE'], '%Y-%m-%d'):
-                player = {k.lower().strip(): v for k,v in gl.iteritems() if not k in exclude_keys}
-                player['dk_points'] = self.dfs.dk_points(player)
-                player['fd_points'] = self.dfs.fd_points(player)
-
-                # change wl (char) to is_win (boolean)
-                if player.get('wl', None) == 'W':
-                    player['is_win'] = True
-                    player.pop('wl')
-                else:
-                    player['is_win'] = False
-                    player.pop('wl')
-
-                # change team_abbreviation to team_code
-                if player.get('team_abbreviation', None):
-                    player['team_code'] = player['team_abbreviation']
-                    player.pop('team_abbreviation')
-                else:
-                    player.pop('team_abbreviation')
-                    
-                new_gamelogs.append(player)
-
-            else:
-                logging.debug('game is already in db: {0}'.format(gl['GAME_DATE']))
-
-        # step four: backup table
         table_name = 'stats.cs_player_gamelogs'
-        if self.safe:
-            self.nbadb.postgres_backup_table(self.nbadb.database, table_name)
-    
+
         if self.nbadb:
-            # step five: update table
-            if len(new_gamelogs) > 0:
-                self.nbadb.insert_dicts(new_gamelogs, table_name)
+            if self.safe:
+                self.nbadb.postgres_backup_table(self.nbadb.database, table_name)
+    
+            self.nbadb.insert_player_gamelogs(gamelogs, table_name)
+            self.nbadb.update_positions(table_name)
+            self.nbadb.update_teamids(table_name)
 
-            # step six: add in missing positions
-            sql = """UPDATE stats.cs_player_gamelogs
-                    SET position_group=subquery.position_group, primary_position=subquery.primary_position
-                    FROM (SELECT nbacom_player_id as player_id, position_group, primary_position FROM stats.players) AS subquery
-                    WHERE (stats.cs_player_gamelogs.position_group IS NULL OR stats.cs_player_gamelogs.primary_position IS NULL) AND stats.cs_player_gamelogs.player_id=subquery.player_id;
-                  """
-            self.nbadb.update(sql)
-
-            # step seven: add in team_ids
-            sql = """UPDATE stats.cs_player_gamelogs
-                    SET team_id=subquery.team_id
-                    FROM (SELECT nbacom_team_id as team_id, team_code FROM stats.teams) AS subquery
-                    WHERE stats.cs_player_gamelogs.team_id IS NULL AND stats.cs_player_gamelogs.team_code=subquery.team_code;
-                  """
-            self.nbadb.update(sql)
-
-        return new_gamelogs
+        return gamelogs
 
     def cs_playerstats(self, season, date_from=None, date_to=None):
         '''
@@ -136,16 +177,32 @@ class NBAComAgent(NBAAgent):
              player_stats (list): player dictionary of basic and advanced stats
         '''
 
+        # default is to get entire season through yesterday
+        yesterday = datetime.datetime.strftime(datetime.datetime.today() - timedelta(1), '%Y-%m-%d')
+
         if not date_from:
             date_from = self.nbas.season_start(season)
 
         if not date_to:
-            date_to = datetime.datetime.strftime(datetime.datetime.today() - timedelta(1), '%Y-%m-%d')
+            date_to = yesterday
 
         ps_base = self.parser.playerstats(self.scraper.playerstats(season, DateFrom=date_from, DateTo=date_to))
         ps_advanced = self.parser.playerstats(self.scraper.playerstats(season, DateFrom=date_from, DateTo=date_to, MeasureType='Advanced'))
 
-        return ps_base, ps_advanced
+        # now need to merge base and advanced
+        ps_base = {p['PLAYER_ID']: p for p in ps_base}
+
+        for ps_adv in ps_advanced:
+            pid = ps_adv['PLAYER_ID']
+            base = ps_base.get(pid)
+
+            if base:
+                base.update(ps_adv)
+                ps_base[pid] = base       
+
+        self.nbadb.insert_playerstats(ps_base.values(), table_name='stats.cs_playerstats', game_date=yesterday)
+
+        return ps_base.values()
 
     def cs_team_gamelogs(self, season, date_from=None, date_to=None):
         '''
@@ -158,53 +215,21 @@ class NBAComAgent(NBAAgent):
              team_gl (list): player dictionary of stats
         '''
 
-        exclude = ['matchup', 'season_id', 'team_name', 'video_available', 'wl']
-        team_gl = []
-        today = datetime.datetime.strftime(date.today(), '%Y-%m-%d')
-
-        # figure out the date filter
-        # postgres will return object unless use to_char function
-        # then need to convert it to datetime object for comparison
-        if self.nbadb:
-            q = """SELECT to_char(max(game_date), 'YYYYMMDD') from stats.cs_team_gamelogs"""
-            last_gamedate = self.nbadb.select_scalar(q)
-            last_gamedate = datetime.datetime.strptime(last_gamedate, '%Y%m%d')
-
-        else:
-            last_gamedate = datetime.datetime.today() - datetime.timedelta(days=7)
-
-        # filter all_gamelogs by date, only want those newer than latest gamelog in table but don't want today's gamelogs
-        # have to convert to datetime object for comparison
-        for gl in self.parser.season_gamelogs(self.scraper.season_gamelogs(season='2015-16', player_or_team='T'), 'T'):
-
-            if gl.get('GAME_DATE') == today:
-                continue
-
-            elif last_gamedate < datetime.datetime.strptime(gl.get('GAME_DATE'), '%Y-%m-%d'):
-                fixed = {k.lower():v for k,v in gl.iteritems() if not k in exclude}
-                fixed['team_code'] = fixed['team_abbreviation']
-                fixed.pop('team_abbreviation')
-                fixed['minutes'] = fixed['min']
-                fixed.pop('min')
-                team_gl.append(fixed)
-
-            else:
-                logging.debug('game skipped: {0}'.format(gl.get('game_date')))
+        gamelogs = self.parser.season_gamelogs(self.scraper.season_gamelogs(season='2015-16', player_or_team='T'), 'T')
 
         if self.nbadb:
 
-             # step four: backup table
             table_name = 'stats.cs_team_gamelogs'
+
             if self.safe:
                 self.nbadb.postgres_backup_table(self.nbadb.database, table_name)
 
-            # step five: update table
-            if len(team_gl) > 0:
-                self.nbadb.insert_dicts(team_gl, table_name)
+            return self.nbadb.insert_player_gamelogs(gamelogs, table_name)
 
-        return team_gl
+        else:
+            return gamelogs
 
-    def cs_team_stats(self, season, date_from=None, date_to=None):
+    def cs_teamstats(self, season, date_from=None, date_to=None):
         '''
         Fetches leaguedashteamstats and updates cs_leaguedashteamstats table
 
@@ -217,16 +242,58 @@ class NBAComAgent(NBAAgent):
              teamstats (list): team dictionary of basic and advanced stats
         '''
 
+        # default is to get entire season through yesterday
+        yesterday = datetime.datetime.strftime(datetime.datetime.today() - timedelta(1), '%Y-%m-%d')
+
         if not date_from:
             date_from = self.nbas.season_start(season)
 
         if not date_to:
-            date_to = datetime.datetime.strftime(datetime.datetime.today() - timedelta(1), '%Y-%m-%d')
+            date_to = yesterday
 
-        ldts_base = self.parser.teamstats(self.scraper.teamstats(season, DateFrom=date_from, DateTo=date_to))
-        ldts_advanced = self.parser.teamstats(self.scraper.teamstats(season, DateFrom=date_from, DateTo=date_to, MeasureType='Advanced'))
+        ts_base = self.parser.teamstats(self.scraper.teamstats(season, DateFrom=date_from, DateTo=date_to))
+        ts_adv = self.parser.teamstats(self.scraper.teamstats(season, DateFrom=date_from, DateTo=date_to, MeasureType='Advanced'))
 
-        return ldts_base, ldts_advanced
+        # now need to merge base and advanced
+        ts_base = {t['TEAM_ID']: t for t in ts_base}
+
+        for ts_adv in ts_adv:
+            tid = ts_adv['TEAM_ID']
+            base = ts_base.get(tid)
+
+            if base:
+                base.update(ts_adv)
+                ts_base[tid] = base
+
+        self.nbadb.insert_teamstats(ts_base.values(), table_name='stats.cs_teamstats', game_date=yesterday)
+
+        return ts_base, ts_adv
+
+    def merge_boxes(self, b1, b2):
+        '''
+        Base and player advanced boxscores from same game
+
+        Arguments:
+            base_box(dict): base boxscore
+            adv_box(dict): advanced boxscore
+
+        Returns:
+            merged(dict) or None
+        '''
+
+        # test if player or team
+        if b1.has_key('PLAYER_ID'):
+            key = 'PLAYER_ID'
+
+        elif b2.has_key('TEAM_ID'):
+            key = 'TEAM_ID'
+
+        else:
+            raise ValueError('does not appear to be player or team box')
+
+        z = b1
+        z.update(b2)
+        return z
 
     def players_to_add(self):
         '''

@@ -1,9 +1,7 @@
-'''
-NBAComScraper
-
-'''
-
+from collections import defaultdict
+import json
 import logging
+import os
 
 from EWTScraper import EWTScraper
 
@@ -55,6 +53,92 @@ class NBAComScraper(EWTScraper):
         if not content: logging.error('could not get content from url: {0}'.format(base_url))
 
         return content
+
+    def boxscore_advanced(self, game_id):
+        '''
+        Boxscore from a single game
+
+        Arguments:
+            game_id: numeric identifier of game (has to be 10-digit, may need two leading zeroes)
+
+        Returns:
+            content: python data structure of json document
+        '''
+
+        base_url = 'http://stats.nba.com/stats/boxscoreadvancedv2?'
+
+        if len(str(game_id)) == 8:
+            game_id = '00' + str(game_id)
+
+        params = {
+            'GameID': game_id,
+            'StartPeriod': 1,
+            'EndPeriod': 10,
+            'StartRange': 0,
+            'EndRange': 28800,
+            'RangeType': 0
+        }
+
+        content = self.get_json(url=base_url, payload=params)
+
+        if not content: logging.error('could not get content from url: {0}'.format(base_url))
+
+        return content
+
+    def boxscores(self, gids, season, box_type='both', save=False, savedir=None):
+        '''
+        Download boxscores for all of the game_ids provided
+
+        Arguments:
+            gids(list): nba.com game_ids
+            season(str): in '2014-15' format
+            box_type(str): ['base', 'advanced', 'both']
+
+        Returns:
+            boxes(dict): keys are the game_id, value is a dictionary with 'base' and 'adv' keys, that value is parsed json resource
+
+        '''
+
+        boxes = defaultdict(dict)
+        box_types = ['base', 'advanced', 'both']
+
+        if box_type.lower() not in box_types:
+            raise ValueError('{0} is not a valid box_type'.format(box_type))
+
+        for gid in gids:
+
+            # transform to string with leading zeroes
+            if len(gid) == 8:
+                gid = '00{0}'.format(gid)
+
+            # each game id has a key for base, advanced, or both
+            if box_type in ('both', 'base'):
+                content = self.boxscore(gid, season)
+                boxes[gid]['base'] = content
+
+                if save and savedir:
+                    try:
+                        fname = os.path.join(savedir, '{0}_box.json'.format(gid))
+
+                        with open(fname, 'w') as outfile:
+                            json.dump(content, outfile)
+                    except:
+                        logging.exception('could not save {0} to file'.format(gid))
+
+            # each game id has a key for base and advanced box
+            if box_type in ('both', 'advanced'):
+                content = self.boxscore_advanced(gid)
+                boxes[gid]['advanced'] = content
+
+                if save and savedir:
+                    try:
+                        fname = os.path.join(savedir, '{0}_box_advanced.json'.format(gid))
+                        with open(fname, 'w') as outfile:
+                            json.dump(content, outfile)
+                    except:
+                        logging.exception('could not save {0} to file'.format(gid))
+
+        return boxes
 
     def one_player_gamelogs(self, player_id, season, **kwargs):
 
@@ -116,24 +200,23 @@ class NBAComScraper(EWTScraper):
         content = self.get_json(url=base_url, payload=params)
 
         if not content:
-            logging.error('could not get content: {0}'.format(url))
+            logging.error('could not get content: {0}'.format(base_url))
 
         return content
 
-    def players (self, season, **kwargs):
+    def players (self, season, cs_only=False):
 
         base_url = 'http://stats.nba.com/stats/commonallplayers?'
 
+        # default is all players, can specify only this season
         params = {
           'IsOnlyCurrentSeason': '0',
           'LeagueID': '00',
           'Season': season,
         }
 
-        # override defaults with **kwargs
-        for key, value in kwargs.iteritems():
-            if params.has_key(key):
-                params[key] = value
+        if cs_only:
+            params['IsOnlyCurrentSeason'] = 1
 
         content = self.get_json(url=base_url, payload=params)
 

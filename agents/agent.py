@@ -9,9 +9,9 @@ import os
 
 import pandas as pd
 
-from daily_fantasy import NBADailyFantasy
-from players import NBAPlayers
-from seasons import NBASeasons
+from nba.daily_fantasy import NBADailyFantasy
+from nba.players import NBAPlayers
+from nba.seasons import NBASeasons
 
 
 class NBAAgent(object):
@@ -23,7 +23,7 @@ class NBAAgent(object):
 
     '''
 
-    def __init__(self, **kwargs):
+    def __init__(self, db=True, safe=True):
         '''
 
         '''
@@ -33,18 +33,6 @@ class NBAAgent(object):
         self.nbap = NBAPlayers()
         self.nbas = NBASeasons()
         
-        # kwargs options
-
-        if 'safe' in kwargs:
-            self.safe = kwargs['safe']
-        else:
-            self.safe = True
-
-        if 'db' in kwargs:
-            self.nbadb = kwargs['db']
-        else:
-            self.nbadb = None
-
     def _read_csv (self, csv_fname, headers=True):
         '''
         Takes csv file and returns dictionary

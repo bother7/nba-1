@@ -93,14 +93,6 @@ class NBAComParser_test(unittest.TestCase):
         self.assertIsInstance(ps, list)
         self.assertEqual(ps[0].get('STATDATE'), statdate)
 
-    def test_scoreboard(self):
-        game_date = '2016-01-10'
-        content = self.nbs.scoreboard(game_date)
-        sb = self.nbp.scoreboard(content, game_date)
-        self.assertIsInstance(sb, dict)
-        self.assertIn('game_headers', sb, "scoreboard has game_headers")
-        self.assertIn('game_linescores', sb, "scoreboard has game_linescores")
-
     def test_season_gamelogs(self):
         team_content = self.nbs.season_gamelogs('2015-16', 'T')
         player_content = self.nbs.season_gamelogs('2015-16', 'P')

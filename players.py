@@ -184,6 +184,20 @@ class NBAPlayers(object):
         elif site.lower() == 'rg' or 'guru' in site.lower():
             return self._rg_name(player_name)
 
+    def recent_nbacom_players(self):
+        '''
+        Gets last couple of years of players from nba.com
+        Returns dictionary with key of name + team
+        '''
+        if not self.nbadb:
+            raise ValueError('missing_players requires a database connection')
+
+        sql = '''SELECT * FROM recent_nba_players'''
+
+        # can also return in dict format
+        # {'{0} {1}'.format(item['player_name'], item.get('team_code')):item for item in self.nbadb.select_dict(sql)}
+        return self.nbadb.select_dict(sql)
+
     def site_to_nbacom(self, site):
         '''
         Returns dictionary with name of player on site, value is list of name and id of player on nba.com

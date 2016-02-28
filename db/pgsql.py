@@ -182,7 +182,7 @@ class NBAPostgres(object):
 
         try:
             cursor.execute(sql)
-            return cursor.fetchall()
+            return [v[0] for v in cursor.fetchall()]
 
         except Exception as e:
             logging.error('sql statement failed: {0}'.format(sql))

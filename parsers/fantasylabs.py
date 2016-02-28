@@ -1,5 +1,3 @@
-import copy
-import json
 import logging
 
 
@@ -38,7 +36,6 @@ class FantasyLabsNBAParser(object):
 
         if 'omit' in kwargs:
             omit = kwargs['omit']
-
         else:
             omit = ['ErrorList', 'ReferenceKey', 'HomePrimaryPlayer', 'VisitorPrimaryPlayer', 'HomePitcherThrows', 'VisitorPitcherThrows','LoadWeather', 'StadiumDirection','StadiumStatus', 'StadiumType', 'PeriodDescription', 'IsExcluded' 'SportEventStagingId', 'IsChecked', 'IsPPD', 'AdjWindBearing', 'AdjWindBearingDisplay', 'SelectedTeam', 'IsWeatherLevel1', 'IsWeatherLevel2', 'IsWeatherLevel3', 'WeatherIcon', 'WeatherSummary', 'EventWeather', 'EventWeatherItems', 'UseWeather', 'IsExcluded']
 
@@ -73,27 +70,28 @@ class FantasyLabsNBAParser(object):
         omit_properties = ['IsLocked']
         omit_other = ['ErrorList', 'LineupCount', 'CurrentExposure', 'ExposureProbability', 'IsExposureLocked', 'Positions', 'PositionCount', 'Exposure', 'IsLiked', 'IsExcluded']
 
-        for md in content:
-            player = {'site': site, 'gamedate': gamedate}
+        if content:
+            for md in content:
+                player = {'site': site, 'gamedate': gamedate}
 
-            for k,v in md.items():
+                for k,v in md.items():
 
-                if k == 'Properties':
+                    if k == 'Properties':
 
-                    for k2,v2 in v.items():
+                        for k2,v2 in v.items():
 
-                        if not k2 in omit_properties:
-                            player[k2] = v2
+                            if not k2 in omit_properties:
+                                player[k2] = v2
 
-                elif not k in omit_other:
-                    player[k] = v
+                    elif not k in omit_other:
+                        player[k] = v
 
-            # test if already have this player
-            # use list where 0 index is DK, 1 FD, 2 Yahoo
-            pid = player.get('PlayerId', None)
-            pid_players = players.get(pid, [])
-            pid_players.append(player)
-            players[pid] = pid_players
+                # test if already have this player
+                # use list where 0 index is DK, 1 FD, 2 Yahoo
+                pid = player.get('PlayerId', None)
+                pid_players = players.get(pid, [])
+                pid_players.append(player)
+                players[pid] = pid_players
 
         if site:
             site_players = []

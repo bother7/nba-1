@@ -2,9 +2,9 @@ from collections import OrderedDict
 import datetime
 import logging
 
-from EWTFantasyTools import EWTFantasyTools
+from nba.dates import *
 
-class NBASeasons(EWTFantasyTools):
+class NBASeasons(object):
     '''
     Finds NBA season start and end dates
 
@@ -18,7 +18,6 @@ class NBASeasons(EWTFantasyTools):
 
     def __init__(self):
 
-        EWTFantasyTools.__init__(self)
         logging.getLogger(__name__).addHandler(logging.NullHandler())
 
         # see https://docs.python.org/2/library/collections.html#collections.OrderedDict
@@ -67,7 +66,7 @@ class NBASeasons(EWTFantasyTools):
         '''
         return self._seasons.get(key)
 
-    def season_dates(self, season, start_date=None, end_date=None, date_format=None):
+    def season_dates(self, season, start_date=None, end_date=None):
         '''
         Returns list of datetime objects for entire season or in custom date range
         '''
@@ -79,7 +78,7 @@ class NBASeasons(EWTFantasyTools):
         if not end_date:
             end_date = self.season_end(season)
 
-        return self.date_list(end_date, start_date, date_format)
+        return date_list(end_date, start_date)
 
     def season_start(self, key):
         '''

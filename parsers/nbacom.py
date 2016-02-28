@@ -54,7 +54,7 @@ class NBAComParser(object):
 
     def boxscore(self, content, game_date=None):
         '''
-        Represents single nba.com boxscore
+        Represents single nba.com boxscore (base)
 
         Arguments:
             content(dict): parsed json
@@ -113,6 +113,88 @@ class NBAComParser(object):
             starter_bench.append(sb)
 
         return players, teams, starter_bench
+
+    def boxscore_advanced(self, content, game_date=None):
+        '''
+        Represents single nba.com boxscore (advanced)
+
+        Arguments:
+            content(dict): parsed json
+            game_date(str): string representing date of game for boxscore
+
+        Returns:
+            players(list): dictionary of stats for each player
+            teams(list): dictionary of stats for each team
+            starter_bench(list): dictionary of stats broken down by starter/bench
+        '''
+
+        players = []
+        teams = []
+
+        for rs in content['resultSets']:
+            if rs.get('name') == 'PlayerStats':
+                player_results = rs
+            elif rs.get('name') == 'TeamStats':
+                team_results = rs
+
+        # add game_date for convenience
+        # standardize on TOV rather than TO; playerstats uses TOV
+        for row_set in player_results.get('rowSet'):
+            player = dict(zip(player_results.get('headers'), row_set))
+
+            if game_date:
+                player['GAME_DATE'] = game_date
+
+            if player.get('MIN'):
+                if ':' in player['MIN']:
+                    player['MIN_PLAYED'], player['SEC_PLAYED'] = player['MIN'].split(':')
+                else:
+                    player['MIN_PLAYED'] = player['MIN']
+
+            if 'TO' in player:
+                player['TOV'] = player.pop('TO')
+
+            players.append(player)
+
+        # add game_date for convenience
+        for result in team_results['rowSet']:
+            team = dict(zip(team_results['headers'], result))
+
+            if game_date:
+                team['GAME_DATE'] = game_date
+
+            teams.append(team)
+
+        return players, teams
+
+    def merge_boxscores(self, base_boxscore, advanced_boxscore):
+        '''
+        Base and player advanced boxscores from same game
+
+        Arguments:
+            base_boxscore(dict): base boxscore
+            advanced_boxscore(dict): advanced boxscore
+
+        Returns:
+            merged(dict) or None
+        '''
+
+        # test if player or team
+        if base_boxscore[0].has_key('PLAYER_ID'):
+            key = 'PLAYER_ID'
+
+        elif base_boxscore[0].has_key('TEAM_ID'):
+            key = 'TEAM_ID'
+
+        else:
+            raise ValueError('does not appear to be player or team box')
+        
+        basedict = {item.get(key): item for item in base_boxscore}
+        advdict = {item.get(key): item for item in advanced_boxscore}
+
+        z = basedict
+        z.update(advdict)
+        return z
 
     def one_player_gamelogs(self, content):
         '''
