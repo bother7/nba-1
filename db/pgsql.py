@@ -17,7 +17,7 @@ class NBAPostgres(object):
 
         '''
 
-        logging.getLogger(__name__).addHandler(logging.NullHandler())
+        self.logger = logging.getLogger(__name__)
 
         if 'user' in kwargs:
             self.user = kwargs['user']
@@ -73,7 +73,7 @@ class NBAPostgres(object):
         cursor = self.conn.cursor()
         placeholders = ', '.join(['%s'] * len(dicts_to_insert[0]))
         columns = ', '.join(dicts_to_insert[0].keys())
-        sql = 'INSERT INTO %s ( %s ) VALUES ( %s )' % (table_name, columns, placeholders)
+        sql = 'INSERT INTO %s ( %s ) VALUES ( %s ) ON CONFLICT DO NOTHING' % (table_name, columns, placeholders)
 
         try:
             for dict_to_insert in dicts_to_insert:
@@ -161,7 +161,8 @@ class NBAPostgres(object):
             return cursor.fetchall()
 
         except Exception as e:
-            logging.error('sql statement failed: {0}'.format(sql))
+            #logging.error('sql statement failed: {0}'.format(sql))
+            logging.exception(e.message)
             return None
 
         finally:

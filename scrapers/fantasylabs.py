@@ -1,5 +1,7 @@
 import logging
 
+import browsercookie
+
 from EWTScraper import EWTScraper
 from nba.dates import *
 
@@ -21,7 +23,7 @@ class FantasyLabsNBAScraper(EWTScraper):
     Most of this code is identical with NFL
     '''
 
-    def __init__(self, use_cache=0, **kwargs):
+    def __init__(self, use_cache=1, **kwargs):
 
         '''
         EWTScraper parameters: 'expire_time', 'headers', 'use_cache'
@@ -30,7 +32,7 @@ class FantasyLabsNBAScraper(EWTScraper):
         # see http://stackoverflow.com/questions/8134444
         EWTScraper.__init__(self, use_cache=use_cache, **kwargs)
 
-        logging.getLogger(__name__).addHandler(logging.NullHandler())
+        self.logger = logging.getLogger(__name__)
 
         if 'default_model' in kwargs:
             self.default_model = kwargs['default_model']
@@ -140,7 +142,8 @@ class FantasyLabsNBAScraper(EWTScraper):
             logging.debug('scraper.model: model_day is {0}'.format(model_day))
 
         #return self.get_json(url=url.format(model_day))
-        return self.get_json(url=url.format(model_day))
+        cj = browsercookie.chrome()
+        return self.get_json(url=url.format(model_day), cookies=cj)
 
     def models(self, start_date, end_date, model_name=None):
         '''

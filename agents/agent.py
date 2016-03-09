@@ -9,7 +9,6 @@ import os
 
 import pandas as pd
 
-from nba.daily_fantasy import NBADailyFantasy
 from nba.players import NBAPlayers
 from nba.seasons import NBASeasons
 
@@ -29,7 +28,6 @@ class NBAAgent(object):
         '''
         logging.getLogger(__name__).addHandler(logging.NullHandler())
 
-        self.dfs = NBADailyFantasy()
         self.nbap = NBAPlayers()
         self.nbas = NBASeasons()
         

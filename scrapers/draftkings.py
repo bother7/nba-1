@@ -3,13 +3,15 @@ import os
 
 class DraftKingsNBAScraper:
     '''
-    s = DraftKingsNBAScraper()
-    s.contest_fn = (os.path.join(os.path.dirname(os.path.realpath(__file__)), 'results.csv'))
-    mm = s.contest_data(s.contest_fn)
-    while True:
-        line=mm.readline()
-        if line == '': break
-        print line.strip()
+
+    Examples:
+        s = DraftKingsNBAScraper()
+        s.contest_fn = (os.path.join(os.path.dirname(os.path.realpath(__file__)), 'results.csv'))
+        mm = s.contest_data(s.contest_fn)
+        while True:
+            line=mm.readline()
+            if line == '': break
+            print line.strip()
     '''
 
     def contest_data(self, fname):
@@ -24,7 +26,6 @@ class DraftKingsNBAScraper:
         '''
 
         if os.path.exists(fname):
-            lines = []
 
             with open(fname, 'r+b') as f:
                 return mmap.mmap(f.fileno(), 0, prot=mmap.PROT_READ)
@@ -33,8 +34,6 @@ class DraftKingsNBAScraper:
             raise ValueError('contest_data(fname): fname must exist')
 
     def salary_data(self, fname):
-
-        lines = []
 
         if os.path.exists(fname):
             with open(fname, 'r') as f:

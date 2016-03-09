@@ -1,7 +1,7 @@
 from __future__ import division
 import datetime
+import json
 import logging
-import pprint
 
 import pandas as pd
 
@@ -35,6 +35,7 @@ class FantasyLabsNBAAgent(NBAAgent):
         TODO: allow filenames, have different calculations
         '''
         frame = pd.DataFrame(data)
+        getcols = ['name', 'position', 'salary', 'projection']
         players = frame.loc[:,getcols].sort_values('projection', ascending=False)
         players.to_csv('players-upside.csv', index=False)
 
@@ -43,6 +44,9 @@ class FantasyLabsNBAAgent(NBAAgent):
         players.to_csv('players-floor.csv', index=False)
 
     def day_models(self):
+        '''
+        This seems like a duplicate
+        '''
         model = self.scraper.model()
         players = self.parser.model(model, 'dk')
         savecols = [u'Player_Name', u'TeamName', u'FirstPosition', u'MinutesProj', u'Salary', u'AvgPts', u'Floor', u'Ceiling']
@@ -65,15 +69,14 @@ class FantasyLabsNBAAgent(NBAAgent):
             if not f.get('projection', None):
                 f['projection'] = 0
 
-    def today_models(self):
+    def dk_tourney_model(self, players, weights):
+        '''
+        Generates list of dictionaries with tournament projection
+        Need to work in relative weights of factors
+        '''
 
         today_players = []
-        today = datetime.datetime.strftime(datetime.datetime.today(), '%Y-%m-%d')
-
-        model = self.scraper.model(model_day=today, model_name='default')
-        players = self.parser.model(content=model, site='dk', gamedate=today)
         savecols = [u'Player_Name', u'TeamName', u'FirstPosition', u'MinutesProj', u'Salary', u'AvgPts', u'Floor', u'Ceiling']
-        getcols = ['name', 'position', 'salary', 'projection']
         filtered = [{k.lower():v for k,v in p.items() if k in savecols} for p in players]
 
 
@@ -86,16 +89,43 @@ class FantasyLabsNBAAgent(NBAAgent):
             if not floor >= 0: floor = 0
             if not avgpts >= 0: avgpts = 0
 
-            f['projection'] = (ceiling * .75) + (floor * .1) + (avgpts * .15)
+            f['tourney_projection'] = (ceiling * .75) + (floor * .1) + (avgpts * .15)
             f['name'] = f['player_name'].replace("'","").strip()
             f['position'] = f['firstposition']
 
             if not f.get('projection', None):
                 f['projection'] = 0
-        
+
             today_players.append(f)
 
-        return today_players
+
+    def past_day_models(self, d, fn=None):
+
+        if fn:
+            with open(fn, 'r') as infile:
+                model = json.load(infile)
+
+        else:
+            model = self.scraper.model(model_day=d, model_name='default')
+
+        players = self.parser.model(content=model, site='dk', gamedate=d)
+
+        return players
+
+    def today_models(self, fn=None, model_name='default'):
+
+        today = datetime.datetime.strftime(datetime.datetime.today(), '%Y-%m-%d')
+
+        if fn:
+            with open(fn, 'r') as infile:
+                model = json.load(infile)
+
+        else:
+            model = self.scraper.model(model_day=today, model_name=model_name)
+
+        players = self.parser.model(content=model, site='dk', gamedate=today)
+
+        return players
         
 if __name__ == '__main__':
     pass

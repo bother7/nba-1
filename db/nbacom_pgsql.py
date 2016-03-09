@@ -2,21 +2,18 @@ import datetime
 import logging
 
 from nba.db import pgsql
-from daily_fantasy import dk_points, fd_points
+from nba.daily_fantasy import dk_points, fd_points
 
 class NBAComPg(pgsql.NBAPostgres):
     '''
 
     '''
 
-
     def __init__(self, **kwargs):
-
-        logging.getLogger(__name__).addHandler(logging.NullHandler())
 
         # see http://stackoverflow.com/questions/8134444
         pgsql.NBAPostgres.__init__(self, **kwargs)
-
+        self.logger = logging.getLogger(__name__)
 
     def insert_boxscores(self, player_boxscores, team_boxscores, player_table_name, team_table_name):
 
@@ -25,14 +22,14 @@ class NBAComPg(pgsql.NBAPostgres):
         cleaned_teams = []
 
         for player in player_boxscores:
-            clean_player = {k.lower():v for k,v in player.iteritems() if not k in omit}
+            clean_player = {k.lower():v for k,v in player.iteritems() if k not in omit}
             clean_player['tov'] = clean_player['to']
             clean_player.pop('to')
             clean_player.pop('team_abbreviation')
             cleaned_players.append(clean_player)
 
         for team in team_boxscores:
-            clean_team = {k.lower():v for k,v in team.iteritems() if not k in omit}
+            clean_team = {k.lower():v for k,v in team.iteritems() if k not in omit}
             clean_team['tov'] = clean_team['to']
             clean_team.pop('to')
             clean_team['team_code'] = clean_team['team_abbreviation']
@@ -74,6 +71,9 @@ class NBAComPg(pgsql.NBAPostgres):
         cleaned_items = []
         omit = ['VIDEO_AVAILABLE', 'TEAM_NAME']
 
+        if 'cs_' in table_name:
+            omit.append('SEASON_ID')
+
         # figure out the date filter
         # postgres will return object unless use to_char function
         # then need to convert it to datetime object for comparison
@@ -90,35 +90,33 @@ class NBAComPg(pgsql.NBAPostgres):
                 continue
 
             elif last_gamedate < datetime.datetime.strptime(item['GAME_DATE'], '%Y-%m-%d'):
-                cleaned_item = {k.lower().strip(): v for k,v in item.iteritems() if not k in omit}
+                cleaned_item = {k.lower().strip(): v for k,v in item.iteritems() if k.upper() not in omit}
+                cleaned_item['dk_points'] = dk_points(item)
                 cleaned_item['dk_points'] = dk_points(item)
                 cleaned_item['fd_points'] = fd_points(item)
 
-                # change wl (char) to is_win (boolean)
-                if item.get('wl', None) == 'W':
-                    item['is_win'] = True
-                    item.pop('wl')
+                # convert wl to is_win (boolean)
+                if cleaned_item.get('wl') == 'W':
+                    cleaned_item['is_win'] = True
+
                 else:
-                    item['is_win'] = False
-                    item.pop('wl')
+                    cleaned_item['is_win'] = False
+
+                cleaned_item.pop('wl', None)
 
                 # change team_abbreviation to team_code
-                if item.get('team_abbreviation', None):
-                    item['team_code'] = item['team_abbreviation']
-                    item.pop('team_abbreviation')
-                else:
-                    item.pop('team_abbreviation')
-
-                # don't need season_id for cs tables
-                item.pop('season_id')
+                if 'team_abbreviation' in cleaned_item:
+                    cleaned_item['team_code'] = cleaned_item['team_abbreviation']
+                    cleaned_item.pop('team_abbreviation')
 
                 cleaned_items.append(cleaned_item)
 
             else:
-                logging.debug('game is already in db: {0}'.format(item.get('GAME_DATE')))
+                self.logger.debug('game is already in db: {0}'.format(item.get('GAME_DATE')))
 
-        ## add cleaned items to database
-        self.insert_dicts(cleaned_items, table_name)
+        # add cleaned items to database
+        if cleaned_items:
+            self.insert_dicts(cleaned_items, table_name)
 
         return cleaned_items
 
@@ -134,25 +132,36 @@ class NBAComPg(pgsql.NBAPostgres):
         
         '''
 
+        # get key-value pair of existing records
+        q = '''SELECT player_id FROM {0} WHERE game_date = '{1}';'''.format(table_name, game_date)
+        players_yesterday = self.select_list(q)
+
         # clean data for insertion
         omit = ['CFID', 'CFPARAMS', 'COMMENT', 'FG3_PCT', 'FG_PCT', 'FT_PCT', 'FGA_PG', 'FGM_PG', 'FTA_PG' 'TEAM_CITY', 'TEAM_NAME']
         cleaned_players = []
 
         for player in playerstats:
-            clean_player = {k.lower():v for k,v in player.iteritems() if not k in omit}
 
-            if clean_player.get('to'):
-                clean_player['tov'] = clean_player['to']
-                clean_player.pop('to')
+            if player.get('PLAYER_ID') in players_yesterday:
+                self.logger.debug('player_id in players_yesterday: {0}'.format(player.get('PLAYER_ID')))
+                continue
 
-            if clean_player.get('team_abbreviation'):
-                clean_player['team_code'] = clean_player['team_abbreviation']
-                clean_player.pop('team_abbreviation')
+            else:
+                clean_player = {k.lower(): v for k,v in player.iteritems() if k not in omit}
 
-            clean_player['game_date'] = game_date
-            cleaned_players.append(clean_player)
+                if 'to' in clean_player:
+                    clean_player['tov'] = clean_player['to']
+                    clean_player.pop('to', None)
 
-        self.insert_dicts(cleaned_players, table_name)
+                if 'team_abbreviation' in clean_player:
+                    clean_player['team_code'] = clean_player['team_abbreviation']
+                    clean_player.pop('team_abbreviation', None)
+
+                clean_player['game_date'] = game_date
+                cleaned_players.append(clean_player)
+
+        if cleaned_players:
+            self.insert_dicts(cleaned_players, table_name)
 
         return cleaned_players
 
@@ -179,32 +188,38 @@ class NBAComPg(pgsql.NBAPostgres):
         # then need to convert it to datetime object for comparison
         today = datetime.datetime.strftime(datetime.datetime.today(), '%Y-%m-%d')
         q = """SELECT to_char(max(game_date), 'YYYYMMDD') from stats.cs_team_gamelogs"""
-        last_gamedate = datetime.datetime.strptime(self.select_scalar(q), '%Y%m%d')
+        last_gamedate = self.select_scalar(q)
+        self.logger.debug(today, last_gamedate)
 
         # filter all_gamelogs by date, only want those newer than latest gamelog in table but don't want today's gamelogs
         # have to convert to datetime object for comparison
         for item in stats:
+            game_date = item.get('GAME_DATE')
+            self.logger.debug('item game date is {0}'.format(game_date))
 
-            if item.get('GAME_DATE') == today:
+            if  game_date == today:
+                self.logger.debug('gamedate today, skip')
                 continue
 
-            elif last_gamedate < datetime.datetime.strptime(item.get('GAME_DATE'), '%Y-%m-%d'):
-                cleaned_item = {k.lower():v for k,v in item.iteritems() if not k.lower() in omit}
+            elif datetime.datetime.strptime(last_gamedate, '%Y%m%d') < datetime.datetime.strptime(item.get('GAME_DATE'), '%Y-%m-%d'):
+                self.logger.debug('gamedate meets filter, process it')
+                cleaned_item = {k.lower(): v for k,v in item.iteritems() if k.lower() not in omit}
 
                 if cleaned_item.get('team_abbreviation'):
                     cleaned_item['team_code'] = cleaned_item['team_abbreviation']
-                    cleaned_item.pop('team_abbreviation')
+                    cleaned_item.pop('team_abbreviation', None)
 
                 if cleaned_item.get('min'):
                     cleaned_item['minutes'] = cleaned_item['min']
-                    cleaned_item.pop('min')
+                    cleaned_item.pop('min', None)
 
                 cleaned_items.append(cleaned_item)
 
             else:
-                logging.debug('game skipped: {0}'.format(item.get('GAME_DATE')))
+                self.logger.debug('game skipped: {0}'.format(item.get('GAME_DATE')))
 
-        self.insert_dicts(cleaned_items, table_name)
+        if cleaned_items:
+            self.insert_dicts(cleaned_items, table_name)
 
         return cleaned_items
 
@@ -226,15 +241,15 @@ class NBAComPg(pgsql.NBAPostgres):
         cleaned_items = []
 
         for item in stats:
-            clean_item = {k.lower():v for k,v in item.iteritems() if not k in omit}
+            clean_item = {k.lower(): v for k,v in item.iteritems() if k not in omit}
 
             if clean_item.get('to'):
                 clean_item['tov'] = clean_item['to']
-                clean_item.pop('to')
+                clean_item.pop('to', None)
 
             if clean_item.get('team_abbreviation'):
                 clean_item['team_code'] = clean_item['team_abbreviation']
-                clean_item.pop('team_abbreviation')
+                clean_item.pop('team_abbreviation', None)
 
             clean_item['game_date'] = game_date
             cleaned_items.append(clean_item)

@@ -1,7 +1,5 @@
-from collections import defaultdict
 import copy
 import datetime
-from datetime import date
 from datetime import timedelta
 import logging
 
@@ -29,7 +27,7 @@ class NBAComAgent(NBAAgent):
 
     def __init__(self, db=True, safe=True):
         NBAAgent.__init__(self)
-        logging.getLogger(__name__).addHandler(logging.NullHandler())
+        self.logger = logging.getLogger(__name__)
         self.scraper = NBAComScraper()
         self.parser = NBAComParser()
         self.safe = safe
@@ -135,9 +133,10 @@ class NBAComAgent(NBAAgent):
             to_insert.append(pti)
 
         if self.nbadb:
-            # step five: update table
             if to_insert:
                 self.nbadb.insert_dicts(to_insert, 'stats.playerteams')
+
+        return to_insert
 
     def cs_player_gamelogs(self, season, date_from=None, date_to=None):
         '''
@@ -158,7 +157,7 @@ class NBAComAgent(NBAAgent):
             if self.safe:
                 self.nbadb.postgres_backup_table(self.nbadb.database, table_name)
     
-            self.nbadb.insert_player_gamelogs(gamelogs, table_name)
+            gamelogs = self.nbadb.insert_player_gamelogs(gamelogs, table_name)
             self.nbadb.update_positions(table_name)
             self.nbadb.update_teamids(table_name)
 
@@ -200,9 +199,7 @@ class NBAComAgent(NBAAgent):
                 base.update(ps_adv)
                 ps_base[pid] = base       
 
-        self.nbadb.insert_playerstats(ps_base.values(), table_name='stats.cs_playerstats', game_date=yesterday)
-
-        return ps_base.values()
+        return self.nbadb.insert_playerstats(ps_base.values(), table_name='stats.cs_playerstats', game_date=yesterday)
 
     def cs_team_gamelogs(self, season, date_from=None, date_to=None):
         '''
@@ -216,6 +213,7 @@ class NBAComAgent(NBAAgent):
         '''
 
         gamelogs = self.parser.season_gamelogs(self.scraper.season_gamelogs(season='2015-16', player_or_team='T'), 'T')
+        self.logger.debug('there are {0} team gamelogs'.format(len(gamelogs)))
 
         if self.nbadb:
 
@@ -224,10 +222,10 @@ class NBAComAgent(NBAAgent):
             if self.safe:
                 self.nbadb.postgres_backup_table(self.nbadb.database, table_name)
 
-            return self.nbadb.insert_player_gamelogs(gamelogs, table_name)
+            gamelogs = self.nbadb.insert_team_gamelogs(gamelogs, table_name)
+            self.logger.debug('there are now {0} team gamelogs'.format(len(gamelogs)))
 
-        else:
-            return gamelogs
+        return gamelogs
 
     def cs_teamstats(self, season, date_from=None, date_to=None):
         '''

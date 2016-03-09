@@ -47,6 +47,7 @@ class FantasyLabsNBAParser(object):
             
         return games
 
+
     def model(self, content, site, gamedate):
         '''
         Parses json associated with model (player stats / projections)

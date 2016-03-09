@@ -1,8 +1,6 @@
 import logging
-import os
 
 from nba.db import pgsql
-
 
 class FantasyLabsNBAPg(pgsql.NBAPostgres):
     '''
@@ -16,16 +14,19 @@ class FantasyLabsNBAPg(pgsql.NBAPostgres):
 
         # see http://stackoverflow.com/questions/8134444
         pgsql.NBAPostgres.__init__(self, **kwargs)
-        logging.getLogger(__name__).addHandler(logging.NullHandler())
+        self.logger = logging.getLogger(__name__)
 
-    def insert_games(self, games):
+    def insert_models(self, models):
         '''
         TODO: code this out
         '''
-        
-        for game in games:
-            pass
+        pass
 
+    def insert_salaries(self, models):
+        '''
+        TODO: code this out
+        '''
+        pass
 
 if __name__ == '__main__':
     pass

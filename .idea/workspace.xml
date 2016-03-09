@@ -2,31 +2,18 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="1ee2a994-d26c-4ac2-85e0-1b034379c66d" name="Default" comment="">
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/dates.py" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/db/nbacom_pgsql.py" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/parsers/draftkings_nba.py" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/parsers/espn_nba.py" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/parsers/fantasylabs_nba.py" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/parsers/pinnacle_nba.py" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/parsers/rotoguru_nba.py" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/scrapers/draftkings_nba.py" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/scrapers/espn_nba.py" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/scrapers/fantasylabs_nba.py" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/scrapers/pinnacle_nba.py" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/scrapers/rotoguru_nba.py" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/wxapp.py" afterPath="" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/NBAComAgent.ipynb" afterPath="$PROJECT_DIR$/NBAComAgent.ipynb" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/agents/agent.py" afterPath="$PROJECT_DIR$/agents/agent.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/agents/fantasylabs.py" afterPath="$PROJECT_DIR$/agents/fantasylabs.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/agents/nbacom.py" afterPath="$PROJECT_DIR$/agents/nbacom.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/daily_fantasy.py" afterPath="$PROJECT_DIR$/daily_fantasy.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/db/fantasylabs_nba_pgsql.py" afterPath="$PROJECT_DIR$/db/fantasylabs_nba_pgsql.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/db/nbacom_pgsql.py" afterPath="$PROJECT_DIR$/db/nbacom_pgsql.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/db/pgsql.py" afterPath="$PROJECT_DIR$/db/pgsql.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/parsers/nbacom.py" afterPath="$PROJECT_DIR$/parsers/nbacom.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/players.py" afterPath="$PROJECT_DIR$/players.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/scrapers/nbacom.py" afterPath="$PROJECT_DIR$/scrapers/nbacom.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/seasons.py" afterPath="$PROJECT_DIR$/seasons.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/tests/test_nbacomparser.py" afterPath="$PROJECT_DIR$/tests/test_nbacomparser.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/tests/test_nbacomscraper.py" afterPath="$PROJECT_DIR$/tests/test_nbacomscraper.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/parsers/fantasylabs.py" afterPath="$PROJECT_DIR$/parsers/fantasylabs.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/scrapers/draftkings.py" afterPath="$PROJECT_DIR$/scrapers/draftkings.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/scrapers/fantasylabs.py" afterPath="$PROJECT_DIR$/scrapers/fantasylabs.py" />
     </list>
     <ignored path="nba.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -46,7 +33,7 @@
     <favorites_list name="nba" />
   </component>
   <component name="FileEditorManager">
-    <leaf />
+    <leaf SIDE_TABS_SIZE_LIMIT_KEY="450" />
   </component>
   <component name="FileTemplateManagerImpl">
     <option name="RECENT_TEMPLATES">
@@ -82,7 +69,6 @@
         <option value="$PROJECT_DIR$/RotoGuruNBAParser.py" />
         <option value="$PROJECT_DIR$/README.md" />
         <option value="$PROJECT_DIR$/agents/rotoguru.py" />
-        <option value="$PROJECT_DIR$/daily_fantasy.py" />
         <option value="$PROJECT_DIR$/../EWTFantasyTools.py" />
         <option value="$PROJECT_DIR$/agents/agent.py" />
         <option value="$PROJECT_DIR$/players.py" />
@@ -92,22 +78,27 @@
         <option value="$PROJECT_DIR$/tests/test_nbacomparser.py" />
         <option value="$PROJECT_DIR$/tests/test_nbacomscraper.py" />
         <option value="$PROJECT_DIR$/scrapers/fantasylabs_nba.py" />
-        <option value="$PROJECT_DIR$/db/fantasylabs_nba_pgsql.py" />
         <option value="$PROJECT_DIR$/wxapp.py" />
-        <option value="$PROJECT_DIR$/../EWTScraper/EWTScraper.py" />
-        <option value="$PROJECT_DIR$/db/pgsql.py" />
         <option value="$PROJECT_DIR$/scrapers/nbacom.py" />
         <option value="$PROJECT_DIR$/parsers/nbacom.py" />
         <option value="$PROJECT_DIR$/db/nbacom_pgsql.py" />
+        <option value="$PROJECT_DIR$/parsers/fantasylabs.py" />
         <option value="$PROJECT_DIR$/agents/nbacom.py" />
+        <option value="$PROJECT_DIR$/daily_fantasy.py" />
+        <option value="$PROJECT_DIR$/db/fantasylabs_nba_pgsql.py" />
+        <option value="$PROJECT_DIR$/scrapers/fantasylabs.py" />
+        <option value="$PROJECT_DIR$/agents/fantasylabs.py" />
+        <option value="$PROJECT_DIR$/../EWTScraper/EWTScraper.py" />
+        <option value="$PROJECT_DIR$/db/pgsql.py" />
+        <option value="$PROJECT_DIR$/scrapers/draftkings.py" />
       </list>
     </option>
   </component>
   <component name="ProjectFrameBounds">
     <option name="x" value="65" />
-    <option name="y" value="24" />
+    <option name="y" value="-4" />
     <option name="width" value="1855" />
-    <option name="height" value="1056" />
+    <option name="height" value="1084" />
   </component>
   <component name="ProjectLevelVcsManager" settingsEditedManually="false">
     <OptionsSetting value="true" id="Add" />
@@ -154,28 +145,7 @@
       <recent name="$PROJECT_DIR$/db" />
     </key>
   </component>
-  <component name="RunManager" selected="Python tests.Nosetests in test_nbacomscraper">
-    <configuration default="false" name="Nosetest NBAComScraper_test.test_team_gamelogs" type="tests" factoryName="Nosetests" temporary="true" nameIsGenerated="true">
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs />
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/tests" />
-      <option name="IS_MODULE_SDK" value="true" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <module name="nba" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/tests/test_nbacomscraper.py" />
-      <option name="CLASS_NAME" value="NBAComScraper_test" />
-      <option name="METHOD_NAME" value="test_team_gamelogs" />
-      <option name="FOLDER_NAME" value="" />
-      <option name="TEST_TYPE" value="TEST_METHOD" />
-      <option name="PATTERN" value="" />
-      <option name="USE_PATTERN" value="false" />
-      <option name="PARAMS" value="" />
-      <option name="USE_PARAM" value="false" />
-      <method />
-    </configuration>
+  <component name="RunManager" selected="Python.draftkings">
     <configuration default="false" name="Nosetests in NBAComParser_test" type="tests" factoryName="Nosetests" temporary="true" nameIsGenerated="true">
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
@@ -218,23 +188,6 @@
       <option name="USE_PARAM" value="false" />
       <method />
     </configuration>
-    <configuration default="false" name="nbacom" type="PythonConfigurationType" factoryName="Python" temporary="true">
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/agents" />
-      <option name="IS_MODULE_SDK" value="true" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <module name="nba" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/agents/nbacom.py" />
-      <option name="PARAMETERS" value="" />
-      <option name="SHOW_COMMAND_LINE" value="false" />
-      <method />
-    </configuration>
     <configuration default="false" name="test_nbacomparser" type="PythonConfigurationType" factoryName="Python" temporary="true">
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
@@ -248,6 +201,40 @@
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <module name="nba" />
       <option name="SCRIPT_NAME" value="$PROJECT_DIR$/tests/test_nbacomparser.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <method />
+    </configuration>
+    <configuration default="false" name="nbacom_pgsql" type="PythonConfigurationType" factoryName="Python" temporary="true">
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/db" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <module name="nba" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/db/nbacom_pgsql.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <method />
+    </configuration>
+    <configuration default="false" name="draftkings" type="PythonConfigurationType" factoryName="Python" temporary="true">
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/scrapers" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <module name="nba" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/scrapers/draftkings.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <method />
@@ -393,19 +380,19 @@
     </configuration>
     <list size="6">
       <item index="0" class="java.lang.String" itemvalue="Python.test_nbacomscraper" />
-      <item index="1" class="java.lang.String" itemvalue="Python tests.Nosetest NBAComScraper_test.test_team_gamelogs" />
-      <item index="2" class="java.lang.String" itemvalue="Python tests.Nosetests in NBAComParser_test" />
-      <item index="3" class="java.lang.String" itemvalue="Python tests.Nosetests in test_nbacomscraper" />
-      <item index="4" class="java.lang.String" itemvalue="Python.nbacom" />
-      <item index="5" class="java.lang.String" itemvalue="Python.test_nbacomparser" />
+      <item index="1" class="java.lang.String" itemvalue="Python tests.Nosetests in NBAComParser_test" />
+      <item index="2" class="java.lang.String" itemvalue="Python tests.Nosetests in test_nbacomscraper" />
+      <item index="3" class="java.lang.String" itemvalue="Python.test_nbacomparser" />
+      <item index="4" class="java.lang.String" itemvalue="Python.nbacom_pgsql" />
+      <item index="5" class="java.lang.String" itemvalue="Python.draftkings" />
     </list>
     <recent_temporary>
       <list size="5">
-        <item index="0" class="java.lang.String" itemvalue="Python tests.Nosetests in test_nbacomscraper" />
-        <item index="1" class="java.lang.String" itemvalue="Python tests.Nosetests in NBAComParser_test" />
-        <item index="2" class="java.lang.String" itemvalue="Python.test_nbacomparser" />
-        <item index="3" class="java.lang.String" itemvalue="Python tests.Nosetest NBAComScraper_test.test_team_gamelogs" />
-        <item index="4" class="java.lang.String" itemvalue="Python.nbacom" />
+        <item index="0" class="java.lang.String" itemvalue="Python.draftkings" />
+        <item index="1" class="java.lang.String" itemvalue="Python.nbacom_pgsql" />
+        <item index="2" class="java.lang.String" itemvalue="Python tests.Nosetests in test_nbacomscraper" />
+        <item index="3" class="java.lang.String" itemvalue="Python tests.Nosetests in NBAComParser_test" />
+        <item index="4" class="java.lang.String" itemvalue="Python.test_nbacomparser" />
       </list>
     </recent_temporary>
   </component>
@@ -455,16 +442,15 @@
     </history-entry>
   </component>
   <component name="ToolWindowManager">
-    <frame x="65" y="24" width="1855" height="1056" extended-state="6" />
+    <frame x="65" y="-4" width="1855" height="1084" extended-state="6" />
     <editor active="false" />
     <layout>
       <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.24959569" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
-      <window_info id="Hierarchy" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.24958217" sideWeight="0.5" order="2" side_tool="false" content_ui="combo" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="true" content_ui="tabs" />
       <window_info id="Python Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
-      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4180791" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
+      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.26666668" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
@@ -473,6 +459,7 @@
       <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Commander" active="false" anchor="right" auto_hide="false" internal_type="SLIDING" type="SLIDING" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Inspection" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
+      <window_info id="Hierarchy" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.24958217" sideWeight="0.5" order="2" side_tool="false" content_ui="combo" />
       <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32861805" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
     </layout>
@@ -517,13 +504,6 @@
     <watches-manager />
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/players.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0">
-          <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/agents/nbacom.py">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
@@ -740,13 +720,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/daily_fantasy.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.060818713">
-          <caret line="2" column="0" selection-start-line="2" selection-start-column="0" selection-end-line="2" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/../EWTFantasyTools.py">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.93918127">
@@ -775,27 +748,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/NBAComAgent.ipynb">
-      <provider selected="true" editor-type-id="ipnb-editor">
-        <state>
-          <selected id="4" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/seasons.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.12163743">
-          <caret line="4" column="0" selection-start-line="4" selection-start-column="0" selection-end-line="4" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/dates.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.030409357">
-          <caret line="34" column="0" selection-start-line="34" selection-start-column="0" selection-end-line="34" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/tests/test_nbacomscraper.py">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.21621622">
@@ -810,14 +762,84 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/db/pgsql.py">
+    <entry file="file://$PROJECT_DIR$/agents/nbacom.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.5169591">
-          <caret line="184" column="52" selection-start-line="184" selection-start-column="52" selection-end-line="184" selection-end-column="52" />
+        <state vertical-scroll-proportion="0.72982454">
+          <caret line="107" column="0" selection-start-line="107" selection-start-column="0" selection-end-line="107" selection-end-column="0" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/parsers/fantasylabs.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.030409357">
+          <caret line="49" column="0" selection-start-line="49" selection-start-column="0" selection-end-line="49" selection-end-column="0" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/daily_fantasy.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.3458283">
+          <caret line="11" column="0" selection-start-line="11" selection-start-column="0" selection-end-line="11" selection-end-column="0" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/parsers/nbacom.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.031438936">
+          <caret line="344" column="0" selection-start-line="344" selection-start-column="0" selection-end-line="344" selection-end-column="0" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/db/fantasylabs_nba_pgsql.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0">
+          <caret line="28" column="12" selection-start-line="28" selection-start-column="12" selection-end-line="28" selection-end-column="12" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/db/nbacom_pgsql.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0">
+          <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/agents/fantasylabs.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.6994152">
+          <caret line="124" column="0" selection-start-line="124" selection-start-column="0" selection-end-line="124" selection-end-column="0" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/../EWTScraper/EWTScraper.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.93918127">
+          <caret line="111" column="8" selection-start-line="111" selection-start-column="8" selection-end-line="111" selection-end-column="8" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/scrapers/fantasylabs.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.24327485">
+          <caret line="146" column="0" selection-start-line="146" selection-start-column="0" selection-end-line="146" selection-end-column="0" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/NBAComAgent.ipynb">
+      <provider selected="true" editor-type-id="ipnb-editor">
+        <state>
+          <selected id="2" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/dates.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.2128655">
+          <caret line="7" column="0" selection-start-line="7" selection-start-column="0" selection-end-line="7" selection-end-column="0" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/seasons.py">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
           <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
@@ -826,42 +848,25 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/scrapers/nbacom.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.54385966">
-          <caret line="76" column="0" selection-start-line="76" selection-start-column="0" selection-end-line="76" selection-end-column="0" />
+        <state vertical-scroll-proportion="0.5169591">
+          <caret line="261" column="0" selection-start-line="261" selection-start-column="0" selection-end-line="261" selection-end-column="0" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/scrapers/draftkings.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.17508814">
+          <caret line="21" column="0" selection-start-line="21" selection-start-column="0" selection-end-line="21" selection-end-column="0" />
           <folding>
-            <element signature="e#0#35#0" expanded="false" />
+            <element signature="e#0#11#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/parsers/nbacom.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.30409357">
-          <caret line="152" column="0" selection-start-line="152" selection-start-column="0" selection-end-line="152" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/db/fantasylabs_nba_pgsql.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0">
-          <caret line="20" column="20" selection-start-line="20" selection-start-column="8" selection-end-line="20" selection-end-column="20" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/db/nbacom_pgsql.py">
+    <entry file="file://$PROJECT_DIR$/db/pgsql.py">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.030552292">
-          <caret line="52" column="11" selection-start-line="52" selection-start-column="11" selection-end-line="52" selection-end-column="11" />
-          <folding>
-            <element signature="e#0#15#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/agents/nbacom.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0">
-          <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+          <caret line="66" column="0" selection-start-line="66" selection-start-column="0" selection-end-line="66" selection-end-column="0" />
           <folding />
         </state>
       </provider>
