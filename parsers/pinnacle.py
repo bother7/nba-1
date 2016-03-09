@@ -3,18 +3,17 @@ PinnacleNBAParser.py
 http://xml.pinnaclesports.com/pinnaclefeed.aspx?sporttype=Basketball&sportsubtype=nba
 '''
 
-from datetime import datetime
+from datetime import datetime as dt
 from dateutil import tz
 import logging
 from operator import itemgetter
-import pprint
 
 from bs4 import BeautifulSoup
 
-from NBATeamNames import NBATeamNames
+from nba.teams import NBATeamNames
 
 
-class PinnacleNBAParser():
+class PinnacleNBAParser(object):
     '''
     Takes xml from scraper, returns list of game dictionaries
 
@@ -37,7 +36,7 @@ class PinnacleNBAParser():
 
     def __init__(self, **kwargs):
 
-        logging.getLogger(__name__).addHandler(logging.NullHandler())
+        self.logger = logging.getLogger(__name__)
 
         if 'game_keys' in kwargs:
             self.game_keys = kwargs['game_keys']

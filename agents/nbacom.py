@@ -9,10 +9,11 @@ try:
 except:
     import pickle
 
-from nba.agents.agent import NBAAgent
-from nba.db.nbacom_pgsql import NBAComPg
-from nba.scrapers.nbacom import NBAComScraper
-from nba.parsers.nbacom import NBAComParser
+from .agent import NBAAgent
+from ..db.nbacom import NBAComPg
+from ..scrapers.nbacom import NBAComScraper
+from ..parsers.nbacom import NBAComParser
+
 
 class NBAComAgent(NBAAgent):
     '''

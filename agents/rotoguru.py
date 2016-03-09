@@ -1,7 +1,7 @@
 from collections import defaultdict
 import logging
 
-from nba.agents.agent import NBAAgent
+from .agent import NBAAgent
 
 
 class RotoguruNBAAgent(NBAAgent):
@@ -80,5 +80,3 @@ class RotoguruNBAAgent(NBAAgent):
 
 if __name__ == '__main__':
     pass
-
-

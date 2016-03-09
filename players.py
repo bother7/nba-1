@@ -5,7 +5,7 @@ from nba.scrapers.nbacom import NBAComScraper
 from nba.parsers.nbacom import NBAComParser
 from nba.db.pgsql import NBAPostgres
 
-from NameMatcher import match_player
+from nba.names import match_player
 
 class NBAPlayers(object):
     '''
