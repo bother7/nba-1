@@ -1,0 +1,614 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>nba.parsers package &mdash; nba 0.1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="nba 0.1 documentation" href="index.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="nba-parsers-package">
+<h1>nba.parsers package<a class="headerlink" href="#nba-parsers-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-nba.parsers.draftkings">
+<span id="nba-parsers-draftkings-module"></span><h2>nba.parsers.draftkings module<a class="headerlink" href="#module-nba.parsers.draftkings" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="nba.parsers.draftkings.DraftKingsNBAParser">
+<em class="property">class </em><code class="descclassname">nba.parsers.draftkings.</code><code class="descname">DraftKingsNBAParser</code><a class="headerlink" href="#nba.parsers.draftkings.DraftKingsNBAParser" title="Permalink to this definition">¶</a></dt>
+<dd><p>Contest entries
+Draftkings salaries</p>
+<dl class="method">
+<dt id="nba.parsers.draftkings.DraftKingsNBAParser.contest_lineups">
+<code class="descname">contest_lineups</code><span class="sig-paren">(</span><em>contest_id</em>, <em>fh</em><span class="sig-paren">)</span><a class="headerlink" href="#nba.parsers.draftkings.DraftKingsNBAParser.contest_lineups" title="Permalink to this definition">¶</a></dt>
+<dd><p>Takes list of lines from Draft Kings result file, returns entry dictionary</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>lines</strong> (<em>param</em>) &#8211; full contest entry line</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><strong>entries</strong> &#8211;
+List of contest entry dictionaries</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">list</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-nba.parsers.espn">
+<span id="nba-parsers-espn-module"></span><h2>nba.parsers.espn module<a class="headerlink" href="#module-nba.parsers.espn" title="Permalink to this headline">¶</a></h2>
+<p>ESPNNBAParser
+2015-11-13: this is all the NFL code rather than NBA code, this is just a skeleton</p>
+<dl class="class">
+<dt id="nba.parsers.espn.ESPNNBAParser">
+<em class="property">class </em><code class="descclassname">nba.parsers.espn.</code><code class="descname">ESPNNBAParser</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#nba.parsers.espn.ESPNNBAParser" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="nba.parsers.espn.ESPNNBAParser.espn_player_ids">
+<code class="descname">espn_player_ids</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#nba.parsers.espn.ESPNNBAParser.espn_player_ids" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="nba.parsers.espn.ESPNNBAParser.fivethirtyeight_nba">
+<code class="descname">fivethirtyeight_nba</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#nba.parsers.espn.ESPNNBAParser.fivethirtyeight_nba" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="nba.parsers.espn.ESPNNBAParser.fix_538player">
+<code class="descname">fix_538player</code><span class="sig-paren">(</span><em>playerjson</em><span class="sig-paren">)</span><a class="headerlink" href="#nba.parsers.espn.ESPNNBAParser.fix_538player" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="nba.parsers.espn.ESPNNBAParser.player_page">
+<code class="descname">player_page</code><span class="sig-paren">(</span><em>content</em><span class="sig-paren">)</span><a class="headerlink" href="#nba.parsers.espn.ESPNNBAParser.player_page" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="nba.parsers.espn.ESPNNBAParser.simscores">
+<code class="descname">simscores</code><span class="sig-paren">(</span><em>player_code</em><span class="sig-paren">)</span><a class="headerlink" href="#nba.parsers.espn.ESPNNBAParser.simscores" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-nba.parsers.fantasylabs">
+<span id="nba-parsers-fantasylabs-module"></span><h2>nba.parsers.fantasylabs module<a class="headerlink" href="#module-nba.parsers.fantasylabs" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="nba.parsers.fantasylabs.FantasyLabsNBAParser">
+<em class="property">class </em><code class="descclassname">nba.parsers.fantasylabs.</code><code class="descname">FantasyLabsNBAParser</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#nba.parsers.fantasylabs.FantasyLabsNBAParser" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<dl class="docutils">
+<dt>Usage:</dt>
+<dd><p class="first">p = FantasyLabsNBAParser()
+games = p.games(games_json)
+model = p.model(model_json)</p>
+<dl class="last docutils">
+<dt>for model_json in models:</dt>
+<dd>p.model(model_json)</dd>
+</dl>
+</dd>
+</dl>
+<p>TODO: can make FantasyLabsParser base class
+Most of this code is identical with FantasyLabsNFLParser</p>
+<dl class="method">
+<dt id="nba.parsers.fantasylabs.FantasyLabsNBAParser.games">
+<code class="descname">games</code><span class="sig-paren">(</span><em>content</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#nba.parsers.fantasylabs.FantasyLabsNBAParser.games" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parses json that is list of games</p>
+<dl class="docutils">
+<dt>Usage:</dt>
+<dd>games = p.games(games_json)
+games = p.games(games_json, omit=[])</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="nba.parsers.fantasylabs.FantasyLabsNBAParser.model">
+<code class="descname">model</code><span class="sig-paren">(</span><em>content</em>, <em>site</em>, <em>gamedate</em><span class="sig-paren">)</span><a class="headerlink" href="#nba.parsers.fantasylabs.FantasyLabsNBAParser.model" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parses json associated with model (player stats / projections)
+The model has 3 dicts for each player: DraftKings, FanDuel, Yahoo
+SourceIds: 4 is DK, 11 is Yahoo, 3 is FD</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>model_day</strong> &#8211; list of dict representing player model</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">list of parsed models</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="nba.scrapers.html#nba.scrapers.nbacom.NBAComScraper.players" title="nba.scrapers.nbacom.NBAComScraper.players">players</a></td>
+</tr>
+</tbody>
+</table>
+<dl class="docutils">
+<dt>Usage:</dt>
+<dd>model = p.model(content)
+model = p.model(content, omit_properties=[])
+model = p.model(content, omit_other=[])</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-nba.parsers.nbacom">
+<span id="nba-parsers-nbacom-module"></span><h2>nba.parsers.nbacom module<a class="headerlink" href="#module-nba.parsers.nbacom" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="nba.parsers.nbacom.NBAComParser">
+<em class="property">class </em><code class="descclassname">nba.parsers.nbacom.</code><code class="descname">NBAComParser</code><a class="headerlink" href="#nba.parsers.nbacom.NBAComParser" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>Parses json endpoints of stats.nba.com into lists of dictionaries</p>
+<dl class="docutils">
+<dt>Usage:</dt>
+<dd><p class="first">s = NBAComScraper()
+jsondoc = s.player_stats()
+p = NBAComParser()
+stats = p.player_stats(jsondoc)</p>
+<p class="last">content = s.teams()
+teams = p.teams(content)</p>
+</dd>
+</dl>
+<dl class="method">
+<dt id="nba.parsers.nbacom.NBAComParser.boxscore">
+<code class="descname">boxscore</code><span class="sig-paren">(</span><em>content</em>, <em>game_date=None</em><span class="sig-paren">)</span><a class="headerlink" href="#nba.parsers.nbacom.NBAComParser.boxscore" title="Permalink to this definition">¶</a></dt>
+<dd><p>Represents single nba.com boxscore (base)</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>content</strong> (<em>dict</em>) &#8211; parsed json</li>
+<li><strong>game_date</strong> (<em>str</em>) &#8211; string representing date of game for boxscore</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>players</strong> &#8211;
+dictionary of stats for each player
+teams(list): dictionary of stats for each team
+starter_bench(list): dictionary of stats broken down by starter/bench</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">list</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="nba.parsers.nbacom.NBAComParser.boxscore_advanced">
+<code class="descname">boxscore_advanced</code><span class="sig-paren">(</span><em>content</em>, <em>game_date=None</em><span class="sig-paren">)</span><a class="headerlink" href="#nba.parsers.nbacom.NBAComParser.boxscore_advanced" title="Permalink to this definition">¶</a></dt>
+<dd><p>Represents single nba.com boxscore (advanced)</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>content</strong> (<em>dict</em>) &#8211; parsed json</li>
+<li><strong>game_date</strong> (<em>str</em>) &#8211; string representing date of game for boxscore</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>players</strong> &#8211;
+dictionary of stats for each player
+teams(list): dictionary of stats for each team
+starter_bench(list): dictionary of stats broken down by starter/bench</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">list</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="nba.parsers.nbacom.NBAComParser.merge_boxscores">
+<code class="descname">merge_boxscores</code><span class="sig-paren">(</span><em>base_boxscore</em>, <em>advanced_boxscore</em><span class="sig-paren">)</span><a class="headerlink" href="#nba.parsers.nbacom.NBAComParser.merge_boxscores" title="Permalink to this definition">¶</a></dt>
+<dd><p>Base and player advanced boxscores from same game</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>base_boxscore</strong> (<em>dict</em>) &#8211; base boxscore</li>
+<li><strong>advanced_boxscore</strong> (<em>dict</em>) &#8211; advanced boxscore</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">merged(dict) or None</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="nba.parsers.nbacom.NBAComParser.one_player_gamelogs">
+<code class="descname">one_player_gamelogs</code><span class="sig-paren">(</span><em>content</em><span class="sig-paren">)</span><a class="headerlink" href="#nba.parsers.nbacom.NBAComParser.one_player_gamelogs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parses gamelogs for one player</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>content</strong> (<em>dict</em>) &#8211; parsed JSON</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><strong>player_gl</strong> &#8211;
+list of gamelog dictionaries</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">list</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="nba.parsers.nbacom.NBAComParser.one_team_gamelogs">
+<code class="descname">one_team_gamelogs</code><span class="sig-paren">(</span><em>content</em><span class="sig-paren">)</span><a class="headerlink" href="#nba.parsers.nbacom.NBAComParser.one_team_gamelogs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parses gamelogs for one team</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>content</strong> (<em>dict</em>) &#8211; parsed JSON</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><strong>team_gl</strong> &#8211;
+list of gamelog dictionaries</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">list</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="nba.parsers.nbacom.NBAComParser.player_info">
+<code class="descname">player_info</code><span class="sig-paren">(</span><em>content</em><span class="sig-paren">)</span><a class="headerlink" href="#nba.parsers.nbacom.NBAComParser.player_info" title="Permalink to this definition">¶</a></dt>
+<dd><p>Dictionary about individual player, includes name, id, etc.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>content</strong> (<em>dict</em>) &#8211; json parsed into dictionary</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">dictionary about individual player, includes name, id, etc.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="nba.parsers.nbacom.NBAComParser.players">
+<code class="descname">players</code><span class="sig-paren">(</span><em>content</em><span class="sig-paren">)</span><a class="headerlink" href="#nba.parsers.nbacom.NBAComParser.players" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="nba.parsers.nbacom.NBAComParser.playerstats">
+<code class="descname">playerstats</code><span class="sig-paren">(</span><em>content</em>, <em>stat_date=None</em><span class="sig-paren">)</span><a class="headerlink" href="#nba.parsers.nbacom.NBAComParser.playerstats" title="Permalink to this definition">¶</a></dt>
+<dd><p>Document has one line of stats per player</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>content</strong> (<em>dict</em>) &#8211; parsed json from nba.com</li>
+<li><strong>stat_date</strong> (<em>str</em>) &#8211; in YYYY-YY format (2015-16)</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>ps</strong> &#8211;
+list of dictionaries, each one is a player&#8217;s stats</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">list</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="nba.parsers.nbacom.NBAComParser.scoreboard">
+<code class="descname">scoreboard</code><span class="sig-paren">(</span><em>content</em>, <em>game_date=None</em><span class="sig-paren">)</span><a class="headerlink" href="#nba.parsers.nbacom.NBAComParser.scoreboard" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>content</strong> (<em>str</em>) &#8211; json string</li>
+<li><strong>game_date</strong> (<em>str</em>) &#8211; date string of the day of scoreboard</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>sb</strong> &#8211;
+{&#8216;date&#8217;: game_date, &#8216;game_headers&#8217;: game_headers.values(), &#8216;game_linescores&#8217;: game_linescores, &#8216;standings&#8217;: standings}</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">dict</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="nba.parsers.nbacom.NBAComParser.season_gamelogs">
+<code class="descname">season_gamelogs</code><span class="sig-paren">(</span><em>content</em>, <em>player_or_team</em><span class="sig-paren">)</span><a class="headerlink" href="#nba.parsers.nbacom.NBAComParser.season_gamelogs" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="nba.parsers.nbacom.NBAComParser.team_dashboard">
+<code class="descname">team_dashboard</code><span class="sig-paren">(</span><em>content</em><span class="sig-paren">)</span><a class="headerlink" href="#nba.parsers.nbacom.NBAComParser.team_dashboard" title="Permalink to this definition">¶</a></dt>
+<dd><p>Dashboard has keys: parameters, overall, location, days_rest, wins_losses
+The value of each key is a list of dictionaries
+parameters: 1 item in list
+overall: 1 item in list
+location: 2 items - home and away
+days_rest: multiple items that vary - 0 days, 1 day, 2 days, 3 days, 4 days
+wins_losses: 2 items - wins and losses</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="nba.parsers.nbacom.NBAComParser.team_opponent_dashboard">
+<code class="descname">team_opponent_dashboard</code><span class="sig-paren">(</span><em>content</em><span class="sig-paren">)</span><a class="headerlink" href="#nba.parsers.nbacom.NBAComParser.team_opponent_dashboard" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns list of dictionaries, stats of opponents vs. each team</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="nba.parsers.nbacom.NBAComParser.teams">
+<code class="descname">teams</code><span class="sig-paren">(</span><em>content</em><span class="sig-paren">)</span><a class="headerlink" href="#nba.parsers.nbacom.NBAComParser.teams" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns list of string - &#8220;1610612737&#8221;,&#8221;ATL&#8221;
+TODO: parse this into dictionaries</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="nba.parsers.nbacom.NBAComParser.teamstats">
+<code class="descname">teamstats</code><span class="sig-paren">(</span><em>content</em>, <em>stat_date=None</em><span class="sig-paren">)</span><a class="headerlink" href="#nba.parsers.nbacom.NBAComParser.teamstats" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="nba-parsers-nbastuffer-module">
+<h2>nba.parsers.nbastuffer module<a class="headerlink" href="#nba-parsers-nbastuffer-module" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-nba.parsers.pinnacle">
+<span id="nba-parsers-pinnacle-module"></span><h2>nba.parsers.pinnacle module<a class="headerlink" href="#module-nba.parsers.pinnacle" title="Permalink to this headline">¶</a></h2>
+<p>PinnacleNBAParser.py
+<a class="reference external" href="http://xml.pinnaclesports.com/pinnaclefeed.aspx?sporttype=Basketball&amp;sportsubtype=nba">http://xml.pinnaclesports.com/pinnaclefeed.aspx?sporttype=Basketball&amp;sportsubtype=nba</a></p>
+<dl class="class">
+<dt id="nba.parsers.pinnacle.PinnacleNBAParser">
+<em class="property">class </em><code class="descclassname">nba.parsers.pinnacle.</code><code class="descname">PinnacleNBAParser</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#nba.parsers.pinnacle.PinnacleNBAParser" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>Takes xml from scraper, returns list of game dictionaries</p>
+<dl class="docutils">
+<dt>Usage:</dt>
+<dd><p class="first">p = PinnacleNBAParser()</p>
+<dl class="docutils">
+<dt>with open(&#8216;/home/sansbacon/1.xml&#8217;, &#8216;r&#8217;) as infile:</dt>
+<dd><p class="first">xml = infile.read()</p>
+<ul class="last simple">
+<li>OR -</li>
+</ul>
+</dd>
+</dl>
+<p class="last">s = PinnacleNBAScraper()
+xml = s.odds()
+games = p.odds(xml)
+p.to_csv(games, date)
+p.to_tsv(games, date)
+p.to_fw(games, date)</p>
+</dd>
+</dl>
+<dl class="method">
+<dt id="nba.parsers.pinnacle.PinnacleNBAParser.odds">
+<code class="descname">odds</code><span class="sig-paren">(</span><em>xml</em>, <em>game_date_cst</em><span class="sig-paren">)</span><a class="headerlink" href="#nba.parsers.pinnacle.PinnacleNBAParser.odds" title="Permalink to this definition">¶</a></dt>
+<dd><p>Takes xml in, returns sorted and filtered list of game dictionaries:
+game_date_cst in YYYY-MM-DD format</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="nba.parsers.pinnacle.PinnacleNBAParser.to_csv">
+<code class="descname">to_csv</code><span class="sig-paren">(</span><em>games</em>, <em>datestr</em><span class="sig-paren">)</span><a class="headerlink" href="#nba.parsers.pinnacle.PinnacleNBAParser.to_csv" title="Permalink to this definition">¶</a></dt>
+<dd><p>Takes list of game dictionaries, outputs csv</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="nba.parsers.pinnacle.PinnacleNBAParser.to_fw">
+<code class="descname">to_fw</code><span class="sig-paren">(</span><em>games</em>, <em>datestr</em><span class="sig-paren">)</span><a class="headerlink" href="#nba.parsers.pinnacle.PinnacleNBAParser.to_fw" title="Permalink to this definition">¶</a></dt>
+<dd><p>Takes list of game dictionaries, outputs fixed-width table</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="nba.parsers.pinnacle.PinnacleNBAParser.to_tsv">
+<code class="descname">to_tsv</code><span class="sig-paren">(</span><em>games</em>, <em>datestr</em><span class="sig-paren">)</span><a class="headerlink" href="#nba.parsers.pinnacle.PinnacleNBAParser.to_tsv" title="Permalink to this definition">¶</a></dt>
+<dd><p>Takes list of game dictionaries, outputs csv</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-nba.parsers.rotoguru">
+<span id="nba-parsers-rotoguru-module"></span><h2>nba.parsers.rotoguru module<a class="headerlink" href="#module-nba.parsers.rotoguru" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="nba.parsers.rotoguru.RotoGuruNBAParser">
+<em class="property">class </em><code class="descclassname">nba.parsers.rotoguru.</code><code class="descname">RotoGuruNBAParser</code><a class="headerlink" href="#nba.parsers.rotoguru.RotoGuruNBAParser" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="docutils">
+<dt>Usage:</dt>
+<dd><p class="first">site = &#8216;dk&#8217;
+p = RotoGuruNBAParser()</p>
+<p class="last">from RotoGuruNBAScraper import RotoGuruNBAScraper
+s = RotoGuruNBAScraper()
+content = s.salaries_day(&#8216;2015-12-09&#8217;, &#8216;dk&#8217;)
+salaries = p.salaries(content, site)
+players = p.players(content, site)</p>
+</dd>
+</dl>
+<dl class="method">
+<dt id="nba.parsers.rotoguru.RotoGuruNBAParser.players">
+<code class="descname">players</code><span class="sig-paren">(</span><em>content</em>, <em>site</em><span class="sig-paren">)</span><a class="headerlink" href="#nba.parsers.rotoguru.RotoGuruNBAParser.players" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns list of dictionaries with player salary/points information from rotoguru</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>content</strong> (<em>str</em>) &#8211; HTML string</li>
+<li><strong>site</strong> (<em>str</em>) &#8211; name of site (&#8216;dk&#8217;, &#8216;fd&#8217;, &#8216;yh&#8217;, etc.)</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>players</strong> &#8211;
+list of dictionaries representing player &amp; his salary on a given date on a given site</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">list</p>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="docutils">
+<dt>Usage:</dt>
+<dd>players = p.players(content, &#8216;dk&#8217;)</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="nba.parsers.rotoguru.RotoGuruNBAParser.salaries">
+<code class="descname">salaries</code><span class="sig-paren">(</span><em>content</em>, <em>site</em><span class="sig-paren">)</span><a class="headerlink" href="#nba.parsers.rotoguru.RotoGuruNBAParser.salaries" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns list of dictionaries with player salary information</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>content</strong> (<em>str</em>) &#8211; HTML string</li>
+<li><strong>site</strong> (<em>str</em>) &#8211; name of site (&#8216;dk&#8217;, &#8216;fd&#8217;, &#8216;yh&#8217;, etc.)</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>salaries</strong> &#8211;
+list of dictionaries representing player &amp; his salary on a given date on a given site</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">list</p>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="docutils">
+<dt>Usage:</dt>
+<dd>salaries = p.salaries(content, &#8216;dk&#8217;)</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-nba.parsers">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-nba.parsers" title="Permalink to this headline">¶</a></h2>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">nba.parsers package</a><ul>
+<li><a class="reference internal" href="#submodules">Submodules</a></li>
+<li><a class="reference internal" href="#module-nba.parsers.draftkings">nba.parsers.draftkings module</a></li>
+<li><a class="reference internal" href="#module-nba.parsers.espn">nba.parsers.espn module</a></li>
+<li><a class="reference internal" href="#module-nba.parsers.fantasylabs">nba.parsers.fantasylabs module</a></li>
+<li><a class="reference internal" href="#module-nba.parsers.nbacom">nba.parsers.nbacom module</a></li>
+<li><a class="reference internal" href="#nba-parsers-nbastuffer-module">nba.parsers.nbastuffer module</a></li>
+<li><a class="reference internal" href="#module-nba.parsers.pinnacle">nba.parsers.pinnacle module</a></li>
+<li><a class="reference internal" href="#module-nba.parsers.rotoguru">nba.parsers.rotoguru module</a></li>
+<li><a class="reference internal" href="#module-nba.parsers">Module contents</a></li>
+</ul>
+</li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/nba.parsers.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2016, Eric Truett.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.6</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.7</a>
+      
+      |
+      <a href="_sources/nba.parsers.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

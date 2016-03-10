@@ -1,0 +1,430 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>nba.agents package &mdash; nba 0.1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="nba 0.1 documentation" href="index.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="nba-agents-package">
+<h1>nba.agents package<a class="headerlink" href="#nba-agents-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-nba.agents.agent">
+<span id="nba-agents-agent-module"></span><h2>nba.agents.agent module<a class="headerlink" href="#module-nba.agents.agent" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="nba.agents.agent.NBAAgent">
+<em class="property">class </em><code class="descclassname">nba.agents.agent.</code><code class="descname">NBAAgent</code><span class="sig-paren">(</span><em>db=True</em>, <em>safe=True</em><span class="sig-paren">)</span><a class="headerlink" href="#nba.agents.agent.NBAAgent" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>Base class to perform script-like tasks
+Use subclasses to replace standalone scripts so can use common API and tools
+Would be helpful to map a bunch of generic actions so don&#8217;t need to remember composed parts
+Example: instead of self.nbadb.insert it would be self.insert, which handles the necessary internal plumbing for you</p>
+<dl class="method">
+<dt id="nba.agents.agent.NBAAgent.read_file">
+<code class="descname">read_file</code><span class="sig-paren">(</span><em>fname</em><span class="sig-paren">)</span><a class="headerlink" href="#nba.agents.agent.NBAAgent.read_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Pass filename, it returns datastructure. Decides based on file extension.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="nba.agents.agent.NBAAgent.save_file">
+<code class="descname">save_file</code><span class="sig-paren">(</span><em>data</em>, <em>fname</em><span class="sig-paren">)</span><a class="headerlink" href="#nba.agents.agent.NBAAgent.save_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Pass filename, it returns datastructure. Decides based on file extension.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="nba.agents.agent.NBAAgent.website">
+<code class="descname">website</code><span class="sig-paren">(</span><em>webdir</em><span class="sig-paren">)</span><a class="headerlink" href="#nba.agents.agent.NBAAgent.website" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates static website to upload to S3 bucket
+This needs to be rewritten generically to create pages of tables
+from a list of dictionaries</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-nba.agents.fantasylabs">
+<span id="nba-agents-fantasylabs-module"></span><h2>nba.agents.fantasylabs module<a class="headerlink" href="#module-nba.agents.fantasylabs" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="nba.agents.fantasylabs.FantasyLabsNBAAgent">
+<em class="property">class </em><code class="descclassname">nba.agents.fantasylabs.</code><code class="descname">FantasyLabsNBAAgent</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#nba.agents.fantasylabs.FantasyLabsNBAAgent" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#nba.agents.agent.NBAAgent" title="nba.agents.agent.NBAAgent"><code class="xref py py-class docutils literal"><span class="pre">nba.agents.agent.NBAAgent</span></code></a></p>
+<p>Performs script-like tasks using rotoguru scraper and parser
+Intended to replace standalone scripts so can use common API and tools</p>
+<p class="rubric">Examples</p>
+<p>a = FantasyLabsNBAAgent()</p>
+<dl class="method">
+<dt id="nba.agents.fantasylabs.FantasyLabsNBAAgent.create_optimizer_files">
+<code class="descname">create_optimizer_files</code><span class="sig-paren">(</span><em>data</em><span class="sig-paren">)</span><a class="headerlink" href="#nba.agents.fantasylabs.FantasyLabsNBAAgent.create_optimizer_files" title="Permalink to this definition">¶</a></dt>
+<dd><p>Outputs csv files to use in optimizer
+TODO: allow filenames, have different calculations</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="nba.agents.fantasylabs.FantasyLabsNBAAgent.day_models">
+<code class="descname">day_models</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#nba.agents.fantasylabs.FantasyLabsNBAAgent.day_models" title="Permalink to this definition">¶</a></dt>
+<dd><p>This seems like a duplicate</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="nba.agents.fantasylabs.FantasyLabsNBAAgent.dk_tourney_model">
+<code class="descname">dk_tourney_model</code><span class="sig-paren">(</span><em>players</em>, <em>weights</em><span class="sig-paren">)</span><a class="headerlink" href="#nba.agents.fantasylabs.FantasyLabsNBAAgent.dk_tourney_model" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates list of dictionaries with tournament projection
+Need to work in relative weights of factors</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="nba.agents.fantasylabs.FantasyLabsNBAAgent.past_day_models">
+<code class="descname">past_day_models</code><span class="sig-paren">(</span><em>d</em>, <em>fn=None</em><span class="sig-paren">)</span><a class="headerlink" href="#nba.agents.fantasylabs.FantasyLabsNBAAgent.past_day_models" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="nba.agents.fantasylabs.FantasyLabsNBAAgent.today_models">
+<code class="descname">today_models</code><span class="sig-paren">(</span><em>fn=None</em>, <em>model_name='default'</em><span class="sig-paren">)</span><a class="headerlink" href="#nba.agents.fantasylabs.FantasyLabsNBAAgent.today_models" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-nba.agents.nbacom">
+<span id="nba-agents-nbacom-module"></span><h2>nba.agents.nbacom module<a class="headerlink" href="#module-nba.agents.nbacom" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="nba.agents.nbacom.NBAComAgent">
+<em class="property">class </em><code class="descclassname">nba.agents.nbacom.</code><code class="descname">NBAComAgent</code><span class="sig-paren">(</span><em>db=True</em>, <em>safe=True</em><span class="sig-paren">)</span><a class="headerlink" href="#nba.agents.nbacom.NBAComAgent" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#nba.agents.agent.NBAAgent" title="nba.agents.agent.NBAAgent"><code class="xref py py-class docutils literal"><span class="pre">nba.agents.agent.NBAAgent</span></code></a></p>
+<p>Performs script-like tasks using NBA.com API
+Intended to replace standalone scripts so can use common API and tools</p>
+<p class="rubric">Examples</p>
+<p>a = NBAComAgent()
+gamelogs = a.cs_player_gamelogs(&#8216;2015-16&#8217;)</p>
+<dl class="method">
+<dt id="nba.agents.nbacom.NBAComAgent.combine_boxscores">
+<code class="descname">combine_boxscores</code><span class="sig-paren">(</span><em>boxes</em>, <em>advanced_boxes</em><span class="sig-paren">)</span><a class="headerlink" href="#nba.agents.nbacom.NBAComAgent.combine_boxscores" title="Permalink to this definition">¶</a></dt>
+<dd><p>processes result from calling NBAComScraper.boxscores() and boxscores_advanced()</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>boxscores</strong> (<em>list</em>) &#8211; list of &#8216;base&#8217; boxscores</li>
+<li><strong>boxscores</strong> &#8211; list of &#8216;advanced&#8217; boxscores</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">merged_players(list)
+merged_teams(list)</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="nba.agents.nbacom.NBAComAgent.commonallplayers">
+<code class="descname">commonallplayers</code><span class="sig-paren">(</span><em>season</em><span class="sig-paren">)</span><a class="headerlink" href="#nba.agents.nbacom.NBAComAgent.commonallplayers" title="Permalink to this definition">¶</a></dt>
+<dd><p>Solves problem of players changing teams
+nba.com updates player teams regularly, so i look every day to make sure lists accurate</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="nba.agents.nbacom.NBAComAgent.cs_player_gamelogs">
+<code class="descname">cs_player_gamelogs</code><span class="sig-paren">(</span><em>season</em>, <em>date_from=None</em>, <em>date_to=None</em><span class="sig-paren">)</span><a class="headerlink" href="#nba.agents.nbacom.NBAComAgent.cs_player_gamelogs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fetches player_gamelogs and updates cs_player_gamelogs table</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>season</strong> (<em>str</em>) &#8211; in YYYY-YY format (2015-16)</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><strong>players</strong> &#8211;
+player dictionary of stats + dfs points</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">list</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="nba.agents.nbacom.NBAComAgent.cs_playerstats">
+<code class="descname">cs_playerstats</code><span class="sig-paren">(</span><em>season</em>, <em>date_from=None</em>, <em>date_to=None</em><span class="sig-paren">)</span><a class="headerlink" href="#nba.agents.nbacom.NBAComAgent.cs_playerstats" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fetches cs_player_stats and updates database table</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>season</strong> (<em>str</em>) &#8211; in YYYY-YY format (2015-16)</li>
+<li><strong>date_from</strong> (<em>str</em>) &#8211; in %Y-%m-%d format, default beginning of season</li>
+<li><strong>date_from</strong> &#8211; in %Y-%m-%d format, default yesterday</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>player_stats</strong> &#8211;
+player dictionary of basic and advanced stats</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">list</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="nba.agents.nbacom.NBAComAgent.cs_team_gamelogs">
+<code class="descname">cs_team_gamelogs</code><span class="sig-paren">(</span><em>season</em>, <em>date_from=None</em>, <em>date_to=None</em><span class="sig-paren">)</span><a class="headerlink" href="#nba.agents.nbacom.NBAComAgent.cs_team_gamelogs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fetches team_gamelogs and updates cs_team_gamelogs table</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>season</strong> (<em>str</em>) &#8211; in YYYY-YY format (2015-16)</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><strong>team_gl</strong> &#8211;
+player dictionary of stats</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">list</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="nba.agents.nbacom.NBAComAgent.cs_teamstats">
+<code class="descname">cs_teamstats</code><span class="sig-paren">(</span><em>season</em>, <em>date_from=None</em>, <em>date_to=None</em><span class="sig-paren">)</span><a class="headerlink" href="#nba.agents.nbacom.NBAComAgent.cs_teamstats" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fetches leaguedashteamstats and updates cs_leaguedashteamstats table</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>season</strong> (<em>str</em>) &#8211; in YYYY-YY format (2015-16)</li>
+<li><strong>date_from</strong> (<em>str</em>) &#8211; in %Y-%m-%d format, default beginning of season</li>
+<li><strong>date_from</strong> &#8211; in %Y-%m-%d format, default yesterday</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>teamstats</strong> &#8211;
+team dictionary of basic and advanced stats</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">list</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="nba.agents.nbacom.NBAComAgent.merge_boxes">
+<code class="descname">merge_boxes</code><span class="sig-paren">(</span><em>b1</em>, <em>b2</em><span class="sig-paren">)</span><a class="headerlink" href="#nba.agents.nbacom.NBAComAgent.merge_boxes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Base and player advanced boxscores from same game</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>base_box</strong> (<em>dict</em>) &#8211; base boxscore</li>
+<li><strong>adv_box</strong> (<em>dict</em>) &#8211; advanced boxscore</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">merged(dict) or None</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="nba.agents.nbacom.NBAComAgent.players_to_add">
+<code class="descname">players_to_add</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#nba.agents.nbacom.NBAComAgent.players_to_add" title="Permalink to this definition">¶</a></dt>
+<dd><p>TODO: Adapt to postgres
+Purpose is to compare current_season_gamelogs and players tables to see if missing players in latter</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="nba.agents.nbacom.NBAComAgent.scoreboards">
+<code class="descname">scoreboards</code><span class="sig-paren">(</span><em>season_start</em>, <em>season_end</em>, <em>pkl_fname=None</em><span class="sig-paren">)</span><a class="headerlink" href="#nba.agents.nbacom.NBAComAgent.scoreboards" title="Permalink to this definition">¶</a></dt>
+<dd><p>Downloads and parses range of scoreboards, optionally saves to pickle file</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="nba.agents.nbacom.NBAComAgent.teamgames">
+<code class="descname">teamgames</code><span class="sig-paren">(</span><em>games</em><span class="sig-paren">)</span><a class="headerlink" href="#nba.agents.nbacom.NBAComAgent.teamgames" title="Permalink to this definition">¶</a></dt>
+<dd><p>Converts list of games into list in teamgames format, where there are2 teamgames for every game</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>games</strong> (<em>list</em>) &#8211; list of games from nba.com where two teams are in 1 row (visitor, home)</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><strong>teamgames</strong> &#8211;
+list of games in teamgames format, 2 teamgames per game row</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">list</td>
+</tr>
+</tbody>
+</table>
+<dl class="docutils">
+<dt>Usage:</dt>
+<dd><p class="first"># is in format {&#8216;game_id&#8217;, &#8216;visitor_team_id&#8217;, &#8216;home_team_id&#8217;, . . . }
+games = NBAPostgres.select_dict(&#8216;SELECT * FROM games&#8217;)</p>
+<p class="last"># is in format {&#8216;game_id&#8217;, &#8216;team_id&#8217;, &#8216;opponent_team_id&#8217;, &#8216;is_home&#8217; . . . }
+teamgames = NBAComAgent.teamgames(games)</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-nba.agents.rotoguru">
+<span id="nba-agents-rotoguru-module"></span><h2>nba.agents.rotoguru module<a class="headerlink" href="#module-nba.agents.rotoguru" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="nba.agents.rotoguru.RotoguruNBAAgent">
+<em class="property">class </em><code class="descclassname">nba.agents.rotoguru.</code><code class="descname">RotoguruNBAAgent</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#nba.agents.rotoguru.RotoguruNBAAgent" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#nba.agents.agent.NBAAgent" title="nba.agents.agent.NBAAgent"><code class="xref py py-class docutils literal"><span class="pre">nba.agents.agent.NBAAgent</span></code></a></p>
+<p>Performs script-like tasks using rotoguru scraper and parser
+Intended to replace standalone scripts so can use common API and tools</p>
+<p class="rubric">Examples</p>
+<p>a = RotoguruNBAAgent()</p>
+<dl class="method">
+<dt id="nba.agents.rotoguru.RotoguruNBAAgent.rg_salaries">
+<code class="descname">rg_salaries</code><span class="sig-paren">(</span><em>salary_pages</em>, <em>players_fname</em>, <em>site</em><span class="sig-paren">)</span><a class="headerlink" href="#nba.agents.rotoguru.RotoguruNBAAgent.rg_salaries" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parses list of rotoguru pages into list of salary dictionaries</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>salary_pages</strong> (<em>dict</em>) &#8211; keyed by gamedate, value is HTML</li>
+<li><strong>players_fname</strong> (<em>str</em>) &#8211; is full path of csv file with players</li>
+<li><strong>site</strong> (<em>str</em>) &#8211; name of site - dk, fd, yh . . .</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>salaries</strong> &#8211;
+list of salary dictionaries
+players (dict): keys are player name, values are player id
+unmatched (defaultdict): keys are playername, values is counter</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">list</p>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="docutils">
+<dt>Usage:</dt>
+<dd>salaries = NBAComAgent.rotoguru_dfs_salaries(salary_pages, &#8216;~/players.csv&#8217;, &#8216;dk&#8217;)
+NBAComAgent.nbadb.insert_dicts(salaries, &#8216;salaries&#8217;)</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-nba.agents">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-nba.agents" title="Permalink to this headline">¶</a></h2>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">nba.agents package</a><ul>
+<li><a class="reference internal" href="#submodules">Submodules</a></li>
+<li><a class="reference internal" href="#module-nba.agents.agent">nba.agents.agent module</a></li>
+<li><a class="reference internal" href="#module-nba.agents.fantasylabs">nba.agents.fantasylabs module</a></li>
+<li><a class="reference internal" href="#module-nba.agents.nbacom">nba.agents.nbacom module</a></li>
+<li><a class="reference internal" href="#module-nba.agents.rotoguru">nba.agents.rotoguru module</a></li>
+<li><a class="reference internal" href="#module-nba.agents">Module contents</a></li>
+</ul>
+</li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/nba.agents.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2016, Eric Truett.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.6</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.7</a>
+      
+      |
+      <a href="_sources/nba.agents.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

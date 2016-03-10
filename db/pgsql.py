@@ -32,7 +32,6 @@ class NBAPostgres(object):
         if with_db:
             self.conn = psycopg2.connect('dbname={0} user={1}'.format(self.database, self.user))
 
-
     def _insert_dict(self, dict_to_insert, table_name):
         '''
         Generic routine to insert dictionary into mysql table

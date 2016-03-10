@@ -9,6 +9,7 @@ from nba.names import match_player
 
 class NBAPlayers(object):
     '''
+    TODO: need to update / merge this with the names module
     Provides for updating nba.com players table (stats.players)
     Also permits cross-reference of player names and player ids from various sites(stats.player_xref)
 
@@ -198,7 +199,21 @@ class NBAPlayers(object):
         # {'{0} {1}'.format(item['player_name'], item.get('team_code')):item for item in self.nbadb.select_dict(sql)}
         return self.nbadb.select_dict(sql)
 
-    def site_to_nbacom(self, site):
+    def player_xref(self, site_name):
+        '''
+        Obtains dictionary of site_player_id and nbacom_player_id
+
+        Args:
+            site_name (str): 'dk', 'fantasylabs', etc.
+        Return:
+            player_xref (dict): key is site_player_id
+        '''
+
+        sql = '''SELECT nbacom_player_id, site_player_id FROM stats.player_xref WHERE site='{0}' ORDER by nbacom_player_id'''
+        xref = self.select_dict(sql.format(site_name))
+        return {p.get('site_player_id'): p.get('nbacom_player_id') for p in xref if p.get('site_player_id')}
+
+    def site_to_nbacom(self, site, player_name):
         '''
         Returns dictionary with name of player on site, value is list of name and id of player on nba.com
 
