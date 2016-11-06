@@ -20,7 +20,7 @@ class NBAPositions(object):
         f = pd.read_csv('/home/sansbacon/stilltofix.csv')
         players = f.to_dict('records')
 
-        conn = MySQLdb.connect(host='localhost', user='root', passwd='cft091146', db='nba_dot_com')
+        conn = MySQLdb.connect(host='localhost', user=PWD, passwd=PWD, db='nba_dot_com')
         cursor = conn.cursor()
 
         try:
