@@ -1,10 +1,10 @@
 import logging
 import os
 
-from nba.db import nba_pgsql
+from nba.db.pgsql import NBAPostgres
 
 
-class NBAStufferPgSQL(nba_pgsql.NBAPostgres):
+class NBAStufferPgSQL(NBAPostgres):
     '''
     Need to port this to postgres
     Makes sense to inherit from NBAPostgres
@@ -25,7 +25,7 @@ class NBAStufferPgSQL(nba_pgsql.NBAPostgres):
         '''
         
         for game in games:
-
+            pass
 
 
 if __name__ == '__main__':

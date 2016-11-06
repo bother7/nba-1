@@ -1,120 +1,186 @@
-from __future__ import division
-import datetime
+import datetime as dt
 import json
 import logging
-
-import pandas as pd
 
 from nba.parsers.fantasylabs import FantasyLabsNBAParser
 from nba.scrapers.fantasylabs import FantasyLabsNBAScraper
 from nba.agents.agent import NBAAgent
+from nba.db.fantasylabs import FantasyLabsNBAPg
+from nba.dates import date_list
 
 
 class FantasyLabsNBAAgent(NBAAgent):
     '''
-    Performs script-like tasks using rotoguru scraper and parser
+    Performs script-like tasks using fantasylabs scraper, parser, and db module
     Intended to replace standalone scripts so can use common API and tools
 
     Examples:
         a = FantasyLabsNBAAgent()
-
+        players = a.today_models()
+        players, pp_players = a.today_models()
     '''
 
-    def __init__(self, **kwargs):
-        logging.getLogger(__name__).addHandler(logging.NullHandler())
-
-        self.scraper = FantasyLabsNBAScraper()
-        self.parser = FantasyLabsNBAParser()
+    def __init__(self, db=True, safe=True, use_cache=True):
 
         # see http://stackoverflow.com/questions/8134444
-        NBAAgent.__init__(self, **kwargs)
+        NBAAgent.__init__(self)
 
-    def create_optimizer_files(self, data):
+        self.logger = logging.getLogger(__name__)
+
+        if db:
+            self.db = FantasyLabsNBAPg()
+
+        self.safe = safe
+
+        if use_cache:
+            self.scraper = FantasyLabsNBAScraper(use_cache=use_cache)
+
+        else:
+            self.scraper = FantasyLabsNBAScraper()
+
+        self.parser = FantasyLabsNBAParser()
+
+    def optimizer_pipeline(self, models):
         '''
-        Outputs csv files to use in optimizer
-        TODO: allow filenames, have different calculations
-        '''
-        frame = pd.DataFrame(data)
-        getcols = ['name', 'position', 'salary', 'projection']
-        players = frame.loc[:,getcols].sort_values('projection', ascending=False)
-        players.to_csv('players-upside.csv', index=False)
+        Takes fantasylabs models, make ready to create Player objects for pydfs_lineup_optimizer
 
-        frame['projection'] = frame.get('ceiling', 0) * .1 + frame.get('floor', 0) * .1 + frame.get('avgpts', 0) * .8
-        players = frame.loc[:,getcols].sort_values('projection', ascending=False)
-        players.to_csv('players-floor.csv', index=False)
+        Args:
+            models (list): is parsed json from day's models
 
-    def day_models(self):
-        '''
-        This seems like a duplicate
-        '''
-        model = self.scraper.model()
-        players = self.parser.model(model, 'dk')
-        savecols = [u'Player_Name', u'TeamName', u'FirstPosition', u'MinutesProj', u'Salary', u'AvgPts', u'Floor', u'Ceiling']
-        getcols = ['name', 'position', 'salary', 'projection']
-        filtered = [{k.lower():v for k,v in p.items() if k in savecols} for p in players]
+        Returns:
+            players (list): list of players, fixed for use in pydfs_lineup_optimizer
 
-        for f in filtered:
-            ceiling = f.get('ceiling', None)
-            floor = f.get('floor', None)
-            avgpts = f.get('avgpts', None)
+        Examples:
+            a = FantasyLabsNBAAgent()
+            models = a.today_models()
+            players = a.optimizer_pipeline(models)
 
-            if not ceiling >= 0: ceiling = 0
-            if not floor >= 0: floor = 0
-            if not avgpts >= 0: avgpts = 0
-
-            f['projection'] = (ceiling * .75) + (floor * .1) + (avgpts * .15)
-            f['name'] = f['player_name'].replace("'","").strip()
-            f['position'] = f['firstposition']
-
-            if not f.get('projection', None):
-                f['projection'] = 0
-
-    def dk_tourney_model(self, players, weights):
-        '''
-        Generates list of dictionaries with tournament projection
-        Need to work in relative weights of factors
         '''
 
-        today_players = []
-        savecols = [u'Player_Name', u'TeamName', u'FirstPosition', u'MinutesProj', u'Salary', u'AvgPts', u'Floor', u'Ceiling']
-        filtered = [{k.lower():v for k,v in p.items() if k in savecols} for p in players]
+        fl_keys = ['PlayerId', 'Player_Name', 'Position', 'Team', 'Salary', 'Score', 'AvgPts', 'Ceiling', 'Floor', 'ProjPlusMinus']
+        fl_players = [{k: v for k,v in p.iteritems() if k in fl_keys} for p in models]
 
+        # remove null values
+        for idx, flp in enumerate(fl_players):
+            if flp.get('Ceiling') is None:
+                fl_players[idx]['Ceiling'] = 0
+            if flp.get('Floor') is None:
+                fl_players[idx]['Floor'] = 0
+            if flp.get('AvgPts') is None:
+                fl_players[idx]['AvgPts'] = 0
 
-        for f in filtered:
-            ceiling = f.get('ceiling', None)
-            floor = f.get('floor', None)
-            avgpts = f.get('avgpts', None)
+        return fl_players
 
-            if not ceiling >= 0: ceiling = 0
-            if not floor >= 0: floor = 0
-            if not avgpts >= 0: avgpts = 0
+    def past_day_models(self, model_day, model_name='default', fn=None, insert_db=False):
+        '''
+        Gets list of player models for day
 
-            f['tourney_projection'] = (ceiling * .75) + (floor * .1) + (avgpts * .15)
-            f['name'] = f['player_name'].replace("'","").strip()
-            f['position'] = f['firstposition']
+        Args:
+            model_day (str): in %Y-%m-%d format
+            model_name (str): default, cash, etc.
+            fn (str): name of model json file to load from disk
+            insert_db (bool): true if want to insert models into database
 
-            if not f.get('projection', None):
-                f['projection'] = 0
+        Returns:
+            players (list): parsed model
+            pp_players (list): parsed model, prepared for insert into database
 
-            today_players.append(f)
+        Examples:
+            a = FantasyLabsNBAAgent()
+            models = a.past_day_models(model_day='2016-03-01')
+            models = a.past_day_models(model_day='2016-03-01', model_name='phan')
+            models = a.past_day_models(model_day='2016-03-01', model_name='phan', insert_db=True)
 
-
-    def past_day_models(self, d, fn=None):
+        '''
 
         if fn:
             with open(fn, 'r') as infile:
                 model = json.load(infile)
 
         else:
-            model = self.scraper.model(model_day=d, model_name='default')
+            model = self.scraper.model(model_day=model_day, model_name=model_name)
 
-        players = self.parser.model(content=model, site='dk', gamedate=d)
+        players = self.parser.model(content=model, site='dk', gamedate=model_day)
+        pp_players = self.db.preprocess_salaries(players)
 
-        return players
+        if self.db and insert_db:
+            self.db.insert_salaries(pp_players)
 
-    def today_models(self, fn=None, model_name='default'):
+        return players, pp_players
 
-        today = datetime.datetime.strftime(datetime.datetime.today(), '%Y-%m-%d')
+    def range_models(self, range_start, range_end, model_name='default', insert_db=False):
+        '''
+        Gets list of player models for day
+
+        Args:
+            range_start (str): in %Y-%m-%d format
+            range_end (str): in %Y-%m-%d format
+            model_name (str): default, cash, etc.
+            fn (str): name of model json file to load from disk
+            insert_db (bool): true if want to insert models into database
+
+        Returns:
+            players (list): parsed model
+            pp_players (list): parsed model, prepared for insert into database
+
+        Examples:
+            a = FantasyLabsNBAAgent()
+            models = a.range_models(range_start='2016-03-01', range_end='2016-03-07')
+            models = a.range_models(range_start='2016-03-01', range_end='2016-03-07', model_name='phan')
+            models = a.range_models(range_start='2016-03-01', range_end='2016-03-07', model_name='phan', insert_db=True)
+        '''
+
+        players = []
+        pp_players = []
+
+        for d in date_list(range_end, range_start):
+            d_players, d_pp_players = self.past_day_models(model_day=dt.datetime.strftime(d, '%Y-%m-%d'), model_name=model_name)
+            players += d_players
+            pp_players += d_pp_players
+
+        if self.db and insert_db:
+            self.db.insert_salaries(pp_players)
+
+        return players, pp_players
+
+    def today_games(self):
+        '''
+        Gets list of today's games
+
+        Args:
+            None
+
+        Returns:
+            list: parsed game json
+
+        Examples:
+            a = FantasyLabsNBAAgent()
+            games = a.today_games()
+        '''
+
+        return self.parser.games(self.scraper.games_today())
+
+    def today_models(self, model_name='default', fn=None, insert_db=False):
+        '''
+        Gets list of player models for today's games
+
+        Args:
+            model_name (str): default, cash, etc.
+            fn (str): name of model json file to load from disk
+            insert_db (bool): true if want to insert models into database
+
+        Returns:
+            players (list): parsed model
+            pp_players (list): parsed model, prepared for insert into database
+
+        Examples:
+            a = FantasyLabsNBAAgent()
+            models = a.today_models()
+            models = a.today_models(model_name='phan')
+            models = a.range_models(model_name='phan', insert_db=True)
+        '''
+
+        today = dt.datetime.strftime(dt.datetime.today(), '%Y-%m-%d')
 
         if fn:
             with open(fn, 'r') as infile:
@@ -125,7 +191,54 @@ class FantasyLabsNBAAgent(NBAAgent):
 
         players = self.parser.model(content=model, site='dk', gamedate=today)
 
-        return players
+        if self.db:
+            pp_players = self.db.preprocess_salaries(players)
+
+            if insert_db:
+                self.db.insert_salaries(pp_players)
+
+        else:
+            pp_players = None
+
+        return players, pp_players
+
+    def update_models(self, season, model_name='default', insert_db=False):
+        '''
+        Fills in all missing models
+        Query database for dates
+        Then fetches missing dates
+
+        Args:
+            season (str): in YYYY-YY format
+            model_name (str): default, cash, etc.
+            insert_db (bool): true if want to insert models into database
+
+        Returns:
+            players (list): parsed model
+            pp_players (list): parsed model, prepared for insert into database
+
+        Examples:
+            a = FantasyLabsNBAAgent()
+            models = a.update_models(season='2015-16')
+            models = a.update_models(season='2015-16', model_name='phan')
+            models = a.update_models(season='2015-16', model_name='phan', insert_db=True)
+
+        '''
+
+        sql = "SELECT DISTINCT game_date FROM dfs.salaries WHERE source='fl' and dfs_site='dk'"
+        # now execute it
+        
+        '''
+        model = self.scraper.model(model_day=model_day, model_name=model_name)
+
+        players = self.parser.model(content=model, site='dk', gamedate=model_day)
+        pp_players = self.db.preprocess_salaries(players)
+
+        if self.db and insert_db:
+            self.db.insert_salaries(pp_players)
+        '''
+        
+        return players, pp_players
         
 if __name__ == '__main__':
     pass

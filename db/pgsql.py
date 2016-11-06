@@ -1,4 +1,4 @@
-import datetime
+import datetime as dt
 import logging
 import os
 import pprint
@@ -7,9 +7,10 @@ import subprocess
 import psycopg2
 import psycopg2.extras
 
+
 class NBAPostgres(object):
 
-    def __init__(self, with_db=True, **kwargs):
+    def __init__(self, user='postgres', database='nba'):
         '''
         Arguments:
             user (str): postgres username
@@ -18,19 +19,9 @@ class NBAPostgres(object):
         '''
 
         self.logger = logging.getLogger(__name__)
-
-        if 'user' in kwargs:
-            self.user = kwargs['user']
-        else:
-            self.user = 'postgres'
-
-        if 'database' in kwargs:
-            self.database = kwargs['database']
-        else:
-            self.database = 'nba'
-
-        if with_db:
-            self.conn = psycopg2.connect('dbname={0} user={1}'.format(self.database, self.user))
+        self.user = user
+        self.database = database
+        self.conn = psycopg2.connect('dbname={0} user={1}'.format(self.database, self.user))
 
     def _insert_dict(self, dict_to_insert, table_name):
         '''
@@ -48,9 +39,9 @@ class NBAPostgres(object):
             self.conn.commit()
 
         except Exception as e:
-            logging.error('insert statement is {0}'.format(sql))
-            logging.error(pprint.pformat(dict_to_insert))
-            logging.exception('insert_dicts failed: {0}'.format(e.message))
+            self.logger.error('insert statement is {0}'.format(sql))
+            self.logger.error(pprint.pformat(dict_to_insert))
+            self.logger.exception('insert_dicts failed: {0}'.format(e.message))
             self.conn.rollback()
 
         finally:
@@ -69,25 +60,27 @@ class NBAPostgres(object):
             None
         '''
 
-        cursor = self.conn.cursor()
-        placeholders = ', '.join(['%s'] * len(dicts_to_insert[0]))
-        columns = ', '.join(dicts_to_insert[0].keys())
-        sql = 'INSERT INTO %s ( %s ) VALUES ( %s ) ON CONFLICT DO NOTHING' % (table_name, columns, placeholders)
+        if dicts_to_insert:
+            cursor = self.conn.cursor()
 
-        try:
-            for dict_to_insert in dicts_to_insert:
-                cursor.execute(sql, dict_to_insert.values())
+            try:
+                for dict_to_insert in dicts_to_insert:
+                    placeholders = ', '.join(['%s'] * len(dict_to_insert))
+                    columns = ', '.join(dict_to_insert.keys())
+                    sql = 'INSERT INTO %s ( %s ) VALUES ( %s ) ON CONFLICT DO NOTHING' % (table_name, columns, placeholders)
+                    cursor.execute(sql, dict_to_insert.values())
 
-            self.conn.commit()
-                
-        except Exception as e:
-            logging.error('insert statement is {0}'.format(sql))
-            logging.error(pprint.pformat(dict_to_insert))
-            logging.exception('insert_dicts failed: {0}'.format(e.message))
-            self.conn.rollback()
+                self.conn.commit()
 
-        finally:
-            cursor.close()
+            except Exception as e:
+                self.logger.error('insert statement is {0}'.format(sql))
+                self.logger.error('values are {0}'.format(','.join([str(v) for v in dict_to_insert.values()])))
+                self.logger.exception('insert_dicts failed: {0}'.format(e.diag.message_primary))
+                if dict_to_insert: self.logger.error(pprint.pformat(dict_to_insert))
+                self.conn.rollback()
+
+            finally:
+                cursor.close()
                 
     def postgres_backup_db(self, dbname, dirname=None):
         '''
@@ -101,14 +94,11 @@ class NBAPostgres(object):
             None           
         '''
 
-        bdate = datetime.datetime.now().strftime('%Y%m%d%H%M')
-        bfile = '{0}_{1}.sql'.format(dbname ,bdate)
-
-        if dirname and os.path.exists(dirname):
-            pass
-
-        else:
+        if not dirname or not os.path.exists(dirname):
             dirname = os.path.expanduser('~')
+
+        bdate = dt.datetime.now().strftime('%Y%m%d%H%M')
+        bfile = os.path.join(dirname, '{0}_{1}.sql'.format(dbname ,bdate))
 
         cmd = ['pg_dump', "-Upostgres", "--compress=9", "--file=" + bfile, dbname]
         p = subprocess.Popen(cmd)
@@ -117,23 +107,25 @@ class NBAPostgres(object):
         if retcode > 0:
             print('Error:', dbname, 'backup error')
 
-
-    def postgres_backup_table(self, dbname, tablename, username='postgres'):
+    def postgres_backup_table(self, dbname, tablename, dirname=None, username='postgres'):
         '''
         Compressed backup of mysql database table
         Based on https://mcdee.com.au/python-mysql-backup-script/
 
         Args:
             dbname (str): the name of the mysql database
-            dbname (str): the name of the mysql database table
+            tablename (str): the name of the mysql database table
             dirname (str): the name of the backup dirnameectory, default is home
 
         Returns:
             None           
         '''
 
-        bdate = datetime.datetime.now().strftime('%Y%m%d%H%M')
-        bfile = '{0}_{1}_{2}.sql.gz'.format(dbname, tablename, bdate)
+        if not dirname or not os.path.exists(dirname):
+            dirname = os.path.expanduser('~')
+
+        bdate = dt.datetime.now().strftime('%Y%m%d%H%M')
+        bfile = os.path.join(dirname, '{0}_{1}_{2}.sql.gz'.format(dbname, tablename, bdate))
 
         cmd = ['pg_dump', "--table=" + tablename, "--username=" + username, "--compress=9", "--file=" + bfile, dbname]
         p = subprocess.Popen(cmd)
@@ -152,7 +144,7 @@ class NBAPostgres(object):
         Returns:
             results (list): list of dictionaries representing rows in table
         '''
-        
+
         cursor = self.conn.cursor(cursor_factory = psycopg2.extras.RealDictCursor)
 
         try:
@@ -160,8 +152,7 @@ class NBAPostgres(object):
             return cursor.fetchall()
 
         except Exception as e:
-            #logging.error('sql statement failed: {0}'.format(sql))
-            logging.exception(e.message)
+            self.logger.exception(e.message)
             return None
 
         finally:
@@ -185,7 +176,7 @@ class NBAPostgres(object):
             return [v[0] for v in cursor.fetchall()]
 
         except Exception as e:
-            logging.error('sql statement failed: {0}'.format(sql))
+            self.logger.error('sql statement failed: {0}'.format(sql))
             return None
 
         finally:
@@ -209,7 +200,7 @@ class NBAPostgres(object):
             return cursor.fetchone()[0]
 
         except Exception as e:
-            logging.error('sql statement failed: {0}'.format(sql))
+            self.logger.error('sql statement failed: {0}'.format(sql))
             return None
 
         finally:
@@ -232,9 +223,9 @@ class NBAPostgres(object):
         try:
             cursor.execute(sql)
             self.conn.commit()
-                
+
         except Exception as e:
-            logging.exception('update failed: {0}'.format(e.message))
+            self.logger.exception('update failed: {0}'.format(e.message))
             self.conn.rollback()
 
         finally:

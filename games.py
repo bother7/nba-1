@@ -8,7 +8,7 @@ import json
 import logging
 import os
 
-from nba.db import postgres
+from nba.db import pgsql
 
 class NBAGames():
     '''

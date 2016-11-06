@@ -1,7 +1,7 @@
 from collections import defaultdict
 import logging
 
-from .agent import NBAAgent
+from nba.agents.agent import NBAAgent
 
 
 class RotoguruNBAAgent(NBAAgent):

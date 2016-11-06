@@ -1,18 +1,18 @@
 import datetime
 import logging
 
-from nba.db import pgsql
+from nba.db.pgsql import NBAPostgres
 from nba.dfs import dk_points, fd_points
 
-class NBAComPg(pgsql.NBAPostgres):
+class NBAComPg(NBAPostgres):
     '''
 
     '''
 
-    def __init__(self, **kwargs):
+    def __init__(self, with_db=True):
 
         # see http://stackoverflow.com/questions/8134444
-        pgsql.NBAPostgres.__init__(self, **kwargs)
+        NBAPostgres.__init__(self)
         self.logger = logging.getLogger(__name__)
 
     def insert_boxscores(self, player_boxscores, team_boxscores, player_table_name, team_table_name):
@@ -78,7 +78,7 @@ class NBAComPg(pgsql.NBAPostgres):
         # postgres will return object unless use to_char function
         # then need to convert it to datetime object for comparison
         q = """SELECT to_char(max(game_date), 'YYYYMMDD') from stats.cs_player_gamelogs"""
-        last_gamedate = datetime.datetime.strptime(self.select_scalar(q), '%Y%m%d')
+        last_gamedate = datetime.datetime.strptime(self.select_scalar(q), '%Y%m%d') #- datetime.timedelta(days=7)
 
         # filter all_gamelogs by date, only want those newer than latest gamelog in table
         # have to convert to datetime object for comparison

@@ -151,14 +151,4 @@ class DraftKingsNBAParser():
         return entries
 
 if __name__ == '__main__':
-    logging.basicConfig(level=logging.DEBUG)
-
-    from DraftKingsNBAScraper import DraftKingsNBAScraper
-    from DraftKingsNBAParser import DraftKingsNBAParser
-
-    s = DraftKingsNBAScraper()
-    p = DraftKingsNBAParser()
-
-    contest = s.contest_data('/home/sansbacon/standings.csv')
-    entries = p.contest_lineups(contest_id='19061168', fh=contest)
-    #pass
+    pass

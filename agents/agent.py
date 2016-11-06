@@ -1,13 +1,8 @@
-
-try:
-    import cPickle as pickle
-except:
-    import pickle
-
+import cPickle as pickle
+import csv
+import json
 import logging
 import os
-
-import pandas as pd
 
 from nba.players import NBAPlayers
 from nba.seasons import NBASeasons
@@ -22,38 +17,42 @@ class NBAAgent(object):
 
     '''
 
-    def __init__(self, db=True, safe=True):
+    def __init__(self):
         '''
-
+        Arguments:
+            db (bool):
         '''
-        logging.getLogger(__name__).addHandler(logging.NullHandler())
-
+        self.logger = logging.getLogger(__name__)
         self.nbap = NBAPlayers()
         self.nbas = NBASeasons()
-        
-    def _read_csv (self, csv_fname, headers=True):
+
+    def _read_csv (self, csv_fname):
         '''
         Takes csv file and returns dictionary
 
         Arguments:
-            csv_fname: name of file to read/parse
+            csv_fname (str): name of file to read/parse
 
         Returns:
             List of dicts, key is name, value is id
 
         '''
-        
-        if os.file.exists(csv_fname):
-            frame = pd.read_csv(csv_fname, headers=headers)
 
-            if frame:
-                list_of_dicts = frame.to_dict('records')
-            else:
-                raise ValueError('frame does not exist - cannot create list_of_dicts')
-                
+        list_of_dicts = []
+
+        if os.path.exists(csv_fname):
+            with open (csv_fname, 'r') as csvfile:
+                reader = csv.reader(csvfile)
+                headers = reader.next()
+
+                for row in reader:
+                    list_of_dicts.append(dict(zip(headers, row)))
+
         else:
             raise ValueError('{0} does not exist'.format(csv_fname))
-            
+
+        return list_of_dicts
+
     def _read_json (self, json_fname):
         '''
         Takes json file and returns data structure
@@ -66,7 +65,7 @@ class NBAAgent(object):
 
         '''
         
-        if os.file.exists(json_fname):
+        if os.path.exists(json_fname):
             with open(json_fname, 'r') as infile:
                 data = json.load(infile)
                
@@ -87,7 +86,7 @@ class NBAAgent(object):
 
         '''
         
-        if os.file.exists(pkl_fname):
+        if os.path.exists(pkl_fname):
             with open(pkl_fname, 'rb') as infile:
                 data = pickle.load(infile)
                
@@ -98,7 +97,7 @@ class NBAAgent(object):
 
     def read_file(self, fname):
         '''
-        Pass filename, it returns datastructure. Decides based on file extension.
+        Pass filename, it returns data structure. Decides based on file extension.
         '''
 
         ext = os.path.splitext(fname)[1]
@@ -115,19 +114,24 @@ class NBAAgent(object):
         else:
             raise ValueError('{0} is not a supported file extension'.format(ext))
 
-    def _save_csv (self, data, csv_fname, sep=';', date_format='%Y-%m-%d'):
+    def _save_csv (self, data, csv_fname, fieldnames, sep=';'):
         '''
         Takes datastructure and saves as csv file
 
         Arguments:
             data: python data structure
             csv_fname: name of file to save
+            fieldnames: list of fields
 
+        Returns:
+            None
         '''
 
         try:
-            frame = pd.DataFrame(data)
-            frame.to_csv(csv_fname, index=False, sep=sep, date_format=date_format)
+            with open(csv_fname, 'w') as csvfile:
+                writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+                writer.writeheader()
+                writer.writerows(data)
 
         except:
             logging.exception('could not save csv file')
@@ -149,7 +153,7 @@ class NBAAgent(object):
         except:
             logging.exception('{0} does not exist'.format(json_fname))
        
-    def _read_pickle (self, data, pkl_fname):
+    def _write_pickle (self, data, pkl_fname):
         '''
         Saves data structure to pickle file
 
@@ -174,7 +178,7 @@ class NBAAgent(object):
         ext = os.path.splitext(fname)[1]
 
         if ext == '.csv':
-            self._save_csv(data, fname)
+            self._save_csv(data=data, csv_fname=fname, fieldnames=data[0])
             
         elif ext == '.json':
             self._save_json(fname)
@@ -184,18 +188,6 @@ class NBAAgent(object):
 
         else:
             raise ValueError('{0} is not a supported file extension'.format(ext))
-
-    def website(self, webdir):
-        '''
-        Generates static website to upload to S3 bucket
-        This needs to be rewritten generically to create pages of tables
-        from a list of dictionaries
-        ''' 
-
-        #########################################
-        # generate the HTML or other files here #
-
-        pass
 
 if __name__ == '__main__':
     pass    

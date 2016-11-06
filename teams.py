@@ -27,7 +27,7 @@ class NBATeamNames:
 
         logging.getLogger(__name__).addHandler(logging.NullHandler())
 
-        self.city_names = {
+        self._city_to_code = {
             'Atlanta': 'ATL',
             'Boston': 'BOS',
             'Brooklyn': 'BKN',
@@ -62,7 +62,7 @@ class NBATeamNames:
             'Washington': 'WAS'
         }
 
-        self.long_names = {
+        self._long_to_code = {
             'Atlanta Hawks': 'ATL',
             'Boston Celtics': 'BOS',
             'Brooklyn Nets': 'BKN',
@@ -99,7 +99,7 @@ class NBATeamNames:
             'Washington Wizards': 'WAS'
         }
 
-        self.nbacom_codes = {
+        self._ids_to_code = {
             "1610612737": "ATL",
             "1610612738": "BOS",
             "1610612751": "BKN",
@@ -132,24 +132,27 @@ class NBATeamNames:
             "1610612764": "WAS"
         }
 
-        self.nbacom_names = {v:k for k,v in self.nbacom_codes.items()}
-        self.short_names = {v:k for k,v in self.long_names.items()}
+        self._code_to_ids = {v:k for k,v in self._ids_to_code.items()}
+        self._code_to_ids['NOH'] = "1610612740"
+        self._code_to_ids['NOK'] = "1610612740"
+        self._code_to_ids['SEA'] = "1610612760"
+        self._code_to_ids['NJN'] = "1610612751"
+        self._code_to_long = {v:k for k,v in self._long_to_code.items()}
 
-    def city_to_short(self, name):
-        return self.city_names.get(name, None)
+    def city_to_code(self, name):
+        return self._city_to_code.get(name)
 
-    def long_to_short(self, name):
-        return self.long_names.get(name, None)
+    def long_to_code(self, name):
+        return self._long_to_code.get(name)
 
-    def nbacom_code_to_short(self, code):
-        return self.nbacom_codes.get(code, None)
+    def id_to_code(self, id):
+        return self._ids_to_code.get(id)
 
-    def nbacom_short_to_code(self, name):
-        return self.nbacom_names.get(name, None)
+    def code_to_id(self, code):
+        return self._code_to_ids.get(code)
 
-    def short_to_long(self, name):
-        return self.short_names.get(name, None)
-
+    def code_to_long(self, code):
+        return self._code_to_long.get(code)
 
 if __name__ == '__main__':
     pass

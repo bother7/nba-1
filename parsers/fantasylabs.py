@@ -72,7 +72,7 @@ class FantasyLabsNBAParser(object):
         omit_other = ['ErrorList', 'LineupCount', 'CurrentExposure', 'ExposureProbability', 'IsExposureLocked', 'Positions', 'PositionCount', 'Exposure', 'IsLiked', 'IsExcluded']
 
         if content:
-            for md in content:
+            for md in content.get('PlayerModels'):
                 player = {'site': site, 'gamedate': gamedate}
 
                 for k,v in md.items():

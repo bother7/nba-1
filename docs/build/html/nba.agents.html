@@ -78,41 +78,97 @@ from a list of dictionaries</p>
 <span id="nba-agents-fantasylabs-module"></span><h2>nba.agents.fantasylabs module<a class="headerlink" href="#module-nba.agents.fantasylabs" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="nba.agents.fantasylabs.FantasyLabsNBAAgent">
-<em class="property">class </em><code class="descclassname">nba.agents.fantasylabs.</code><code class="descname">FantasyLabsNBAAgent</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#nba.agents.fantasylabs.FantasyLabsNBAAgent" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">nba.agents.fantasylabs.</code><code class="descname">FantasyLabsNBAAgent</code><span class="sig-paren">(</span><em>db=False</em>, <em>safe=True</em>, <em>use_cache=True</em><span class="sig-paren">)</span><a class="headerlink" href="#nba.agents.fantasylabs.FantasyLabsNBAAgent" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#nba.agents.agent.NBAAgent" title="nba.agents.agent.NBAAgent"><code class="xref py py-class docutils literal"><span class="pre">nba.agents.agent.NBAAgent</span></code></a></p>
-<p>Performs script-like tasks using rotoguru scraper and parser
+<p>Performs script-like tasks using fantasylabs scraper, parser, and db module
 Intended to replace standalone scripts so can use common API and tools</p>
 <p class="rubric">Examples</p>
-<p>a = FantasyLabsNBAAgent()</p>
-<dl class="method">
-<dt id="nba.agents.fantasylabs.FantasyLabsNBAAgent.create_optimizer_files">
-<code class="descname">create_optimizer_files</code><span class="sig-paren">(</span><em>data</em><span class="sig-paren">)</span><a class="headerlink" href="#nba.agents.fantasylabs.FantasyLabsNBAAgent.create_optimizer_files" title="Permalink to this definition">¶</a></dt>
-<dd><p>Outputs csv files to use in optimizer
-TODO: allow filenames, have different calculations</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="nba.agents.fantasylabs.FantasyLabsNBAAgent.day_models">
-<code class="descname">day_models</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#nba.agents.fantasylabs.FantasyLabsNBAAgent.day_models" title="Permalink to this definition">¶</a></dt>
-<dd><p>This seems like a duplicate</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="nba.agents.fantasylabs.FantasyLabsNBAAgent.dk_tourney_model">
-<code class="descname">dk_tourney_model</code><span class="sig-paren">(</span><em>players</em>, <em>weights</em><span class="sig-paren">)</span><a class="headerlink" href="#nba.agents.fantasylabs.FantasyLabsNBAAgent.dk_tourney_model" title="Permalink to this definition">¶</a></dt>
-<dd><p>Generates list of dictionaries with tournament projection
-Need to work in relative weights of factors</p>
-</dd></dl>
-
+<p>a = FantasyLabsNBAAgent()
+players = a.today_models()
+players, pp_players = a.today_models()</p>
 <dl class="method">
 <dt id="nba.agents.fantasylabs.FantasyLabsNBAAgent.past_day_models">
-<code class="descname">past_day_models</code><span class="sig-paren">(</span><em>d</em>, <em>fn=None</em><span class="sig-paren">)</span><a class="headerlink" href="#nba.agents.fantasylabs.FantasyLabsNBAAgent.past_day_models" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<code class="descname">past_day_models</code><span class="sig-paren">(</span><em>model_day</em>, <em>model_name='default'</em>, <em>fn=None</em>, <em>insert_db=False</em><span class="sig-paren">)</span><a class="headerlink" href="#nba.agents.fantasylabs.FantasyLabsNBAAgent.past_day_models" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gets list of player models for day</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>model_day</strong> (<em>str</em>) &#8211; in %Y-%m-%d format</li>
+<li><strong>model_name</strong> (<em>str</em>) &#8211; default, cash, etc.</li>
+<li><strong>fn</strong> (<em>str</em>) &#8211; name of model json file to load from disk</li>
+<li><strong>insert_db</strong> (<em>bool</em>) &#8211; true if want to insert models into database</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>players</strong> &#8211;
+parsed model
+pp_players (list): parsed model, prepared for insert into database</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">list</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="nba.agents.fantasylabs.FantasyLabsNBAAgent.range_models">
+<code class="descname">range_models</code><span class="sig-paren">(</span><em>range_start</em>, <em>range_end</em>, <em>model_name='default'</em>, <em>insert_db=False</em><span class="sig-paren">)</span><a class="headerlink" href="#nba.agents.fantasylabs.FantasyLabsNBAAgent.range_models" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gets list of player models for day</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>range_start</strong> (<em>str</em>) &#8211; in %Y-%m-%d format</li>
+<li><strong>range_end</strong> (<em>str</em>) &#8211; in %Y-%m-%d format</li>
+<li><strong>model_name</strong> (<em>str</em>) &#8211; default, cash, etc.</li>
+<li><strong>fn</strong> (<em>str</em>) &#8211; name of model json file to load from disk</li>
+<li><strong>insert_db</strong> (<em>bool</em>) &#8211; true if want to insert models into database</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>players</strong> &#8211;
+parsed model
+pp_players (list): parsed model, prepared for insert into database</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">list</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
 
 <dl class="method">
 <dt id="nba.agents.fantasylabs.FantasyLabsNBAAgent.today_models">
-<code class="descname">today_models</code><span class="sig-paren">(</span><em>fn=None</em>, <em>model_name='default'</em><span class="sig-paren">)</span><a class="headerlink" href="#nba.agents.fantasylabs.FantasyLabsNBAAgent.today_models" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<code class="descname">today_models</code><span class="sig-paren">(</span><em>model_name='default'</em>, <em>fn=None</em>, <em>insert_db=False</em><span class="sig-paren">)</span><a class="headerlink" href="#nba.agents.fantasylabs.FantasyLabsNBAAgent.today_models" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gets list of player models for today&#8217;s games</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>model_name</strong> (<em>str</em>) &#8211; default, cash, etc.</li>
+<li><strong>fn</strong> (<em>str</em>) &#8211; name of model json file to load from disk</li>
+<li><strong>insert_db</strong> (<em>bool</em>) &#8211; true if want to insert models into database</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>players</strong> &#8211;
+parsed model
+pp_players (list): parsed model, prepared for insert into database</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">list</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
 
 </dd></dl>
 

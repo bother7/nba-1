@@ -4,10 +4,10 @@ Gets daily odds xml feed from pinnacle sports
 http://xml.pinnaclesports.com/pinnaclefeed.aspx?sporttype=Basketball&sportsubtype=nba
 '''
 
-from EWTScraper import EWTScraper
+from nba.scrapers import scraper
 import logging
 
-class PinnacleNBAScraper(EWTScraper):
+class PinnacleNBAScraper(scraper.EWTScraper):
     '''
     Gets daily nba game/odds xml feed from pinnacle sports
     '''

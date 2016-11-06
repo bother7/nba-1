@@ -89,7 +89,7 @@ This is just a shell based on NFL - need to build out for NBA</p>
 <dl class="class">
 <dt id="nba.scrapers.espn.ESPNNBAScraper">
 <em class="property">class </em><code class="descclassname">nba.scrapers.espn.</code><code class="descname">ESPNNBAScraper</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#nba.scrapers.espn.ESPNNBAScraper" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">EWTScraper.EWTScraper</span></code></p>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">nba.scrapers.scraper.EWTScraper</span></code></p>
 <dl class="method">
 <dt id="nba.scrapers.espn.ESPNNBAScraper.player_page">
 <code class="descname">player_page</code><span class="sig-paren">(</span><em>content</em><span class="sig-paren">)</span><a class="headerlink" href="#nba.scrapers.espn.ESPNNBAScraper.player_page" title="Permalink to this definition">¶</a></dt>
@@ -110,7 +110,7 @@ This is just a shell based on NFL - need to build out for NBA</p>
 <dl class="class">
 <dt id="nba.scrapers.espn.FiveThirtyEightNBAScraper">
 <em class="property">class </em><code class="descclassname">nba.scrapers.espn.</code><code class="descname">FiveThirtyEightNBAScraper</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#nba.scrapers.espn.FiveThirtyEightNBAScraper" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">EWTScraper.EWTScraper</span></code></p>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">nba.scrapers.scraper.EWTScraper</span></code></p>
 <dl class="method">
 <dt id="nba.scrapers.espn.FiveThirtyEightNBAScraper.espn_player_ids">
 <code class="descname">espn_player_ids</code><span class="sig-paren">(</span><em>pklfname=None</em><span class="sig-paren">)</span><a class="headerlink" href="#nba.scrapers.espn.FiveThirtyEightNBAScraper.espn_player_ids" title="Permalink to this definition">¶</a></dt>
@@ -134,7 +134,7 @@ This is just a shell based on NFL - need to build out for NBA</p>
 <dl class="class">
 <dt id="nba.scrapers.fantasylabs.FantasyLabsNBAScraper">
 <em class="property">class </em><code class="descclassname">nba.scrapers.fantasylabs.</code><code class="descname">FantasyLabsNBAScraper</code><span class="sig-paren">(</span><em>use_cache=1</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#nba.scrapers.fantasylabs.FantasyLabsNBAScraper" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">EWTScraper.EWTScraper</span></code></p>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">nba.scrapers.scraper.EWTScraper</span></code></p>
 <p>Usage:</p>
 <blockquote>
 <div><p>s = FantasyLabsNBAScraper()
@@ -214,7 +214,7 @@ models = s.models(start_date=&#8216;10_04_2015&#8217;, end_date=&#8216;10_09_201
 <dl class="class">
 <dt id="nba.scrapers.nbacom.NBAComScraper">
 <em class="property">class </em><code class="descclassname">nba.scrapers.nbacom.</code><code class="descname">NBAComScraper</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#nba.scrapers.nbacom.NBAComScraper" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">EWTScraper.EWTScraper</span></code></p>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">nba.scrapers.scraper.EWTScraper</span></code></p>
 <dl class="docutils">
 <dt>Usage:</dt>
 <dd>s = NBAComScraper()
@@ -397,7 +397,7 @@ Gets daily odds xml feed from pinnacle sports
 <dl class="class">
 <dt id="nba.scrapers.pinnacle.PinnacleNBAScraper">
 <em class="property">class </em><code class="descclassname">nba.scrapers.pinnacle.</code><code class="descname">PinnacleNBAScraper</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#nba.scrapers.pinnacle.PinnacleNBAScraper" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">EWTScraper.EWTScraper</span></code></p>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">nba.scrapers.scraper.EWTScraper</span></code></p>
 <p>Gets daily nba game/odds xml feed from pinnacle sports</p>
 <dl class="method">
 <dt id="nba.scrapers.pinnacle.PinnacleNBAScraper.odds">
@@ -412,7 +412,7 @@ Gets daily odds xml feed from pinnacle sports
 <dl class="class">
 <dt id="nba.scrapers.rotoguru.RotoGuruNBAScraper">
 <em class="property">class </em><code class="descclassname">nba.scrapers.rotoguru.</code><code class="descname">RotoGuruNBAScraper</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#nba.scrapers.rotoguru.RotoGuruNBAScraper" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">EWTScraper.EWTScraper</span></code></p>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">nba.scrapers.scraper.EWTScraper</span></code></p>
 <dl class="docutils">
 <dt>Usage:</dt>
 <dd>s = RotoGuruNBAScraper()

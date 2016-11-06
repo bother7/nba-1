@@ -1,8 +1,8 @@
 import logging
 
-import browsercookie
+#import browsercookie
 
-from EWTScraper import EWTScraper
+from ewt.scraper import EWTScraper
 from nba.dates import *
 
 
@@ -43,7 +43,7 @@ class FantasyLabsNBAScraper(EWTScraper):
             self.model_urls = kwargs['model_urls']
         else:
             self.model_urls = {
-                'default': 'http://www.fantasylabs.com/api/playermodel/2/{0}/?modelId=100594',
+                'default': 'http://www.fantasylabs.com/api/playermodel/2/{0}/?modelId=100605',
                 'bales': 'http://www.fantasylabs.com/api/playermodel/2/{0}/?modelId=193714',
                 'phan': 'http://www.fantasylabs.com/api/playermodel/2/{0}/?modelId=193718',
                 'tournament': 'http://www.fantasylabs.com/api/playermodel/2/{0}/?modelId=193722',
@@ -106,7 +106,7 @@ class FantasyLabsNBAScraper(EWTScraper):
 
         return content
 
-    def model(self, model_day=None, model_name=None):
+    def model(self, model_day=None, model_name='default'):
         '''
         Gets json for model, default to Phan model
         Stats in most models the same, main difference is the ranking based on weights of factors present in all models
@@ -118,7 +118,7 @@ class FantasyLabsNBAScraper(EWTScraper):
         '''
 
         # if model_name is none or not in dict, use default
-        if self.model_urls.has_key(model_name):
+        if self.model_urls.get(model_name):
             url = self.model_urls.get(model_name)
             logging.debug('model: model_url is {0}'.format(url))
 
@@ -142,8 +142,8 @@ class FantasyLabsNBAScraper(EWTScraper):
             logging.debug('scraper.model: model_day is {0}'.format(model_day))
 
         #return self.get_json(url=url.format(model_day))
-        cj = browsercookie.chrome()
-        return self.get_json(url=url.format(model_day), cookies=cj)
+        #cj = browsercookie.chrome()
+        return self.get_json(url=url.format(model_day)) #, cookies=cj)
 
     def models(self, start_date, end_date, model_name=None):
         '''

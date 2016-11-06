@@ -3,7 +3,7 @@ import json
 import logging
 import os
 
-from EWTScraper import EWTScraper
+from nba.scrapers.scraper import EWTScraper
 
 
 class NBAComScraper(EWTScraper):
@@ -21,7 +21,8 @@ class NBAComScraper(EWTScraper):
 
         # see http://stackoverflow.com/questions/8134444
         EWTScraper.__init__(self, **kwargs)
-        logging.getLogger(__name__).addHandler(logging.NullHandler())
+        self.logger = logging.getLogger(__name__)
+        self.logger.addHandler(logging.NullHandler())
 
     def boxscore(self, game_id, season):
         '''
@@ -421,6 +422,7 @@ class NBAComScraper(EWTScraper):
                 params[key] = value
 
         content = self.get_json(url=base_url, payload=params)
+        self.logger.debug(self.responses[:-1])
 
         # if not from web either, then log an error
         if not content: logging.error('could not get content: {0}'.format(base_url))

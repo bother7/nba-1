@@ -8,10 +8,10 @@ import os
 
 from bs4 import BeautifulSoup
 
-from EWTScraper import EWTScraper
+from nba.scrapers import scraper
 
 
-class ESPNNBAScraper(EWTScraper):
+class ESPNNBAScraper(scraper.EWTScraper):
     '''
 
     '''
@@ -20,7 +20,7 @@ class ESPNNBAScraper(EWTScraper):
         # see http://stackoverflow.com/questions/8134444
         EWTScraper.__init__(self, **kwargs)
 
-        logger = logging.getLogger(__name__)
+        self.logger = logging.getLogger(__name__)
 
         if 'maxindex' in kwargs:
             self.maxindex = kwargs['maxindex']
@@ -50,7 +50,7 @@ class ESPNNBAScraper(EWTScraper):
                 players[match.group(1)] = match.group(2)
 
             else:
-                print 'could not get {0}'.format(link['href'])
+                self.logger.error('could not get {0}'.format(link['href']))
 
         return players
 
@@ -98,7 +98,7 @@ class ESPNNBAScraper(EWTScraper):
         return pages
 
 
-class FiveThirtyEightNBAScraper(EWTScraper):
+class FiveThirtyEightNBAScraper(scraper.EWTScraper):
     '''
 
     '''
@@ -140,7 +140,7 @@ class FiveThirtyEightNBAScraper(EWTScraper):
             fn = os.path.join(savedir, '{0}.json'.format(player_code))
 
             if os.path.isfile(fn):
-                print 'already have {0}'.format(fn)
+                self.logger.debug('already have {0}'.format(fn))
 
             else:
                 if len(player_code) > 3:
@@ -150,16 +150,16 @@ class FiveThirtyEightNBAScraper(EWTScraper):
                         with open(fn, 'w') as outfile:
                             outfile.write(content)
                     else:
-                        print 'could not get {0}'.format(player_code)
+                        self.logger.debug('could not get {0}'.format(player_code))
 
                     if from_cache:
-                        print 'got url from cache'
+                        self.logger.debug('got url from cache')
 
                     else:
                         time.sleep(2)
 
                 else:
-                    print 'could not get {0}'.format(player_code)
+                    self.logger.debug('could not get {0}'.format(player_code))
 
     
     def simscores(self, player_code):

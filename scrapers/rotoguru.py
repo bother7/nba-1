@@ -2,9 +2,9 @@ from datetime import datetime
 import logging
 from urllib import urlencode
 
-from EWTScraper import EWTScraper
+from nba.scrapers import scraper
 
-class RotoGuruNBAScraper(EWTScraper):
+class RotoGuruNBAScraper(scraper.EWTScraper):
     '''
 
     Usage:

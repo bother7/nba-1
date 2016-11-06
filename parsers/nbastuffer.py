@@ -1,18 +1,13 @@
-import csv
 import logging
-import numbers
-import pprint
 import re
-import xlrd
 
-from NBAGames import NBAGames
-from NBATeamNames import NBATeamNames
+from nba.teams import NBATeamNames
 
 
-class NBAStufferParser():
+class NBAStufferParser(object):
 
     '''
-    Parses xls file of NBA game info from nbastuffer.com into game dictionaries
+    Parses xls or csv file of NBA game info from nbastuffer.com into game dictionaries
 
     Example:
         p = NBAStufferParser()
@@ -24,33 +19,33 @@ class NBAStufferParser():
     
     '''
 
-    def __init__(self, **kwargs):
+    def __init__(self, nbadotcom_games = {}, omit = None):
         '''
         Args:
-            **kwargs: 
+            nbadotcom_games (dict): key-value pair of gamecode and nbacom_game_id
+            omit (list): fields to omit from nbastuffer files
         '''
 
-        logging.getLogger(__name__).addHandler(logging.NullHandler())
+        self.logger = logging.getLogger(__name__)
+        self.logger.addHandler(logging.NullHandler())
 
-        if 'names' in kwargs:
-            self.names = kwargs['names']
-        else:
-            self.names = NBATeamNames()
-        
-        if 'nbadotcom_games' in kwargs:
-            self.nbadotcom_games = kwargs['nbadotcom_games']
-        else:
-            self.nbadotcom_games = {}
-            logging.error('no nbadotcom_games')
+        self.names = NBATeamNames()
+        self.nbadotcom_games = nbadotcom_games
 
-        if 'omit' in kwargs:
-            self.omit = kwargs['omit']
+        if omit:
+            self.omit = omit
         else:
-            self.omit = ['teams', 'f', 'moneyline', 'movements', 'opening_odds']
+            self.omit = ['teams', 'f', 'moneyline', 'moneyline_', 'movements', 'opening_odds', 'to to']
 
     def _fix_headers(self, headers_):
         '''
         Standardize with field names used by nba.com
+
+        Args:
+            headers_ (list):
+
+        Returns:
+            fixed (list):
         '''
 
         fixed = []
@@ -88,20 +83,35 @@ class NBAStufferParser():
         '''
         Inconsistent naming of New orleans pelicans / hornets / oklahoma city (katrina year)
         This produces the correct 3-letter code to match up to nba.com gamecodes
+
+        Args:
+            gamecode (str): 20151031/CHINOP
+            season (str): 2015-16
+
+        Returns:
+            gamecode (str):
         '''
 
         if season in ['2007', '2008', '2009', '2010', '2011', '2012']:
-            gamecode = gamecode.replace('NOP', 'NOH')
+            return gamecode.replace('NOP', 'NOH')
 
         elif season in ['2005', '2006']:
-            gamecode = gamecode.replace('NOP', 'NOK')
+            return gamecode.replace('NOP', 'NOK')
 
-        return gamecode
+        else:
+            return gamecode
 
     def _fix_starters(self, *args):
         '''
-        Strange unicode characters in some of the player (starter) fields
+        Removes strange unicode characters in some of the player (starter) fields
+
+        Args:
+            variable length list of strings
+
+        Returns:
+            fixed (list): strings with unicode characters removed
         '''
+
         fixed = []
         
         for team in args:
@@ -113,32 +123,47 @@ class NBAStufferParser():
             
         return fixed
         
-    def _gameid(self, gamecode, dataset):
+    def _gameid(self, gamecode, dataset='Regular'):
         '''
-        Takes gamecode in format 20151027/CLECHI
-        Returns game_id used by nba.com
+        Takes gamecode and returns game_id used by nba.com
+
+        Args:
+            gamecode(str): format 20151027/CLECHI.
+            dataset (str): name of dataset (regular season or playoff)
+
+        Returns:
+            gameid (str): 8 or 10-digit gamecode
+
         '''
         game = self.nbadotcom_games.get(gamecode)
         gameid = None
 
         if game:
             gameid = game.get('game_id', None)
-            logging.debug('_gameid returns {0}'.format(gameid))
+            self.logger.debug('_gameid returns {0}'.format(gameid))
 
         else:
             # right now, don't have playoffs in games database, no need to print all of those errors
             if 'Regular' in dataset:
-                logging.error('_gameid: could not find id for gamecode {0}'.format(gamecode))
+                self.logger.warning('_gameid: could not find id for gamecode {0}'.format(gamecode))
     
             else:
-                logging.debug('_gameid: could not find id for playoff gamecode {0}'.format(gamecode))
+                self.logger.debug('_gameid: could not find id for playoff gamecode {0}'.format(gamecode))
             
         return gameid
 
     def _gamecode(self, away, home):
         '''
+        Returns gamecode based on game_pair from nbastuffer dataset
         Game_pair is a list with two elements: first is dictionary of away team, second is dictionary of home team
-        Returns gamecode in format 20141013/CHIBOS
+
+        Args:
+            away (dict): top row in game_pair
+            home (dict): bottom row in game_pair
+
+        Returns:
+             gamecode (str): in format 20141031/CHICLE
+
         '''
 
         gamecode = None
@@ -153,10 +178,10 @@ class NBAStufferParser():
             if match:
                 if len(match.group(3)) > 2:
                     gamecode = '{0}{1}{2}/{3}{4}'.format(match.group(3), match.group(1), match.group(2), away_team, home_team)
-                    logging.debug('gamecode: {0}'.format(gamecode))
+                    #self.logger.debug('gamecode: {0}'.format(gamecode))
                 else:
                     gamecode = '20{0}{1}{2}/{3}{4}'.format(match.group(3), match.group(1), match.group(2), away_team, home_team)
-                    logging.debug('gamecode: {0}'.format(gamecode))
+                    #self.logger.debug('gamecode: {0}'.format(gamecode))
 
             else:
                 gamecode = '{0}/{1}{2}'.format(gamedate, away_team, home_team)
@@ -166,19 +191,30 @@ class NBAStufferParser():
             season = away.get('dataset', 'XXXX')[0:4]
             gamecode = self._fix_new_orleans(gamecode, season)
 
-        logging.debug('_gamecode returns {0}'.format(gamecode))
+        self.logger.debug('_gamecode returns {0}'.format(gamecode))
         return gamecode
 
-    def _get_closing(self, team1, team2, rowidx):
+    def _get_closing(self, team1, team2, rowidx=0):
         '''
         Takes 2 team dictionaries, extracts cell with closing odds / closing (could be line or spread) or sets to None
-        Various formats:
-            Sometimes total like 198
-            Sometimes + odds like 7
-            Sometimes - odds like -7
-            Sometimes a hybrid like -5.5 -05
-            Sometimes includes PK (which is Pick'Em, 0 spread)
-            Sometimes looks like -1.5-05
+
+        Args:
+            team1 (dict):
+            team2 (dict):
+            rowidx (int):
+
+        Returns:
+            team1_odds (str):
+            team2_odds (str):
+
+        Examples:
+            Various formats:
+                Sometimes total like 198
+                Sometimes + odds like 7
+                Sometimes - odds like -7
+                Sometimes a hybrid like -5.5 -05
+                Sometimes includes PK (which is Pick'Em, 0 spread)
+                Sometimes looks like -1.5-05
         '''
         
         team1_odds = team1.get('closing_odds', None)
@@ -192,7 +228,7 @@ class NBAStufferParser():
             if team1_odds == None or team1_odds == '':
                 team1_odds = team1.get('spread', None)
                 team2_odds = team1.get('total', None)
-                logging.error('have to rely on opening odds: {0}, {1}: {2}'.format(team2.get('gamedate', 'Gamedate N/A'), team1.get('teams', 'Team N/A'), team2.get('teams', 'Team N/A')))
+                self.logger.error('have to rely on opening odds: {0}, {1}: {2}'.format(team2.get('gamedate', 'Gamedate N/A'), team1.get('teams', 'Team N/A'), team2.get('teams', 'Team N/A')))
 
         # odds are stored under 'closing_odds' and 'closing' depending on the year
         if team2_odds == None or team1_odds == '':
@@ -201,14 +237,14 @@ class NBAStufferParser():
             if team2_odds == None or team1_odds == '':
                 team2_odds = team2.get('total', None)
                 team1_odds = team1.get('spread', None)
-                logging.error('have to rely on opening odds: {0}, {1}: {2}'.format(team2.get('gamedate', 'Gamedate N/A'), team1.get('teams', 'Team N/A'), team2.get('teams', 'Team N/A')))
+                self.logger.error('have to rely on opening odds: {0}, {1}: {2}'.format(team2.get('gamedate', 'Gamedate N/A'), team1.get('teams', 'Team N/A'), team2.get('teams', 'Team N/A')))
 
         # if can't obtain anything, then skip further processing on odds
         if team1_odds == None or team1_odds == '':
-            logging.error('error _get_closing: line %d | team1_odds: %s  team2_odds %s' % (rowidx, team1_odds, team2_odds))
+            self.logger.error('error _get_closing: line %d | team1_odds: %s  team2_odds %s' % (rowidx, team1_odds, team2_odds))
 
         elif team2_odds == None or team1_odds == '':
-            logging.error('error _get_closing: line %d | team1_odds: %s  team2_odds %s' % (rowidx, team1_odds, team2_odds))
+            self.logger.error('error _get_closing: line %d | team1_odds: %s  team2_odds %s' % (rowidx, team1_odds, team2_odds))
 
         else:
             '''
@@ -225,7 +261,7 @@ class NBAStufferParser():
 
             # otherwise strip out multiple odds if present
             else:
-                match = re.search(r'([-]?\d+)\s?.*?', team1_odds)
+                match = re.search(r'([-]?\d+\.?\d?)\s?.*?', team1_odds)
 
                 if match:
                     team1_odds = match.group(1)
@@ -236,68 +272,74 @@ class NBAStufferParser():
 
             # otherwise strip out multiple odds if present
             else:
-                match = re.search(r'([-]?\d+)\s?.*?', team2_odds)
+                match = re.search(r'([-]?\d+\.?\d?)\s?.*?', team2_odds)
 
                 if match:
                     team2_odds = match.group(1)
 
-        logging.debug('team odds: {0}, {1}: {2}, {3}'.format(team1.get('teams', 'Team N/A'), team2.get('teams', 'Team N/A'), team1_odds, team2_odds))
+        self.logger.debug('team odds: {0}, {1}: {2}, {3}'.format(team1.get('teams', 'Team N/A'), team2.get('teams', 'Team N/A'), team1_odds, team2_odds))
                
         return team1_odds, team2_odds
 
     def _implied_total(self, game_total, spread):
         '''
         Takes game total and spread and returns implied total based on those values
+
+        Args:
+            game_total (float): something like 201.5
+            spread (float): something like -1.5
+
+        Returns:
+            implied_total (float): something like 100.25
         '''
 
         try:
-            return (game_total/float(2)) - (spread/float(2))
+            return (float(game_total)/float(2)) - (float(spread)/float(2))
 
         except TypeError, e:
-            logging.error('implied total error: {0}'.format(e.message))
+            self.logger.error('implied total error: {0}'.format(e.message))
             return None
                 
     def _is_total_or_spread(self, val1, val2):
         '''
         Tests if it is a game total or a point spread; former is always larger
+
+        Args:
+            val1 (float):
+            val2 (float):
+
+        Returns:
+            val_type (str): 'total' or 'spread'
         '''
 
-        if (isinstance(val1, numbers.Number) and isinstance(val2, numbers.Number)):
-            if val1 > val2:
+        try:
+            if float(val1) > float(val2):
                 return 'total'
             else:
                 return 'spread'
 
-        else:
-            try:
-                if float(val1) > float(val2):
-                    return 'total'
-                else:
-                    return 'spread'
-
-            except:
-                logging.error('{0} or {1} is not a number'.format(val1, val2))
-                return None
+        except:
+            self.logger.error('{0} or {1} is not a number'.format(val1, val2))
+            return None
 
     def _point_spread(self, odds):
         '''
         Takes point spread, can be negative or positive, assumes that spread is for team1
-        Returns point spread for team1 and team2
+
+        Args:
+            odds (float):
+
+        Returns:
+            team1_spread (float):
+            team2_spread (float):
         '''
 
-        if odds == 0:
-            team1_spread = 0
-            team2_spread = 0
+        try:
+            return float(odds), 0 - float(odds)
 
-        elif isinstance(odds, numbers.Number):
-            team1_spread = odds
-            team2_spread = float(0) - odds
-
-        else:
-            team1_spread = None
-            team2_spread = None
-
-        return team1_spread, team2_spread
+        except Exception as e:
+            self.logger.exception(e.message)
+            return None, None
 
     def _rest(self, team):
         '''
@@ -353,7 +395,7 @@ class NBAStufferParser():
         NBAStuffer uses the city name only, not the team name, which is annoying b/c New Orleans / Charlotte multiple teams over time
         '''
         
-        return self.names.city_to_short(team_name)
+        return self.names.city_to_code(team_name)
 
     def _total_and_spread(self, team1, team2, rowidx):
         '''
@@ -364,18 +406,20 @@ class NBAStufferParser():
         # team1_odds, team2_odds are in -8 195 format (depending on whether total or spread
         # type will be "total" or "spread"
         team1_odds, team2_odds = self._get_closing(team1, team2, rowidx)
+        self.logger.info('team1 odds: {}'.format(team1_odds))
+        self.logger.info('team2 odds: {}'.format(team2_odds))
         team1_type = self._is_total_or_spread(team1_odds, team2_odds)
 
         game_ou = None
         away_spread = None
         home_spread = None
-        
+
         if team1_odds is not None and team2_odds is not None:
             # if team1_odds is total, then team2_odds is spread
             # set the game_ou and then calculate spreads
             if team1_type == 'total':       
                 game_ou = team1_odds
-                away_spread, home_spread = self._point_spread(team2_odds)
+                home_spread, away_spread = self._point_spread(team2_odds)
                 
             # if team1_odds is a spread,
             # calculate spreads for both teams and then set the game_ou
@@ -384,10 +428,10 @@ class NBAStufferParser():
                 game_ou = team2_odds
                 
             else:
-                logging.error('row {0}: not spread or line - {1} {2}'.format(rowidx, team1_odds, team2_odds))
+                self.logger.error('row {0}: not spread or line - {1} {2}'.format(rowidx, team1_odds, team2_odds))
 
         else:
-            logging.error('row {0}: not spread or line - {1} {2}'.format(rowidx, team1_odds, team2_odds))
+            self.logger.error('row {0}: not spread or line - {1} {2}'.format(rowidx, team1_odds, team2_odds))
        
         return game_ou, away_spread, home_spread
 
@@ -395,19 +439,25 @@ class NBAStufferParser():
         '''
         Goes through data rows two at a time (grouped by home/away team in same game)
         Returns list of (list of 2 dictionaries (home and away info) that represents one game)
+
+        Args:
+            rows (list): lines from csv file
+            headers (list): headers for each row
+
+        Returns:
+            gp (list): each game pair is a list of 2 teams that played in game
         '''
 
         gp = []
         
-        for rowidx in range(1,len(rows),2):
+        for rowidx in range(0,len(rows),2):
             # merge all of the cells in the row with the headers
             # proceed in pairs because 2 rows make for one game
 
-            team1 = dict(zip(headers, rows[rowidx]))
-            team2 = dict(zip(headers, rows[rowidx+1]))
-
+            team1 = dict(zip(headers, rows[rowidx].split(',')))
+            team2 = dict(zip(headers, rows[rowidx+1].split(',')))
             team1, team2 = self._fix_starters(team1, team2)
-            
+
             if team1 and team2:
                 # convert team city to 3-letter code
                 # add codes to both teams in game_pair
@@ -420,6 +470,16 @@ class NBAStufferParser():
                 team2['away_team'] = team1['team_code']
                 team2['home_team'] = team2['team_code']
 
+                # team ids
+                team1['team_id'] = self.names.code_to_id(team1['team_code'])
+                team2['team_id'] = self.names.code_to_id(team2['team_code'])
+                team1['opponent_team_id'] = self.names.code_to_id(team1['opponent_team_code'])
+                team2['opponent_team_id'] = self.names.code_to_id(team2['opponent_team_code'])
+                team1['away_team_id'] = self.names.code_to_id(team1['away_team'])
+                team2['away_team_id'] = self.names.code_to_id(team2['away_team'])
+                team1['home_team_id'] = self.names.code_to_id(team1['home_team'])
+                team2['home_team_id'] = self.names.code_to_id(team2['home_team'])
+
                 # opponent points
                 team1['opponent_points'] = team2['pts']
                 team2['opponent_points'] = team1['pts']
@@ -430,9 +490,17 @@ class NBAStufferParser():
                 team1['game_ou'] = game_ou
                 team1['away_spread'] = away_spread
                 team1['home_spread'] = home_spread
+
+                away_implied_total = self._implied_total(game_ou, away_spread)
+                home_implied_total = self._implied_total(game_ou, home_spread)
+
+                team1['away_implied_total'] = away_implied_total
+                team1['home_implied_total'] = home_implied_total
                 team2['game_ou'] = game_ou
                 team2['away_spread'] = away_spread
                 team2['home_spread'] = home_spread
+                team2['away_implied_total'] = away_implied_total
+                team2['home_implied_total'] = home_implied_total
 
                 # gamecode is in 20151030/DETCHI
                 # gameid is nbadotcom identifier for games
@@ -442,19 +510,50 @@ class NBAStufferParser():
                 team2['gamecode'] = gamecode
                 team1['game_id'] = game_id
                 team2['game_id'] = game_id
-                gp.append([team1, team2])
 
                 # rest
                 team1 = self._rest(team1)
                 team2 = self._rest(team2)
 
+                # fix closing
+                if team1.has_key('closing'):
+                    team1['closing_odds'] = team1['closing']
+                    team1.pop('closing')
+
+                if team2.has_key('closing'):
+                    team2['closing_odds'] = team2['closing']
+                    team2.pop('closing')
+
+                # fix gamedate
+                if team1.has_key('gamedate'):
+                    team1['game_date'] = team1['gamedate']
+                    team1.pop('gamedate')
+
+                if team2.has_key('gamedate'):
+                    team2['game_date'] = team2['gamedate']
+                    team2.pop('gamedate')
+
+                # regular season
+                if 'Regular' in team1['dataset']:
+                    team1['is_regular_season'] = True
+                    team2['is_regular_season'] = True
+
+                # overtime
+                if team1.get('ot1'):
+                    team1['has_ot'] = True
+                    team2['has_ot'] = True
+
                 # omit some fields - can pass parameter or use defaults
                 for field in self.omit:
-                    team1.pop(field, None)
-                    team2.pop(field, None)
-                    
+                    team1.pop(field.lower(), None)
+                    team2.pop(field.lower(), None)
+                    team1.pop(field.upper(), None)
+                    team2.pop(field.upper(), None)
+
+                gp.append([team1, team2])
+
             else:
-                logging.error('%s | row %d: could not get team1 or team2 - %s' % (sheet.name, rowidx))
+                self.logger.error('could not get team1 or team2')
 
         return gp
 
@@ -503,14 +602,16 @@ class NBAStufferParser():
                 team2['gamecode'] = gamecode
                 team1['game_id'] = game_id
                 team2['game_id'] = game_id
-                gp.append([team1, team2])
+                team2['gamecode'] = gamecode
 
                 # rest
                 team1 = self._rest(team1)
                 team2 = self._rest(team2)
-                
+
+                gp.append([team1, team2])
+
             else:
-                logging.error('%s | row %d: could not get team1 or team2 - %s' % (sheet.name, rowidx))
+                self.logger.error('%s | row %d: could not get team1 or team2 - %s' % (sheet.name, rowidx))
 
         return gp
 
@@ -534,4 +635,42 @@ class NBAStufferParser():
         return _headers
 
 if __name__ == "__main__":
-    pass
+    import glob
+    import pprint
+    import random
+
+    from nba.db.pgsql import NBAPostgres
+
+    logging.basicConfig(level=logging.ERROR)
+    p = NBAStufferParser()
+    db = NBAPostgres()
+
+    fixed_games = []
+
+    for fn in glob.glob('/home/sansbacon/workspace/nba-data/nbastuffer/csv/*Box*.csv'):
+
+        with open(fn, 'r') as infile:
+            rows = infile.readlines()
+
+        headers = rows.pop(0).split(',')
+        headers = p.headers(headers)
+        game_pairs = p.game_pairs(rows, headers)
+
+        wanted = ['is_regular_season', 'has_ot', 'dataset', 'game_date', 'venue', 'rest_days', 'days_last_game', 'back_to_back', 'back_to_back_to_back',
+                  'three_in_four', 'four_in_five', 'gamecode', 'team_code', 'team_id', 'opponent_team_code', 'opponent_team_id',
+                  'q1', 'q2', 'q3', 'q4', 'ot1', 'ot2', 'ot3', 'ot4',
+                  'away_team', 'away_team_id', 'home_team', 'home_team_id',
+                  'has_ot', 'poss', 'pts', 'opponent_points', 'pace', 'deff', 'oeff', 'opening_spread', 'opening_total', 'closing_odds',
+                  'game_ou', 'away_spread', 'home_spread', 'away_implied_total', 'home_implied_total']
+
+        for game_pair in game_pairs:
+            for game in game_pair:
+                fixed_game = {k:v for k,v in game.iteritems() if k in wanted}
+
+                for k,v in fixed_game.iteritems():
+                    if v == '':
+                        fixed_game[k] = None
+
+                fixed_games.append(fixed_game)
+
+    db.insert_dicts(fixed_games, 'dfs.nbastuffer_boxes')
