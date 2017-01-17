@@ -1,6 +1,9 @@
 import datetime as dt
 import json
 import logging
+import os
+
+import browsercookie
 
 from nba.parsers.fantasylabs import FantasyLabsNBAParser
 from nba.scrapers.fantasylabs import FantasyLabsNBAScraper
@@ -20,23 +23,12 @@ class FantasyLabsNBAAgent(NBAAgent):
         players, pp_players = a.today_models()
     '''
 
-    def __init__(self, db=True, safe=True, use_cache=True):
+    def __init__(self, cache_name=None, db=True, safe=True):
 
         # see http://stackoverflow.com/questions/8134444
-        NBAAgent.__init__(self)
+        NBAAgent.__init__(self, cache_name)
 
-        self.logger = logging.getLogger(__name__)
 
-        if db:
-            self.db = FantasyLabsNBAPg()
-
-        self.safe = safe
-
-        if use_cache:
-            self.scraper = FantasyLabsNBAScraper(use_cache=use_cache)
-
-        else:
-            self.scraper = FantasyLabsNBAScraper()
 
         self.parser = FantasyLabsNBAParser()
 
@@ -160,7 +152,7 @@ class FantasyLabsNBAAgent(NBAAgent):
 
         return self.parser.games(self.scraper.games_today())
 
-    def today_models(self, model_name='default', fn=None, insert_db=False):
+    def today_model(self, model_name='phan', fn=None, insert_db=False):
         '''
         Gets list of player models for today's games
 
@@ -226,6 +218,7 @@ class FantasyLabsNBAAgent(NBAAgent):
         '''
 
         sql = "SELECT DISTINCT game_date FROM dfs.salaries WHERE source='fl' and dfs_site='dk'"
+
         # now execute it
         
         '''
@@ -236,9 +229,9 @@ class FantasyLabsNBAAgent(NBAAgent):
 
         if self.db and insert_db:
             self.db.insert_salaries(pp_players)
-        '''
-        
+
         return players, pp_players
-        
+        '''
+
 if __name__ == '__main__':
     pass

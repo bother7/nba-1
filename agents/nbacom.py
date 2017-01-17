@@ -220,9 +220,10 @@ class NBAComAgent(NBAAgent):
 
             if base:
                 base.update(ps_adv)
-                ps_base[pid] = base       
+                ps_base[pid] = base
 
-        return self.nbadb.insert_playerstats(ps_base.values(), table_name='stats.cs_playerstats', game_date=yesterday)
+        return ps_base.values()
+        #return self.nbadb.insert_playerstats(ps_base.values(), table_name='stats.cs_playerstats', game_date=yesterday)
 
     def cs_team_gamelogs(self, season, date_from=None, date_to=None):
         '''

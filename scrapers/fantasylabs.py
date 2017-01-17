@@ -1,6 +1,6 @@
 import logging
 
-#import browsercookie
+import browsercookie
 
 from ewt.scraper import EWTScraper
 from nba.dates import *
@@ -23,32 +23,24 @@ class FantasyLabsNBAScraper(EWTScraper):
     Most of this code is identical with NFL
     '''
 
-    def __init__(self, use_cache=1, **kwargs):
+    def __init__(self, cache_name=None):
 
         '''
-        EWTScraper parameters: 'expire_time', 'headers', 'use_cache'
+        EWTScraper parameters:
         '''
 
         # see http://stackoverflow.com/questions/8134444
-        EWTScraper.__init__(self, use_cache=use_cache, **kwargs)
+        EWTScraper.__init__(self, cache_name=cache_name, cookies=browsercookie.firefox())
 
-        self.logger = logging.getLogger(__name__)
+        logging.getLogger(__name__).addHandler(logging.NullHandler())
 
-        if 'default_model' in kwargs:
-            self.default_model = kwargs['default_model']
-        else:
-            self.default_model = 'default'
-
-        if 'model_urls' in kwargs:
-            self.model_urls = kwargs['model_urls']
-        else:
-            self.model_urls = {
+        self.model_urls = {
                 'default': 'http://www.fantasylabs.com/api/playermodel/2/{0}/?modelId=100605',
                 'bales': 'http://www.fantasylabs.com/api/playermodel/2/{0}/?modelId=193714',
-                'phan': 'http://www.fantasylabs.com/api/playermodel/2/{0}/?modelId=193718',
+                'phan': 'http://www.fantasylabs.com/api/playermodel/2/{0}/?modelId=661266',
                 'tournament': 'http://www.fantasylabs.com/api/playermodel/2/{0}/?modelId=193722',
                 'cash': 'http://www.fantasylabs.com/api/playermodel/2/{0}/?modelId=193723'
-            }
+        }
 
     def games_day(self, game_date):
         '''
@@ -141,8 +133,7 @@ class FantasyLabsNBAScraper(EWTScraper):
             model_day=datetime.datetime.strftime(datetime.datetime.today(), site_format('fl'))
             logging.debug('scraper.model: model_day is {0}'.format(model_day))
 
-        #return self.get_json(url=url.format(model_day))
-        #cj = browsercookie.chrome()
+
         return self.get_json(url=url.format(model_day)) #, cookies=cj)
 
     def models(self, start_date, end_date, model_name=None):

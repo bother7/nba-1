@@ -22,6 +22,8 @@ class NBASeasons(object):
 
         # see https://docs.python.org/2/library/collections.html#collections.OrderedDict
         d = {
+            "2016-17": {"start": datetime.datetime.strptime("10-25-2016", "%m-%d-%Y"),
+                        "end": datetime.datetime.strptime("04-12-2017", "%m-%d-%Y")},
             "2015-16": {"start": datetime.datetime.strptime("10-27-2015", "%m-%d-%Y"), "end": datetime.datetime.strptime("04-13-2016", "%m-%d-%Y")},
             "2014-15": {"start": datetime.datetime.strptime("10-28-2014", "%m-%d-%Y"), "end": datetime.datetime.strptime("04-15-2015", "%m-%d-%Y")},
             "2013-14": {"start": datetime.datetime.strptime("10-29-2013", "%m-%d-%Y"), "end": datetime.datetime.strptime("04-16-2014", "%m-%d-%Y")},

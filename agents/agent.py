@@ -4,6 +4,9 @@ import json
 import logging
 import os
 
+import browsercookie
+
+from nba.db.pgsql import NBAPostgres
 from nba.players import NBAPlayers
 from nba.seasons import NBASeasons
 
@@ -17,14 +20,25 @@ class NBAAgent(object):
 
     '''
 
-    def __init__(self):
+    def __init__(self, cache_name=None, db=False, safe=True):
         '''
         Arguments:
             db (bool):
         '''
-        self.logger = logging.getLogger(__name__)
+        logging.getLogger(__name__).addHandler(logging.NullHandler())
         self.nbap = NBAPlayers()
         self.nbas = NBASeasons()
+
+        if db:
+            self.db = NBAPostgres()
+
+        self.safe = safe
+        if cache_name:
+            self.cache_name = cache_name
+        else:
+            self.cache_name = os.path.join(os.path.expanduser("~"), '.rcache', cache_name)
+
+        self.scraper = FantasyLabsNBAScraper(cj=browsercookie.firefox(), cache_name=self.cache_name)
 
     def _read_csv (self, csv_fname):
         '''
