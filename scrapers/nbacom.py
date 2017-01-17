@@ -31,11 +31,9 @@ class NBAComScraper(EWTScraper):
     def boxscore(self, game_id, season):
         '''
         Boxscore from a single game
-
         Arguments:
             game_id: numeric identifier of game
             season: string in YYYY-YY format (2015-16)
-
         Returns:
             content: python data structure of json documnt
         '''
@@ -62,10 +60,8 @@ class NBAComScraper(EWTScraper):
     def boxscore_advanced(self, game_id):
         '''
         Boxscore from a single game
-
         Arguments:
             game_id: numeric identifier of game (has to be 10-digit, may need two leading zeroes)
-
         Returns:
             content: python data structure of json document
         '''
@@ -93,15 +89,12 @@ class NBAComScraper(EWTScraper):
     def boxscores(self, gids, season, box_type='both', save=False, savedir=None):
         '''
         Download boxscores for all of the game_ids provided
-
         Arguments:
             gids(list): nba.com game_ids
             season(str): in '2014-15' format
             box_type(str): ['base', 'advanced', 'both']
-
         Returns:
             boxes(dict): keys are the game_id, value is a dictionary with 'base' and 'adv' keys, that value is parsed json resource
-
         '''
 
         boxes = defaultdict(dict)
@@ -158,8 +151,8 @@ class NBAComScraper(EWTScraper):
         }
 
         # override defaults with **kwargs
-        for key, value in kwargs.iteritems():
-            if params.has_key(key):
+        for key, value in kwargs.items():
+            if key in params:
                 params[key] = value
 
         content = self.get_json(url=base_url, payload=params)
@@ -198,8 +191,8 @@ class NBAComScraper(EWTScraper):
         }
 
         # override defaults with **kwargs
-        for key, value in kwargs.iteritems():
-            if params.has_key(key):
+        for key, value in kwargs.items():
+            if key in params:
                 params[key] = value
 
         content = self.get_json(url=base_url, payload=params)
@@ -233,10 +226,8 @@ class NBAComScraper(EWTScraper):
     def playerstats(self, season, **kwargs):
         '''
         Document has one line of stats per player
-
         Arguments:
             season(str): such as 2015-16
-
         Returns:
             content: parsed json response from nba.com
         '''
@@ -277,8 +268,8 @@ class NBAComScraper(EWTScraper):
         }
 
         # override defaults with **kwargs
-        for key, value in kwargs.iteritems():
-            if params.has_key(key):
+        for key, value in kwargs.items():
+            if key in params:
                 params[key] = value
 
         content = self.get_json(url=base_url, payload=params)
@@ -303,8 +294,8 @@ class NBAComScraper(EWTScraper):
         }
 
         # override defaults with **kwargs
-        for key, value in kwargs.iteritems():
-            if params.has_key(key):
+        for key, value in kwargs.items():
+            if key in params:
                 params[key] = value
 
         content = self.get_json(url=base_url, payload=params)
@@ -328,8 +319,8 @@ class NBAComScraper(EWTScraper):
         }
 
         # override defaults with **kwargs
-        for key, value in kwargs.iteritems():
-            if params.has_key(key):
+        for key, value in kwargs.items():
+            if key in params:
                 params[key] = value
 
         content = self.get_json(url=base_url, payload=params)
@@ -376,8 +367,8 @@ class NBAComScraper(EWTScraper):
         }
 
         # override defaults with **kwargs
-        for key, value in kwargs.iteritems():
-            if params.has_key(key):
+        for key, value in kwargs.items():
+            if key in params:
                 params[key] = value
 
         content = self.get_json(url=base_url, payload=params)
@@ -422,8 +413,8 @@ class NBAComScraper(EWTScraper):
         }
 
         # override defaults with **kwargs
-        for key, value in kwargs.iteritems():
-            if params.has_key(key):
+        for key, value in kwargs.items():
+            if key in params:
                 params[key] = value
 
         content = self.get_json(url=base_url, payload=params)
@@ -436,13 +427,10 @@ class NBAComScraper(EWTScraper):
     def teams(self):
         '''
         nba.com stores team_id and team_code as a variable in a javascript file
-
         Arguments:
             None
-
         Returns:
             javascript file with js variable containing team_ids and team names
-
         '''
 
         url = 'http://stats.nba.com/scripts/custom.min.js'
@@ -494,8 +482,8 @@ class NBAComScraper(EWTScraper):
         }
 
         # override defaults with **kwargs
-        for key, value in kwargs.iteritems():
-            if params.has_key(key):
+        for key, value in kwargs.items():
+            if key in params:
                 params[key] = value
 
         content = self.get_json(url=base_url, payload=params)
