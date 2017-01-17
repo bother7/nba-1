@@ -53,7 +53,7 @@ class DraftKingsNBAParser():
             lineup = self._contest_lineup(lineup_string)
 
             if len(lineup) > 0:
-                for key, value in lineup.items():
+                for key, value in list(lineup.items()):
                     entry[key] = value
 
             return entry

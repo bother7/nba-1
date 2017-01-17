@@ -1,7 +1,7 @@
 import mmap
 import os
 
-class DraftKingsNBAScraper:
+class DraftKingsNBAScraper(object):
     '''
 
     Examples:

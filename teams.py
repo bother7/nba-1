@@ -132,12 +132,12 @@ class NBATeamNames:
             "1610612764": "WAS"
         }
 
-        self._code_to_ids = {v:k for k,v in self._ids_to_code.items()}
+        self._code_to_ids = {v:k for k,v in list(self._ids_to_code.items())}
         self._code_to_ids['NOH'] = "1610612740"
         self._code_to_ids['NOK'] = "1610612740"
         self._code_to_ids['SEA'] = "1610612760"
         self._code_to_ids['NJN'] = "1610612751"
-        self._code_to_long = {v:k for k,v in self._long_to_code.items()}
+        self._code_to_long = {v:k for k,v in list(self._long_to_code.items())}
 
     def city_to_code(self, name):
         return self._city_to_code.get(name)

@@ -1,4 +1,4 @@
-from __future__ import division, print_function
+
 
 import multiprocessing
 import pickle
@@ -71,9 +71,9 @@ class NBASim(object):
         frame = frame[frame.Min >= 250]
         pool_size = len(frame.index)
         num_groups, remainder= divmod(pool_size, num_teams)
-        tids = (num_groups + 1) * range(1, 11)
+        tids = (num_groups + 1) * list(range(1, 11))
         frame['team_id'] = 0
-        frame['pid'] = range(1, pool_size + 1)
+        frame['pid'] = list(range(1, pool_size + 1))
         frame['TO'] = 0 - frame['TO']
 
         n = num_teams * num_players
@@ -83,7 +83,7 @@ class NBASim(object):
         # parallelize
         #results = Parallel(n_jobs=num_cores)(delayed(self._nbasim)(frame, i, n, prange, tid_range, value_columns, rank_columns) for i in xrange(1, iterations+1))
         results = self._nbasim_opt(frame=frame, i=0, n=n, num_teams=num_teams, team_ids=tids[0:pool_size],
-                                   prange=range(0, num_players), value_columns=value_columns, rank_columns=rank_columns)
+                                   prange=list(range(0, num_players)), value_columns=value_columns, rank_columns=rank_columns)
         players = results
         #players = pd.concat(results)
         players['VORP'] = players['TOT'] - players['TOT'].mean()

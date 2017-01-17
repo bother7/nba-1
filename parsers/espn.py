@@ -34,13 +34,13 @@ class ESPNNBAParser():
         all_players = {}
 
         s = EWTScraper()
-        page_numbers = range(1,11)
+        page_numbers = list(range(1,11))
 
         for page_number in page_numbers:
             url = 'http://espn.go.com/nba/salaries/_/page/{0}/seasontype/1'.format(page_number)
             content = s.get(url)
             players = player_page(content)
-            for id, name in players.items():
+            for id, name in list(players.items()):
                 all_players[id] = name
 
         with open('espn-nba-players.json', 'w') as outfile:
@@ -54,12 +54,12 @@ class ESPNNBAParser():
         with open('/home/sansbacon/PycharmProjects/untitled/espn-nba-players.json', 'r') as infile:
             espn_players = json.load(infile)
 
-        for player_code in espn_players.values():
+        for player_code in list(espn_players.values()):
             player_code = re.sub('[.\']', '', player_code)
             fn = '/home/sansbacon/538/{0}.json'.format(player_code)
 
             if os.path.isfile(fn):
-                print 'already have {0}'.format(fn)
+                print('already have {0}'.format(fn))
 
             else:
                 if len(player_code) > 3:
@@ -69,16 +69,16 @@ class ESPNNBAParser():
                         with open(fn, 'w') as outfile:
                             outfile.write(content)
                     else:
-                        print 'could not get {0}'.format(player_code)
+                        print('could not get {0}'.format(player_code))
 
                     if from_cache:
-                        print 'got url from cache'
+                        print('got url from cache')
 
                     else:
                         time.sleep(2)
 
                 else:
-                    print 'could not get {0}'.format(player_code)
+                    print('could not get {0}'.format(player_code))
 
     def fix_538player(playerjson):
 
@@ -97,7 +97,7 @@ class ESPNNBAParser():
         }
 
         player_stats = playerjson['player_stats']
-        player = {convert.get(k, k) : v for k, v in player_stats.items()}
+        player = {convert.get(k, k) : v for k, v in list(player_stats.items())}
 
         # fix values
         if player['rookie'] == '': player['rookie'] = '0'
@@ -123,7 +123,7 @@ class ESPNNBAParser():
                 players[match.group(1)] = match.group(2)
 
             else:
-                print 'could not get {0}'.format(link['href'])
+                print('could not get {0}'.format(link['href']))
 
         return players
 
@@ -141,7 +141,7 @@ class ESPNNBAParser():
                 from_cache = r.from_cache
 
         except requests.exceptions.RequestException as e:
-            print e
+            print(e)
 
         return content, from_cache
 

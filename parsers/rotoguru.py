@@ -1,6 +1,5 @@
 from datetime import datetime
 import logging
-import pprint
 import re
 
 
@@ -148,7 +147,7 @@ class RotoGuruNBAParser:
             
         for row in rows[1:]:
             cells = row.split(';')
-            sal = {k:v for k,v in dict(zip(headers, cells)).iteritems() if k in wanted}
+            sal = {k:v for k,v in dict(list(zip(headers, cells))).items() if k in wanted}
             sal['site'] = site
 
             # fix gamedate to YYYY-MM-DD

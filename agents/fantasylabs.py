@@ -50,7 +50,7 @@ class FantasyLabsNBAAgent(NBAAgent):
         '''
 
         fl_keys = ['PlayerId', 'Player_Name', 'Position', 'Team', 'Salary', 'Score', 'AvgPts', 'Ceiling', 'Floor', 'ProjPlusMinus']
-        fl_players = [{k: v for k,v in p.iteritems() if k in fl_keys} for p in models]
+        fl_players = [{k: v for k,v in p.items() if k in fl_keys} for p in models]
 
         # remove null values
         for idx, flp in enumerate(fl_players):

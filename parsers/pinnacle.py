@@ -3,10 +3,11 @@ PinnacleNBAParser.py
 http://xml.pinnaclesports.com/pinnaclefeed.aspx?sporttype=Basketball&sportsubtype=nba
 '''
 
-from datetime import datetime as dt
+from datetime import datetime
 from dateutil import tz
 import logging
 from operator import itemgetter
+import pprint
 
 from bs4 import BeautifulSoup
 

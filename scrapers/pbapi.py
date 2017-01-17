@@ -1,6 +1,6 @@
 import logging
 
-from nba.scrapers.scraper import EWTScraper
+from ewt.scraper import EWTScraper
 
 class ProBasketballAPIScraper(EWTScraper):
 

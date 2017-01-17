@@ -77,7 +77,7 @@ class NBAPlayers(object):
                 content = self.scraper.player_info(pid, season)
                 pi = self.parser.player_info(content)
                 
-                pi = {k.lower(): v for k,v in pi.iteritems()}
+                pi = {k.lower(): v for k,v in pi.items()}
                 pi.pop('games_played_flag', None)
                 pi['nbacom_team_id'] = pi.get('team_id', None)
                 pi.pop('team_id', None)
@@ -95,7 +95,7 @@ class NBAPlayers(object):
 
                 # have to convert empty strings to None, otherwise insert fails for integer/numeric columns
                 player_info= {}
-                for k,v in pi.iteritems():
+                for k,v in pi.items():
                     if not v:
                         player_info[k] = None
                     else:

@@ -46,11 +46,11 @@ class NBASeasons(object):
             "1996-97": {"start": datetime.datetime.strptime("11-01-1996", "%m-%d-%Y"), "end": datetime.datetime.strptime("04-20-1997", "%m-%d-%Y")}
         }
 
-        self._seasons = OrderedDict(sorted(d.items(), reverse=True))
+        self._seasons = OrderedDict(sorted(list(d.items()), reverse=True))
 
     def in_what_season(self, day):
         
-        if isinstance(day, basestring):
+        if isinstance(day, str):
             day = datetime.datetime.strptime(day, '%Y-%m-%d')
         
         for season in self._seasons:

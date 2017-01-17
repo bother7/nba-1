@@ -1,10 +1,10 @@
 from datetime import datetime
 import logging
-from urllib import urlencode
 
-from nba.scrapers import scraper
+from ewt.scraper import EWTScraper
 
-class RotoGuruNBAScraper(scraper.EWTScraper):
+
+class RotoGuruNBAScraper(EWTScraper):
     '''
 
     Usage:
@@ -14,12 +14,17 @@ class RotoGuruNBAScraper(scraper.EWTScraper):
 
     '''
 
-    def __init__(self, **kwargs):
+    def __init__(self, headers=None, cookies=None, cache_name=None):
+        '''
 
+        Args:
+            headers:
+            cookies:
+            cache_name:
+        '''
         logging.getLogger(__name__).addHandler(logging.NullHandler())
-
         # see http://stackoverflow.com/questions/8134444
-        EWTScraper.__init__(self, **kwargs)
+        EWTScraper.__init__(self, headers, cookies, cache_name)
         
     def data_day(self, day, extra_params=None):
         '''

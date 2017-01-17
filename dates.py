@@ -20,7 +20,7 @@ def date_list(d1, d2):
 
     # convert datestring into datetime object
     # strtodate knows the formats used by various sites
-    if isinstance(d1, basestring):
+    if isinstance(d1, str):
         try:
             d1 = strtodate(d1)
 
@@ -29,7 +29,7 @@ def date_list(d1, d2):
 
     # convert datestring into datetime object
     # strtodate knows the formats used by various sites
-    if isinstance(d2, basestring):
+    if isinstance(d2, str):
         try:
             d2 = strtodate(d2)
 

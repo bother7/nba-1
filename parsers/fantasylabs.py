@@ -42,7 +42,7 @@ class FantasyLabsNBAParser(object):
         games = []
 
         for item in content:
-            game = {k:v for k,v in item.items() if not k in omit}
+            game = {k:v for k,v in list(item.items()) if not k in omit}
             games.append(game)
             
         return games
@@ -75,11 +75,11 @@ class FantasyLabsNBAParser(object):
             for md in content.get('PlayerModels'):
                 player = {'site': site, 'gamedate': gamedate}
 
-                for k,v in md.items():
+                for k,v in list(md.items()):
 
                     if k == 'Properties':
 
-                        for k2,v2 in v.items():
+                        for k2,v2 in list(v.items()):
 
                             if not k2 in omit_properties:
                                 player[k2] = v2
@@ -99,7 +99,7 @@ class FantasyLabsNBAParser(object):
             
             site_ids = {'dk': 4, 'fd': 3, 'yahoo': 11}               
 
-            for pid, player in players.items():
+            for pid, player in list(players.items()):
                 for p in player:
                     if p.get('SourceId', None) == site_ids.get(site, None):
                         site_players.append(p)

@@ -296,7 +296,7 @@ class NBAStufferParser(object):
         try:
             return (float(game_total)/float(2)) - (float(spread)/float(2))
 
-        except TypeError, e:
+        except TypeError as e:
             self.logger.error('implied total error: {0}'.format(e.message))
             return None
                 
@@ -454,8 +454,8 @@ class NBAStufferParser(object):
             # merge all of the cells in the row with the headers
             # proceed in pairs because 2 rows make for one game
 
-            team1 = dict(zip(headers, rows[rowidx].split(',')))
-            team2 = dict(zip(headers, rows[rowidx+1].split(',')))
+            team1 = dict(list(zip(headers, rows[rowidx].split(','))))
+            team2 = dict(list(zip(headers, rows[rowidx+1].split(','))))
             team1, team2 = self._fix_starters(team1, team2)
 
             if team1 and team2:
@@ -516,20 +516,20 @@ class NBAStufferParser(object):
                 team2 = self._rest(team2)
 
                 # fix closing
-                if team1.has_key('closing'):
+                if 'closing' in team1:
                     team1['closing_odds'] = team1['closing']
                     team1.pop('closing')
 
-                if team2.has_key('closing'):
+                if 'closing' in team2:
                     team2['closing_odds'] = team2['closing']
                     team2.pop('closing')
 
                 # fix gamedate
-                if team1.has_key('gamedate'):
+                if 'gamedate' in team1:
                     team1['game_date'] = team1['gamedate']
                     team1.pop('gamedate')
 
-                if team2.has_key('gamedate'):
+                if 'gamedate' in team2:
                     team2['game_date'] = team2['gamedate']
                     team2.pop('gamedate')
 
@@ -573,8 +573,8 @@ class NBAStufferParser(object):
         gp = []
         
         for rowidx in range(1,sheet.nrows,2):
-            team1 = dict(zip(headers, rows[rowidx]))
-            team2 = dict(zip(headers, rows[rowidx+1]))
+            team1 = dict(list(zip(headers, rows[rowidx])))
+            team2 = dict(list(zip(headers, rows[rowidx+1])))
 
             if team1 and team2:
                 # convert team city to 3-letter code
@@ -665,9 +665,9 @@ if __name__ == "__main__":
 
         for game_pair in game_pairs:
             for game in game_pair:
-                fixed_game = {k:v for k,v in game.iteritems() if k in wanted}
+                fixed_game = {k:v for k,v in game.items() if k in wanted}
 
-                for k,v in fixed_game.iteritems():
+                for k,v in fixed_game.items():
                     if v == '':
                         fixed_game[k] = None
 

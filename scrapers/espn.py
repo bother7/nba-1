@@ -1,38 +1,41 @@
 '''
 ESPNNBAScraper
-This is just a shell based on NFL - need to build out for NBA 
 '''
 
 import logging
 import os
+import re
+import time
 
 from bs4 import BeautifulSoup
 
-from nba.scrapers import scraper
+from ewt.scraper import EWTScraper
 
-
-class ESPNNBAScraper(scraper.EWTScraper):
+class ESPNNBAScraper(EWTScraper):
     '''
 
     '''
 
-    def __init__(self, **kwargs):
+    def __init__(self, headers=None, cookies=None, cache_name=None):
+
         # see http://stackoverflow.com/questions/8134444
-        EWTScraper.__init__(self, **kwargs)
+        logging.getLogger(__name__).addHandler(logging.NullHandler())
 
-        self.logger = logging.getLogger(__name__)
-
-        if 'maxindex' in kwargs:
-            self.maxindex = kwargs['maxindex']
+        if not headers:
+            self.headers = {'Referer': 'http://www.fantasylabs.com/nfl/player-models/',
+                        'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:50.0) Gecko/20100101 Firefox/50.0'}
         else:
-            self.maxindex = 400
+            self.headers = headers
 
-        if 'projection_urls' in 'kwargs':
-            self.projection_urls = kwargs['projection_urls']
-        else:
-            base_url = 'http://games.espn.go.com/ffl/tools/projections?'
-            idx = [0, 40, 80, 120, 160, 200, 240, 280, 320, 360]
-            self.projection_urls = [base_url + 'startIndex=' + x for x in idx]
+        self.cookies = cookies
+        self.cache_name = cache_name
+
+        EWTScraper.__init__(self, headers=self.headers, cookies=self.cookies, cache_name=self.cache_name)
+
+        self.maxindex = 400
+        base_url = 'http://games.espn.go.com/ffl/tools/projections?'
+        idx = [0, 40, 80, 120, 160, 200, 240, 280, 320, 360]
+        self.projection_urls = [base_url + 'startIndex=' + x for x in idx]
 
     def player_page(self, content):
 
@@ -98,16 +101,23 @@ class ESPNNBAScraper(scraper.EWTScraper):
         return pages
 
 
-class FiveThirtyEightNBAScraper(scraper.EWTScraper):
+class FiveThirtyEightNBAScraper(EWTScraper):
     '''
 
     '''
 
-    def __init__(self, **kwargs):
-        # see http://stackoverflow.com/questions/8134444
-        EWTScraper.__init__(self, **kwargs)
+    def __init__(self, headers=None, cookies=None, cache_name=None):
+        logging.getLogger(__name__).addHandler(logging.NullHandler())
 
-        self.logger = logging.getLogger(__name__)
+        if not headers:
+            self.headers = {'Referer': 'http://www.fantasylabs.com/nfl/player-models/',
+                        'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:50.0) Gecko/20100101 Firefox/50.0'}
+        else:
+            self.headers = headers
+
+        self.cookies = cookies
+        self.cache_name = cache_name
+        EWTScraper.__init__(self, headers=self.headers, cookies=self.cookies, cache_name=self.cache_name)
 
     def espn_player_ids(self, pklfname=None):
 

@@ -32,7 +32,7 @@ class NBAComParser(object):
         exclude = ['game_sequence']
 
         for linescore in linescores:
-            fixed_linescore = {k.lower():v for k,v in linescore.items()}
+            fixed_linescore = {k.lower():v for k,v in list(linescore.items())}
             fixed_linescore.pop('game_sequence', None)
 
             fixed_linescore['team_game_id'] = '{0}:{1}'.format(fixed_linescore['team_id'], fixed_linescore['game_id'])
@@ -81,7 +81,7 @@ class NBAComParser(object):
         # add game_date for convenience
         # standardize on TOV rather than TO; playerstats uses TOV
         for row_set in player_results.get('rowSet'):
-            player = dict(zip(player_results.get('headers'), row_set))
+            player = dict(list(zip(player_results.get('headers'), row_set)))
 
             if game_date:
                 player['GAME_DATE'] = game_date
@@ -96,7 +96,7 @@ class NBAComParser(object):
 
         # add game_date for convenience
         for result in team_results['rowSet']:
-            team = dict(zip(team_results['headers'], result))
+            team = dict(list(zip(team_results['headers'], result)))
 
             if game_date:
                 team['GAME_DATE'] = game_date
@@ -105,7 +105,7 @@ class NBAComParser(object):
 
         # starter_bench
         for result in starter_bench_results['rowSet']:
-            sb = dict(zip(team_results['headers'], result))
+            sb = dict(list(zip(team_results['headers'], result)))
 
             if game_date:
                 sb['GAME_DATE'] = game_date
@@ -140,7 +140,7 @@ class NBAComParser(object):
         # add game_date for convenience
         # standardize on TOV rather than TO; playerstats uses TOV
         for row_set in player_results.get('rowSet'):
-            player = dict(zip(player_results.get('headers'), row_set))
+            player = dict(list(zip(player_results.get('headers'), row_set)))
 
             if game_date:
                 player['GAME_DATE'] = game_date
@@ -158,7 +158,7 @@ class NBAComParser(object):
 
         # add game_date for convenience
         for result in team_results['rowSet']:
-            team = dict(zip(team_results['headers'], result))
+            team = dict(list(zip(team_results['headers'], result)))
 
             if game_date:
                 team['GAME_DATE'] = game_date
@@ -180,10 +180,10 @@ class NBAComParser(object):
         '''
 
         # test if player or team
-        if base_boxscore[0].has_key('PLAYER_ID'):
+        if 'PLAYER_ID' in base_boxscore[0]:
             key = 'PLAYER_ID'
 
-        elif base_boxscore[0].has_key('TEAM_ID'):
+        elif 'TEAM_ID' in base_boxscore[0]:
             key = 'TEAM_ID'
 
         else:
@@ -211,7 +211,7 @@ class NBAComParser(object):
         result_set = content['resultSets'][0]
 
         for row_set in result_set['rowSet']:
-            game_log = dict(zip(result_set['headers'], row_set))
+            game_log = dict(list(zip(result_set['headers'], row_set)))
             player_gl.append(game_log)
 
         return player_gl
@@ -232,7 +232,7 @@ class NBAComParser(object):
         result_set = content['resultSets'][0]
 
         for row_set in result_set['rowSet']:
-            game_log = dict(zip(result_set['headers'], row_set))
+            game_log = dict(list(zip(result_set['headers'], row_set)))
             team_gl.append(game_log)
 
         return team_gl
@@ -252,7 +252,7 @@ class NBAComParser(object):
         rowset = result_set.get('rowSet')
 
         if headers and rowset:
-            return dict(zip(headers,rowset[0]))
+            return dict(list(zip(headers,rowset[0])))
 
         else:
             raise ValueError('player_info failed: no headers or rowset')
@@ -264,7 +264,7 @@ class NBAComParser(object):
         result_set = content['resultSets'][0]
 
         for row_set in result_set['rowSet']:
-            p.append(dict(zip(result_set['headers'], row_set)))
+            p.append(dict(list(zip(result_set['headers'], row_set))))
 
         return p
 
@@ -286,7 +286,7 @@ class NBAComParser(object):
         result_set = content['resultSets'][0]
 
         for row_set in result_set['rowSet']:
-            p = dict(zip(result_set['headers'], row_set))
+            p = dict(list(zip(result_set['headers'], row_set)))
 
             if stat_date:
                 p['STATDATE'] = stat_date
@@ -314,7 +314,7 @@ class NBAComParser(object):
         # want to get game_headers, east_standings, and west_standings
         # resultSets[0] is a list of games, with game_id, gamecode, teams, etc.
         for row_set in content['resultSets'][0]['rowSet']:
-            game_header = dict(zip(content['resultSets'][0]['headers'], row_set))
+            game_header = dict(list(zip(content['resultSets'][0]['headers'], row_set)))
             gamecode = game_header.get('GAMECODE', None)
 
             if gamecode:
@@ -325,18 +325,18 @@ class NBAComParser(object):
         # resultSets[1] are the game_linescores (includes results on a team-by-team, game-by-game basis)
         for row_set in content['resultSets'][1]['rowSet']:
             linescore_headers = [h.lower() for h in content['resultSets'][1]['headers']]
-            linescore = dict(zip(linescore_headers, row_set))
+            linescore = dict(list(zip(linescore_headers, row_set)))
             game_linescores.append(linescore)
 
         # resultSets[4] is a list of eastern_conference_standings
         for row_set in content['resultSets'][4]['rowSet']:
-            standings.append(dict(zip(content['resultSets'][4]['headers'], row_set)))
+            standings.append(dict(list(zip(content['resultSets'][4]['headers'], row_set))))
 
         # resultSets[5] is a list of western_conference_standings
         for row_set in content['resultSets'][5]['rowSet']:
-            standings.append(dict(zip(content['resultSets'][5]['headers'], row_set)))
+            standings.append(dict(list(zip(content['resultSets'][5]['headers'], row_set))))
 
-        sb = {'date': game_date, 'game_headers': game_headers.values(), 'game_linescores': self._fix_linescores(game_linescores), 'standings': standings}
+        sb = {'date': game_date, 'game_headers': list(game_headers.values()), 'game_linescores': self._fix_linescores(game_linescores), 'standings': standings}
         return sb
 
     def season_gamelogs(self,content,player_or_team):
@@ -349,7 +349,7 @@ class NBAComParser(object):
             headers = results['headers']
 
             for result in results['rowSet']:
-                gamelog = dict(zip(headers, result))
+                gamelog = dict(list(zip(headers, result)))
 
                 # add opponent_score
                 points = gamelog.get('PTS', None)
@@ -365,7 +365,7 @@ class NBAComParser(object):
             headers = result_set.get('headers')
 
             for row_set in result_set['rowSet']:
-                player_game = dict(zip(headers,row_set))
+                player_game = dict(list(zip(headers,row_set)))
                 gamelogs.append(player_game)
 
         return gamelogs
@@ -392,22 +392,22 @@ class NBAComParser(object):
                 headers = result_set['headers']
 
                 for row_set in result_set['rowSet']:
-                    result = dict(zip(headers, row_set))
+                    result = dict(list(zip(headers, row_set)))
                     dashboard['overall'].append(result)
 
             elif result_set['name'] == 'LocationTeamDashboard':
                 for row_set in result_set['rowSet']:
-                    result = dict(zip(headers, row_set))
+                    result = dict(list(zip(headers, row_set)))
                     dashboard['location'].append(result)
 
             elif result_set['name'] == 'DaysRestTeamDashboard':
                 for row_set in result_set['rowSet']:
-                    result = dict(zip(headers, row_set))
+                    result = dict(list(zip(headers, row_set)))
                     dashboard['days_rest'].append(result)
 
             elif result_set['name'] == 'WinsLossesTeamDashboard':
                 for row_set in result_set['rowSet']:
-                    result = dict(zip(headers, row_set))
+                    result = dict(list(zip(headers, row_set)))
                     dashboard['wins_losses'].append(result)
 
         return dashboard
@@ -423,7 +423,7 @@ class NBAComParser(object):
         headers = [h.lower() for h in result_set['headers']]
 
         for row_set in result_set['rowSet']:
-            teams.append(dict(zip(headers, row_set)))
+            teams.append(dict(list(zip(headers, row_set))))
 
         return teams
 
@@ -445,7 +445,7 @@ class NBAComParser(object):
         result_set = content['resultSets'][0]
 
         for row_set in result_set['rowSet']:
-            t = dict(zip(result_set['headers'], row_set))
+            t = dict(list(zip(result_set['headers'], row_set)))
 
             if stat_date:
                 t['STATDATE'] = stat_date

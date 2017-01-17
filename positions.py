@@ -31,7 +31,7 @@ class NBAPositions(object):
             conn.commit()
 
         except Exception as e:
-            print e.message
+            print(e.message)
             conn.rollback()
 
         finally:

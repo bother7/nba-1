@@ -1,7 +1,5 @@
 import logging
 
-import browsercookie
-
 from ewt.scraper import EWTScraper
 from nba.dates import *
 
@@ -19,20 +17,29 @@ class FantasyLabsNBAScraper(EWTScraper):
             datestr = datetime.strf
             model_json = s.model(model_date=datestr)
 
-    TODO: can make FantasyLabsParser base class
-    Most of this code is identical with NFL
     '''
 
-    def __init__(self, cache_name=None):
-
-        '''
-        EWTScraper parameters:
+    def __init__(self, headers=None, cookies=None, cache_name=None):
         '''
 
-        # see http://stackoverflow.com/questions/8134444
-        EWTScraper.__init__(self, cache_name=cache_name, cookies=browsercookie.firefox())
+        Args:
+            headers:
+            cookies:
+            cache_name:
+        '''
 
         logging.getLogger(__name__).addHandler(logging.NullHandler())
+
+        if not headers:
+            self.headers = {'Referer': 'http://www.fantasylabs.com/nfl/player-models/',
+                        'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:50.0) Gecko/20100101 Firefox/50.0'}
+        else:
+            self.headers = headers
+
+        self.cookies = cookies
+        self.cache_name = cache_name
+
+        EWTScraper.__init__(self, headers=self.headers, cookies=self.cookies, cache_name=self.cache_name)
 
         self.model_urls = {
                 'default': 'http://www.fantasylabs.com/api/playermodel/2/{0}/?modelId=100605',

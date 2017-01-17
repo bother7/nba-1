@@ -3,7 +3,7 @@ import json
 import logging
 import os
 
-from nba.scrapers.scraper import EWTScraper
+from ewt.scraper import EWTScraper
 
 
 class NBAComScraper(EWTScraper):
@@ -13,16 +13,20 @@ class NBAComScraper(EWTScraper):
         content = s.team_dashboard(team_id='1610612738', season='2015-16')
     '''
 
-    def __init__(self,**kwargs):
+    def __init__(self, headers=None, cookies=None, cache_name=None):
 
-        '''
-        EWTScraper parameters: 'dldir', 'expire_time', 'headers', 'use_cache'
-        '''
+        logging.getLogger(__name__).addHandler(logging.NullHandler())
 
-        # see http://stackoverflow.com/questions/8134444
-        EWTScraper.__init__(self, **kwargs)
-        self.logger = logging.getLogger(__name__)
-        self.logger.addHandler(logging.NullHandler())
+        if not headers:
+            self.headers = {'Referer': 'http://www.fantasylabs.com/nfl/player-models/',
+                        'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:50.0) Gecko/20100101 Firefox/50.0'}
+        else:
+            self.headers = headers
+
+        self.cookies = cookies
+        self.cache_name = cache_name
+
+        EWTScraper.__init__(self, headers=self.headers, cookies=self.cookies, cache_name=self.cache_name)
 
     def boxscore(self, game_id, season):
         '''
@@ -422,7 +426,7 @@ class NBAComScraper(EWTScraper):
                 params[key] = value
 
         content = self.get_json(url=base_url, payload=params)
-        self.logger.debug(self.responses[:-1])
+        logging.debug(self.responses[:-1])
 
         # if not from web either, then log an error
         if not content: logging.error('could not get content: {0}'.format(base_url))

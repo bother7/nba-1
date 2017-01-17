@@ -14,7 +14,7 @@ def dk_points(player):
         dk_pts(float): number of draftkings points scored by the player
     '''
 
-    cleaned_player = {k.lower(): v for k,v in player.iteritems()}
+    cleaned_player = {k.lower(): v for k,v in player.items()}
     dkpts = 0
     logger.debug('dkpts are {0}'.format(dkpts))
     dkpts += cleaned_player.get('pts', 0)

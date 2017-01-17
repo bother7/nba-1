@@ -1,4 +1,4 @@
-import cPickle as pickle
+import pickle as pickle
 import csv
 import json
 import logging
@@ -57,10 +57,10 @@ class NBAAgent(object):
         if os.path.exists(csv_fname):
             with open (csv_fname, 'r') as csvfile:
                 reader = csv.reader(csvfile)
-                headers = reader.next()
+                headers = next(reader)
 
                 for row in reader:
-                    list_of_dicts.append(dict(zip(headers, row)))
+                    list_of_dicts.append(dict(list(zip(headers, row))))
 
         else:
             raise ValueError('{0} does not exist'.format(csv_fname))

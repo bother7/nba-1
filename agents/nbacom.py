@@ -3,7 +3,7 @@ import datetime as dt
 import logging
 
 try:
-    import cPickle as pickle
+    import pickle as pickle
 
 except:
     import pickle
@@ -69,7 +69,7 @@ class NBAComAgent(NBAAgent):
         merged_players = []
         merged_teams = []
 
-        for gid, box in boxes.iteritems():
+        for gid, box in boxes.items():
 
             # players and teams are lists of dicts
             players, teams, starterbench = self.parser.boxscore(box)
@@ -85,14 +85,14 @@ class NBAComAgent(NBAAgent):
             teams_adv_dict = {t['TEAM_ID']: t for t in teams_adv}
 
             # now loop through players
-            for pid, player in players_dict.iteritems():
+            for pid, player in players_dict.items():
                 player_adv = players_adv_dict.get(pid)
 
                 if player_adv:
                     merged_players.append(self.merge_boxes(player, player_adv))
 
             # now loop through teams
-            for tid, team in teams_dict.iteritems():
+            for tid, team in teams_dict.items():
                 team_adv = teams_adv_dict.get(tid)
 
                 if team_adv:
@@ -142,7 +142,7 @@ class NBAComAgent(NBAAgent):
         for p in players:
             pti = {'game_date': game_date, 'nbacom_season_id': 22015, 'season': 2016}
 
-            for k,v in p.iteritems():
+            for k,v in p.items():
                 converted = convert.get(k)
                 if converted:
                     pti[converted] = v
@@ -222,7 +222,7 @@ class NBAComAgent(NBAAgent):
                 base.update(ps_adv)
                 ps_base[pid] = base
 
-        return ps_base.values()
+        return list(ps_base.values())
         #return self.nbadb.insert_playerstats(ps_base.values(), table_name='stats.cs_playerstats', game_date=yesterday)
 
     def cs_team_gamelogs(self, season, date_from=None, date_to=None):
@@ -299,7 +299,7 @@ class NBAComAgent(NBAAgent):
                 base.update(ts_adv)
                 ts_base[tid] = base
 
-        self.nbadb.insert_teamstats(ts_base.values(), table_name='stats.cs_teamstats', game_date=yesterday)
+        self.nbadb.insert_teamstats(list(ts_base.values()), table_name='stats.cs_teamstats', game_date=yesterday)
 
         return ts_base, ts_adv
 
@@ -405,7 +405,7 @@ class NBAComAgent(NBAAgent):
             tg1['opponent_team_id'] = game['visitor_team_id']
             tg1['is_home'] = True
 
-            teamgames.append({k:v for k,v in tg1.iteritems() if not k in to_drop})
+            teamgames.append({k:v for k,v in tg1.items() if not k in to_drop})
 
             tg2 = copy.deepcopy(game)
             tg2['team_code'] = game['visitor_team_code']
@@ -414,7 +414,7 @@ class NBAComAgent(NBAAgent):
             tg2['opponent_team_id'] = game['home_team_id']
             tg2['is_home'] = False
 
-            teamgames.append({k:v for k,v in tg2.iteritems() if not k in to_drop})
+            teamgames.append({k:v for k,v in tg2.items() if not k in to_drop})
 
         return teamgames
 
@@ -451,7 +451,7 @@ class NBAComAgent(NBAAgent):
             teamstats_opp = self.parser.team_opponent_dashboard(content)
 
             for team in teamstats_opp:
-                fixed_team = {k.lower():v for k,v in team.iteritems()}
+                fixed_team = {k.lower():v for k,v in team.items()}
                 fixed_team['game_date'] = dt.datetime.strftime(day, '%Y-%m-%d')
                 topp.append(fixed_team)
 
