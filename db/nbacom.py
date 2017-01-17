@@ -118,7 +118,7 @@ class NBAComPg(NBAPostgres):
         if cleaned_items:
             self.insert_dicts(cleaned_items, table_name)
 
-        return cleaned_items
+        #return cleaned_items
 
     def insert_playerstats(self, playerstats, table_name, game_date):
         '''

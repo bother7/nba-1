@@ -138,6 +138,20 @@ class NBAComScraper(EWTScraper):
 
         return boxes
 
+    def games(self, season_year):
+        '''
+
+        Args:
+            season:
+
+        Returns:
+
+        '''
+        url = 'http://data.nba.com/data/10s/v2015/json/mobile_teams/nba/{}/league/00_full_schedule.json'
+        content = self.get_json(url=url.format(season_year))
+        if not content: logging.error('could not get content: {0}'.format(url))
+        return content
+
     def one_player_gamelogs(self, player_id, season, **kwargs):
 
         # step two: get player_gamelogs

@@ -1,9 +1,9 @@
-import json
+import datetime
 import logging
 from math import modf
-import pprint
 import re
 
+from nba.seasons import season_start
 
 class NBAComParser(object):
     '''
@@ -166,6 +166,42 @@ class NBAComParser(object):
             teams.append(team)
 
         return players, teams
+
+    def games(self, content, season):
+        '''
+
+        Args:
+            content:
+            season:
+
+        Returns:
+
+        '''
+
+        results = []
+        start = season_start(season)
+        for item in content.get('lscd'):
+            mscd = item.get('mscd')
+            for g in mscd.get('g'):
+                gd = g.get('gdte')
+                try:
+                    gd = datetime.datetime.strptime(gd, '%Y-%m-%d')
+                    if start <= gd:
+                        results.append({
+                            'game_id': g.get('gid'),
+                            'gamecode': g.get('gcode'),
+                            'visitor_team_id': g.get('v').get('tid'),
+                            'visitor_team_code': g.get('v').get('ta'),
+                            'home_team_id': g.get('h').get('tid'),
+                            'home_team_code': g.get('h').get('ta'),
+                            'game_date': gd,
+                            'season': int(season[0:4])
+                        })
+
+                except Exception as e:
+                    print e.message
+
+        return results
 
     def merge_boxscores(self, base_boxscore, advanced_boxscore):
         '''
