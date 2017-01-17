@@ -21,7 +21,7 @@ class NBAPlayers(object):
     '''
     
     def __init__(self, db=False):
-        self.logger = logging.getLogger(__name__)
+        logging.getLogger(__name__).addHandler(logging.NullHandler())
         self._dk_players = []
         self.scraper = NBAComScraper()
         self.parser = NBAComParser()
@@ -43,7 +43,7 @@ class NBAPlayers(object):
                 with open(fn, 'r') as infile:
                     self._dk_players = json.load(infile)
             except:
-                self.logger.exception('could not open dk_players json file')
+                logging.exception('could not open dk_players json file')
 
         return self._dk_players
 

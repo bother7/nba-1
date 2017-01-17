@@ -13,9 +13,9 @@ class ESPNNBAParser():
     def __init__(self, **kwargs):
 
         if 'logger' in kwargs:
-            self.logger = kwargs['logger']
+            logging = kwargs['logger']
         else:
-            self.logger = logging.getLogger(__name__) \
+            logging.getLogger(__name__).addHandler(logging.NullHandler())  \
                 .addHandler(logging.NullHandler())
 
     def _parse_row(self, row):

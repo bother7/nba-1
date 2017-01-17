@@ -4,7 +4,7 @@ import logging
 class ProBasketballAPIParser(object):
 
     def __init__(self):
-        self.logger = logging.getLogger(__name__)
+        logging.getLogger(__name__).addHandler(logging.NullHandler())
 
     def players(self, content):
 

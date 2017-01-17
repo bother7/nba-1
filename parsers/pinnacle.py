@@ -37,7 +37,7 @@ class PinnacleNBAParser(object):
 
     def __init__(self, **kwargs):
 
-        self.logger = logging.getLogger(__name__)
+        logging.getLogger(__name__).addHandler(logging.NullHandler())
 
         if 'game_keys' in kwargs:
             self.game_keys = kwargs['game_keys']

@@ -5,7 +5,7 @@ from ewt.scraper import EWTScraper
 class ProBasketballAPIScraper(EWTScraper):
 
     def __init__(self, api_key):
-        self.logger = logging.getLogger(__name__)
+        logging.getLogger(__name__).addHandler(logging.NullHandler())
         self.urls = {
             'players': 'https://probasketballapi.com/draftkings/players'
         }

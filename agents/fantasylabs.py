@@ -26,10 +26,9 @@ class FantasyLabsNBAAgent(NBAAgent):
     def __init__(self, cache_name=None, db=True, safe=True):
 
         # see http://stackoverflow.com/questions/8134444
-        NBAAgent.__init__(self, cache_name)
 
-
-
+        NBAAgent.__init__(self, cache_name, db=False, safe=safe)
+        self.db = FantasyLabsNBAPg()
         self.parser = FantasyLabsNBAParser()
 
     def optimizer_pipeline(self, models):
@@ -152,7 +151,7 @@ class FantasyLabsNBAAgent(NBAAgent):
 
         return self.parser.games(self.scraper.games_today())
 
-    def today_model(self, model_name='phan', fn=None, insert_db=False):
+    def today_model(self, model_name='default', fn=None, insert_db=False):
         '''
         Gets list of player models for today's games
 

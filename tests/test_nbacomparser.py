@@ -1,6 +1,7 @@
+from __future__ import absolute_import
+
 import logging
 import os
-import pprint
 import unittest
 
 from nba.parsers.nbacom import NBAComParser
@@ -81,7 +82,7 @@ class NBAComParser_test(unittest.TestCase):
         self.assertIsInstance(pinfo, dict)
 
     def test_players(self):
-        content = self.nbs.players(season='2015-16', IsOnlyCurrentSeason='1')
+        content = self.nbs.players(season='2016-17', cs_only='1')
         ps = self.nbp.players(content)
         self.assertIsInstance(ps, list)
         self.assertIsNotNone(ps[0], 'ps should not be none')

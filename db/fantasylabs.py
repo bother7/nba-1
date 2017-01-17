@@ -14,7 +14,7 @@ class FantasyLabsNBAPg(NBAPostgres):
 
     def __init__(self):
         NBAPostgres.__init__(self)
-        self.logger = logging.getLogger(__name__)
+        logging.getLogger(__name__).addHandler(logging.NullHandler())
         self.nbaplayers = NBAPlayers(db=True)
         self.player_xref = {}
 

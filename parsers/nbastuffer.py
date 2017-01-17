@@ -26,8 +26,8 @@ class NBAStufferParser(object):
             omit (list): fields to omit from nbastuffer files
         '''
 
-        self.logger = logging.getLogger(__name__)
-        self.logger.addHandler(logging.NullHandler())
+        logging.getLogger(__name__).addHandler(logging.NullHandler())
+        logging.addHandler(logging.NullHandler())
 
         self.names = NBATeamNames()
         self.nbadotcom_games = nbadotcom_games
@@ -140,15 +140,15 @@ class NBAStufferParser(object):
 
         if game:
             gameid = game.get('game_id', None)
-            self.logger.debug('_gameid returns {0}'.format(gameid))
+            logging.debug('_gameid returns {0}'.format(gameid))
 
         else:
             # right now, don't have playoffs in games database, no need to print all of those errors
             if 'Regular' in dataset:
-                self.logger.warning('_gameid: could not find id for gamecode {0}'.format(gamecode))
+                logging.warning('_gameid: could not find id for gamecode {0}'.format(gamecode))
     
             else:
-                self.logger.debug('_gameid: could not find id for playoff gamecode {0}'.format(gamecode))
+                logging.debug('_gameid: could not find id for playoff gamecode {0}'.format(gamecode))
             
         return gameid
 
@@ -178,10 +178,10 @@ class NBAStufferParser(object):
             if match:
                 if len(match.group(3)) > 2:
                     gamecode = '{0}{1}{2}/{3}{4}'.format(match.group(3), match.group(1), match.group(2), away_team, home_team)
-                    #self.logger.debug('gamecode: {0}'.format(gamecode))
+                    #logging.debug('gamecode: {0}'.format(gamecode))
                 else:
                     gamecode = '20{0}{1}{2}/{3}{4}'.format(match.group(3), match.group(1), match.group(2), away_team, home_team)
-                    #self.logger.debug('gamecode: {0}'.format(gamecode))
+                    #logging.debug('gamecode: {0}'.format(gamecode))
 
             else:
                 gamecode = '{0}/{1}{2}'.format(gamedate, away_team, home_team)
@@ -191,7 +191,7 @@ class NBAStufferParser(object):
             season = away.get('dataset', 'XXXX')[0:4]
             gamecode = self._fix_new_orleans(gamecode, season)
 
-        self.logger.debug('_gamecode returns {0}'.format(gamecode))
+        logging.debug('_gamecode returns {0}'.format(gamecode))
         return gamecode
 
     def _get_closing(self, team1, team2, rowidx=0):
@@ -228,7 +228,7 @@ class NBAStufferParser(object):
             if team1_odds == None or team1_odds == '':
                 team1_odds = team1.get('spread', None)
                 team2_odds = team1.get('total', None)
-                self.logger.error('have to rely on opening odds: {0}, {1}: {2}'.format(team2.get('gamedate', 'Gamedate N/A'), team1.get('teams', 'Team N/A'), team2.get('teams', 'Team N/A')))
+                logging.error('have to rely on opening odds: {0}, {1}: {2}'.format(team2.get('gamedate', 'Gamedate N/A'), team1.get('teams', 'Team N/A'), team2.get('teams', 'Team N/A')))
 
         # odds are stored under 'closing_odds' and 'closing' depending on the year
         if team2_odds == None or team1_odds == '':
@@ -237,14 +237,14 @@ class NBAStufferParser(object):
             if team2_odds == None or team1_odds == '':
                 team2_odds = team2.get('total', None)
                 team1_odds = team1.get('spread', None)
-                self.logger.error('have to rely on opening odds: {0}, {1}: {2}'.format(team2.get('gamedate', 'Gamedate N/A'), team1.get('teams', 'Team N/A'), team2.get('teams', 'Team N/A')))
+                logging.error('have to rely on opening odds: {0}, {1}: {2}'.format(team2.get('gamedate', 'Gamedate N/A'), team1.get('teams', 'Team N/A'), team2.get('teams', 'Team N/A')))
 
         # if can't obtain anything, then skip further processing on odds
         if team1_odds == None or team1_odds == '':
-            self.logger.error('error _get_closing: line %d | team1_odds: %s  team2_odds %s' % (rowidx, team1_odds, team2_odds))
+            logging.error('error _get_closing: line %d | team1_odds: %s  team2_odds %s' % (rowidx, team1_odds, team2_odds))
 
         elif team2_odds == None or team1_odds == '':
-            self.logger.error('error _get_closing: line %d | team1_odds: %s  team2_odds %s' % (rowidx, team1_odds, team2_odds))
+            logging.error('error _get_closing: line %d | team1_odds: %s  team2_odds %s' % (rowidx, team1_odds, team2_odds))
 
         else:
             '''
@@ -277,7 +277,7 @@ class NBAStufferParser(object):
                 if match:
                     team2_odds = match.group(1)
 
-        self.logger.debug('team odds: {0}, {1}: {2}, {3}'.format(team1.get('teams', 'Team N/A'), team2.get('teams', 'Team N/A'), team1_odds, team2_odds))
+        logging.debug('team odds: {0}, {1}: {2}, {3}'.format(team1.get('teams', 'Team N/A'), team2.get('teams', 'Team N/A'), team1_odds, team2_odds))
                
         return team1_odds, team2_odds
 
@@ -297,7 +297,7 @@ class NBAStufferParser(object):
             return (float(game_total)/float(2)) - (float(spread)/float(2))
 
         except TypeError as e:
-            self.logger.error('implied total error: {0}'.format(e.message))
+            logging.error('implied total error: {0}'.format(e.message))
             return None
                 
     def _is_total_or_spread(self, val1, val2):
@@ -319,7 +319,7 @@ class NBAStufferParser(object):
                 return 'spread'
 
         except:
-            self.logger.error('{0} or {1} is not a number'.format(val1, val2))
+            logging.error('{0} or {1} is not a number'.format(val1, val2))
             return None
 
     def _point_spread(self, odds):
@@ -338,7 +338,7 @@ class NBAStufferParser(object):
             return float(odds), 0 - float(odds)
 
         except Exception as e:
-            self.logger.exception(e.message)
+            logging.exception(e.message)
             return None, None
 
     def _rest(self, team):
@@ -406,8 +406,8 @@ class NBAStufferParser(object):
         # team1_odds, team2_odds are in -8 195 format (depending on whether total or spread
         # type will be "total" or "spread"
         team1_odds, team2_odds = self._get_closing(team1, team2, rowidx)
-        self.logger.info('team1 odds: {}'.format(team1_odds))
-        self.logger.info('team2 odds: {}'.format(team2_odds))
+        logging.info('team1 odds: {}'.format(team1_odds))
+        logging.info('team2 odds: {}'.format(team2_odds))
         team1_type = self._is_total_or_spread(team1_odds, team2_odds)
 
         game_ou = None
@@ -428,10 +428,10 @@ class NBAStufferParser(object):
                 game_ou = team2_odds
                 
             else:
-                self.logger.error('row {0}: not spread or line - {1} {2}'.format(rowidx, team1_odds, team2_odds))
+                logging.error('row {0}: not spread or line - {1} {2}'.format(rowidx, team1_odds, team2_odds))
 
         else:
-            self.logger.error('row {0}: not spread or line - {1} {2}'.format(rowidx, team1_odds, team2_odds))
+            logging.error('row {0}: not spread or line - {1} {2}'.format(rowidx, team1_odds, team2_odds))
        
         return game_ou, away_spread, home_spread
 
@@ -553,7 +553,7 @@ class NBAStufferParser(object):
                 gp.append([team1, team2])
 
             else:
-                self.logger.error('could not get team1 or team2')
+                logging.error('could not get team1 or team2')
 
         return gp
 
@@ -611,7 +611,7 @@ class NBAStufferParser(object):
                 gp.append([team1, team2])
 
             else:
-                self.logger.error('%s | row %d: could not get team1 or team2 - %s' % (sheet.name, rowidx))
+                logging.error('%s | row %d: could not get team1 or team2 - %s' % (sheet.name, rowidx))
 
         return gp
 

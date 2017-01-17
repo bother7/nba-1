@@ -223,7 +223,8 @@ class NBAComScraper(EWTScraper):
         if cs_only:
             params['IsOnlyCurrentSeason'] = 1
 
-        content = self.get_json(url=base_url, payload=params)
+        url = base_url
+        content = self.get_json(url, payload=params)
 
         if not content: logging.error('could not get content: {0}'.format(base_url))
 
@@ -426,7 +427,6 @@ class NBAComScraper(EWTScraper):
                 params[key] = value
 
         content = self.get_json(url=base_url, payload=params)
-        logging.debug(self.responses[:-1])
 
         # if not from web either, then log an error
         if not content: logging.error('could not get content: {0}'.format(base_url))

@@ -18,7 +18,7 @@ class NBAPostgres(object):
 
         '''
 
-        self.logger = logging.getLogger(__name__)
+        logging.getLogger(__name__).addHandler(logging.NullHandler()) 
         self.user = user
         self.database = database
         self.conn = psycopg2.connect('dbname={0} user={1}'.format(self.database, self.user))
@@ -39,9 +39,9 @@ class NBAPostgres(object):
             self.conn.commit()
 
         except Exception as e:
-            self.logger.error('insert statement is {0}'.format(sql))
-            self.logger.error(pprint.pformat(dict_to_insert))
-            self.logger.exception('insert_dicts failed: {0}'.format(e.message))
+            logging.error('insert statement is {0}'.format(sql))
+            logging.error(pprint.pformat(dict_to_insert))
+            logging.exception('insert_dicts failed: {0}'.format(e.message))
             self.conn.rollback()
 
         finally:
@@ -73,10 +73,10 @@ class NBAPostgres(object):
                 self.conn.commit()
 
             except Exception as e:
-                self.logger.error('insert statement is {0}'.format(sql))
-                self.logger.error('values are {0}'.format(','.join([str(v) for v in dict_to_insert.values()])))
-                self.logger.exception('insert_dicts failed: {0}'.format(e.diag.message_primary))
-                if dict_to_insert: self.logger.error(pprint.pformat(dict_to_insert))
+                logging.error('insert statement is {0}'.format(sql))
+                logging.error('values are {0}'.format(','.join([str(v) for v in dict_to_insert.values()])))
+                logging.exception('insert_dicts failed: {0}'.format(e.diag.message_primary))
+                if dict_to_insert: logging.error(pprint.pformat(dict_to_insert))
                 self.conn.rollback()
 
             finally:
@@ -152,7 +152,7 @@ class NBAPostgres(object):
             return cursor.fetchall()
 
         except Exception as e:
-            self.logger.exception(e.message)
+            logging.exception(e.message)
             return None
 
         finally:
@@ -176,7 +176,7 @@ class NBAPostgres(object):
             return [v[0] for v in cursor.fetchall()]
 
         except Exception as e:
-            self.logger.error('sql statement failed: {0}'.format(sql))
+            logging.error('sql statement failed: {0}'.format(sql))
             return None
 
         finally:
@@ -200,7 +200,7 @@ class NBAPostgres(object):
             return cursor.fetchone()[0]
 
         except Exception as e:
-            self.logger.error('sql statement failed: {0}'.format(sql))
+            logging.error('sql statement failed: {0}'.format(sql))
             return None
 
         finally:
@@ -225,7 +225,7 @@ class NBAPostgres(object):
             self.conn.commit()
 
         except Exception as e:
-            self.logger.exception('update failed: {0}'.format(e.message))
+            logging.exception('update failed: {0}'.format(e.message))
             self.conn.rollback()
 
         finally:

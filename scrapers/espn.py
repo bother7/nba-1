@@ -53,7 +53,7 @@ class ESPNNBAScraper(EWTScraper):
                 players[match.group(1)] = match.group(2)
 
             else:
-                self.logger.error('could not get {0}'.format(link['href']))
+                logging.error('could not get {0}'.format(link['href']))
 
         return players
 
@@ -150,7 +150,7 @@ class FiveThirtyEightNBAScraper(EWTScraper):
             fn = os.path.join(savedir, '{0}.json'.format(player_code))
 
             if os.path.isfile(fn):
-                self.logger.debug('already have {0}'.format(fn))
+                logging.debug('already have {0}'.format(fn))
 
             else:
                 if len(player_code) > 3:
@@ -160,16 +160,16 @@ class FiveThirtyEightNBAScraper(EWTScraper):
                         with open(fn, 'w') as outfile:
                             outfile.write(content)
                     else:
-                        self.logger.debug('could not get {0}'.format(player_code))
+                        logging.debug('could not get {0}'.format(player_code))
 
                     if from_cache:
-                        self.logger.debug('got url from cache')
+                        logging.debug('got url from cache')
 
                     else:
                         time.sleep(2)
 
                 else:
-                    self.logger.debug('could not get {0}'.format(player_code))
+                    logging.debug('could not get {0}'.format(player_code))
 
     
     def simscores(self, player_code):
@@ -180,7 +180,7 @@ class FiveThirtyEightNBAScraper(EWTScraper):
             return content
             
         except:
-            self.logger.exception('could not get {0}'.format(url))
+            logging.exception('could not get {0}'.format(url))
             return None
 
 if __name__ == "__main__":

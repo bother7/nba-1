@@ -36,8 +36,8 @@ class NBAComAgent(NBAAgent):
 
         '''
 
+        logging.getLogger(__name__).addHandler(logging.NullHandler())
         NBAAgent.__init__(self)
-        self.logger = logging.getLogger(__name__)
         self.scraper = NBAComScraper()
         self.parser = NBAComParser()
         self.safe = safe
@@ -243,7 +243,7 @@ class NBAComAgent(NBAAgent):
         '''
 
         gamelogs = self.parser.season_gamelogs(self.scraper.season_gamelogs(season='2015-16', player_or_team='T'), 'T')
-        self.logger.debug('there are {0} team gamelogs'.format(len(gamelogs)))
+        logging.debug('there are {0} team gamelogs'.format(len(gamelogs)))
 
         if self.nbadb:
 
@@ -253,7 +253,7 @@ class NBAComAgent(NBAAgent):
                 self.nbadb.postgres_backup_table(self.nbadb.database, table_name)
 
             gamelogs = self.nbadb.insert_team_gamelogs(gamelogs, table_name)
-            self.logger.debug('there are now {0} team gamelogs'.format(len(gamelogs)))
+            logging.debug('there are now {0} team gamelogs'.format(len(gamelogs)))
 
         return gamelogs
 
@@ -461,7 +461,7 @@ class NBAComAgent(NBAAgent):
                     pickle.dump(topp, outfile)
 
             except:
-                self.logger.error('could not save scoreboards to {0}'.format(pkl_fname))
+                logging.error('could not save scoreboards to {0}'.format(pkl_fname))
 
         return topp
 

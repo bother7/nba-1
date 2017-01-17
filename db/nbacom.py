@@ -13,7 +13,7 @@ class NBAComPg(NBAPostgres):
 
         # see http://stackoverflow.com/questions/8134444
         NBAPostgres.__init__(self)
-        self.logger = logging.getLogger(__name__)
+        logging.getLogger(__name__).addHandler(logging.NullHandler())
 
     def insert_boxscores(self, player_boxscores, team_boxscores, player_table_name, team_table_name):
 
@@ -112,7 +112,7 @@ class NBAComPg(NBAPostgres):
                 cleaned_items.append(cleaned_item)
 
             else:
-                self.logger.debug('game is already in db: {0}'.format(item.get('GAME_DATE')))
+                logging.debug('game is already in db: {0}'.format(item.get('GAME_DATE')))
 
         # add cleaned items to database
         if cleaned_items:
@@ -143,7 +143,7 @@ class NBAComPg(NBAPostgres):
         for player in playerstats:
 
             if player.get('PLAYER_ID') in players_yesterday:
-                self.logger.debug('player_id in players_yesterday: {0}'.format(player.get('PLAYER_ID')))
+                logging.debug('player_id in players_yesterday: {0}'.format(player.get('PLAYER_ID')))
                 continue
 
             else:
@@ -189,20 +189,20 @@ class NBAComPg(NBAPostgres):
         today = datetime.datetime.strftime(datetime.datetime.today(), '%Y-%m-%d')
         q = """SELECT to_char(max(game_date), 'YYYYMMDD') from stats.cs_team_gamelogs"""
         last_gamedate = self.select_scalar(q)
-        self.logger.debug(today, last_gamedate)
+        logging.debug(today, last_gamedate)
 
         # filter all_gamelogs by date, only want those newer than latest gamelog in table but don't want today's gamelogs
         # have to convert to datetime object for comparison
         for item in stats:
             game_date = item.get('GAME_DATE')
-            self.logger.debug('item game date is {0}'.format(game_date))
+            logging.debug('item game date is {0}'.format(game_date))
 
             if  game_date == today:
-                self.logger.debug('gamedate today, skip')
+                logging.debug('gamedate today, skip')
                 continue
 
             elif datetime.datetime.strptime(last_gamedate, '%Y%m%d') < datetime.datetime.strptime(item.get('GAME_DATE'), '%Y-%m-%d'):
-                self.logger.debug('gamedate meets filter, process it')
+                logging.debug('gamedate meets filter, process it')
                 cleaned_item = {k.lower(): v for k,v in item.iteritems() if k.lower() not in omit}
 
                 if cleaned_item.get('team_abbreviation'):
@@ -216,7 +216,7 @@ class NBAComPg(NBAPostgres):
                 cleaned_items.append(cleaned_item)
 
             else:
-                self.logger.debug('game skipped: {0}'.format(item.get('GAME_DATE')))
+                logging.debug('game skipped: {0}'.format(item.get('GAME_DATE')))
 
         if cleaned_items:
             self.insert_dicts(cleaned_items, table_name)

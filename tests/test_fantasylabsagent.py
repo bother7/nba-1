@@ -1,5 +1,6 @@
+from __future__ import absolute_import
+
 import datetime as dt
-import logging
 import random
 import unittest
 
@@ -9,14 +10,14 @@ from nba.dates import *
 class FantasyLabsNBAAgent_test(unittest.TestCase):
 
     def setUp(self):
-        self.a = FantasyLabsNBAAgent(db=True, use_cache=True)
+        self.a = FantasyLabsNBAAgent(db=True)
 
     def test_init(self):
         adb = FantasyLabsNBAAgent(db=True)
         self.assertIsNotNone(adb.db)
         asafe = FantasyLabsNBAAgent(safe=True)
         self.assertIsNotNone(adb.safe)
-        asafe = FantasyLabsNBAAgent(use_cache=True)
+        asafe = FantasyLabsNBAAgent(cache_name='testnba')
         self.assertIsNotNone(adb.scraper)
 
     def test_past_day_models(self):
@@ -56,8 +57,8 @@ class FantasyLabsNBAAgent_test(unittest.TestCase):
         self.assertIsInstance(pp_model, dict)
         self.assertIn('salary', pp_model)
 
-    def test_today_models(self):
-        models, pp_models = self.a.today_models()
+    def test_today_model(self):
+        models, pp_models = self.a.today_model()
         logging.debug('there are {0} models'.format(len(models)))
         self.assertIsInstance(models, list)
         self.assertTrue(len(models) > 0)
