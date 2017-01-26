@@ -6,7 +6,6 @@ import os
 
 from nba.db.pgsql import NBAPostgres
 from nba.players import NBAPlayers
-from nba.seasons import NBASeasons
 from nba.scrapers.fantasylabs import FantasyLabsNBAScraper
 
 
@@ -30,7 +29,6 @@ class NBAAgent(object):
         '''
         logging.getLogger(__name__).addHandler(logging.NullHandler())
         self.nbap = NBAPlayers()
-        self.nbas = NBASeasons()
 
         if db:
             self.db = NBAPostgres()

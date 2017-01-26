@@ -62,7 +62,7 @@ def season_dates(season, start_date=None, end_date=None):
     if not end_date:
         end_date = season_end(season)
 
-    return date_list(end_date, start_date)
+    return list(reversed(date_list(end_date, start_date)))
 
 def season_start(key):
     '''

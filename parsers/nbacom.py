@@ -171,13 +171,12 @@ class NBAComParser(object):
         '''
 
         Args:
-            content:
-            season:
+            content(dict): is parsed json
+            season(str): is in YYYY-YY format
 
         Returns:
-
+            results(list): of game dict
         '''
-
         results = []
         start = season_start(season)
         for item in content.get('lscd'):
@@ -186,6 +185,7 @@ class NBAComParser(object):
                 gd = g.get('gdte')
                 try:
                     gd = datetime.datetime.strptime(gd, '%Y-%m-%d')
+                    # the json includes preseason games, filter them
                     if start <= gd:
                         results.append({
                             'game_id': g.get('gid'),
@@ -198,8 +198,8 @@ class NBAComParser(object):
                             'season': int(season[0:4])
                         })
 
-                except Exception as e:
-                    print e.message
+                except (ValueError, TypeError) as e:
+                    logging.exception(e)
 
         return results
 

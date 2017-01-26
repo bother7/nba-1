@@ -10,7 +10,7 @@ import psycopg2.extras
 
 class NBAPostgres(object):
 
-    def __init__(self, user='postgres', database='nba'):
+    def __init__(self, user, password, database):
         '''
         Arguments:
             user (str): postgres username
@@ -19,9 +19,7 @@ class NBAPostgres(object):
         '''
 
         logging.getLogger(__name__).addHandler(logging.NullHandler()) 
-        self.user = user
-        self.database = database
-        self.conn = psycopg2.connect('dbname={0} user={1}'.format(self.database, self.user))
+        self.conn = psycopg2.connect(dbname=database, user=user, password=password)
 
     def _insert_dict(self, dict_to_insert, table_name):
         '''
