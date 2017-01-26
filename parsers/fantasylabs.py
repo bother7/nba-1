@@ -9,21 +9,38 @@ class FantasyLabsNBAParser(object):
         p = FantasyLabsNBAParser()
         games = p.games(games_json)
         model = p.model(model_json)
-
-        for model_json in models:
-            p.model(model_json)
-
-    TODO: can make FantasyLabsParser base class
-    Most of this code is identical with FantasyLabsNFLParser           
     '''
 
-    def __init__(self,**kwargs):
-        '''
-
-        '''
-
+    def __init__(self):
         logging.getLogger(__name__).addHandler(logging.NullHandler())
                         
+    def dk_salaries(self, content, day):
+        '''
+        Gets list of salaries for one day
+        Args:
+            content (str):
+            day(str): in mm_dd_YYYY format
+        Returns:
+            players (list): of player dict
+        '''
+
+        site = 'dk'
+        wanted = ['Score', 'Player_Name', 'Position', 'Team', 'Ceiling', 'Floor', 'Salary', 'AvgPts', 'p_own', 'PlayerId']
+        salaries = [{k:v for k,v in p.items() if k in wanted} for p in self.model(content, site=site, gamedate=day)]
+
+        # add columns to ease insertion into salaries table
+        for idx, salary in enumerate(salaries):
+            fx = {'source': 'fantasylabs', 'dfs_site': site, 'game_date': day}
+            fx['source_player_id'] = salary.get('PlayerId')
+            fx['source_player_name'] = salary.get('Player_Name')
+            fx['salary'] = salary.get('Salary')
+            fx['team_code'] = salary.get('Team')
+            fx['dfs_position'] = salary.get('Position')
+            salaries[idx] = fx
+
+        return salaries
+
+
     def games(self, content, **kwargs):
         '''
         Parses json that is list of games
@@ -50,23 +67,18 @@ class FantasyLabsNBAParser(object):
 
     def model(self, content, site, gamedate):
         '''
-        Parses json associated with model (player stats / projections)
+        Parses dict associated with model (player stats / projections)
         The model has 3 dicts for each player: DraftKings, FanDuel, Yahoo
         SourceIds: 4 is DK, 11 is Yahoo, 3 is FD
-
         Arguments:
-            model_day: list of dict representing player model
-
+            content(dict):
+            site(str):
+            gamedate(str):
         Returns:
             players: list of parsed models
-            
         Usage:
-            model = p.model(content)
-            model = p.model(content, omit_properties=[])
-            model = p.model(content, omit_other=[])
-
+            model = p.model(content, site='dk', gamedate='1_14_2017')
         '''
-
         players = {}
         omit_properties = ['IsLocked']
         omit_other = ['ErrorList', 'LineupCount', 'CurrentExposure', 'ExposureProbability', 'IsExposureLocked', 'Positions', 'PositionCount', 'Exposure', 'IsLiked', 'IsExcluded']
@@ -110,3 +122,12 @@ class FantasyLabsNBAParser(object):
 
 if __name__ == "__main__":
     pass
+    '''
+    import json
+    with open('model-1_26_2017.json', 'r') as infile:
+        content = json.load(infile)
+
+    from nba.parsers.fantasylabs import FantasyLabsNBAParser
+    p = FantasyLabsNBAParser()
+
+    '''

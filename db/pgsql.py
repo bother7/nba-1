@@ -10,7 +10,7 @@ import psycopg2.extras
 
 class NBAPostgres(object):
 
-    def __init__(self, user='postgres', database='nba'):
+    def __init__(self, user, password, database):
         '''
         Arguments:
             user (str): postgres username
@@ -19,9 +19,7 @@ class NBAPostgres(object):
         '''
 
         logging.getLogger(__name__).addHandler(logging.NullHandler()) 
-        self.user = user
-        self.database = database
-        self.conn = psycopg2.connect('dbname={0} user={1}'.format(self.database, self.user))
+        self.conn = psycopg2.connect(dbname=database, user=user, password=password)
 
     def _insert_dict(self, dict_to_insert, table_name):
         '''
@@ -59,7 +57,54 @@ class NBAPostgres(object):
         Returns:
             None
         '''
+        if not dicts_to_insert:
+            return None
 
+        cur = self.conn.cursor()
+        fields = tuple(sorted(dicts_to_insert[0].keys()))
+        records = []
+        for d in dicts_to_insert:
+            t = tuple([d[f] for f in fields])
+            records.append(t)
+        records_list_template = ','.join(['%s'] * len(records))
+        insert_query = 'insert into {0} ({1}) values {2} ON CONFLICT DO NOTHING'.format(table_name, ','.join(fields), records_list_template)
+
+        try:
+            cur.execute(cur.mogrify(insert_query, records))
+            self.conn.commit()
+        except Exception as e:
+            logging.error('insert statement is {0}'.format(insert_query))
+            logging.exception('insert_dicts failed: {0}'.format(e.diag.message_primary))
+            self.conn.rollback()
+        finally:
+            cur.close()
+
+        '''
+        # https://stackoverflow.com/questions/8134602/psycopg2-insert-multiple-rows-with-one-query/30985541#30985541
+        # postgresql will convert list of tuples into postgres records
+        cursor = self.conn.cursor()
+        fields = tuple(sorted(dicts_to_insert[0].keys()))
+        records = []
+        for d in dicts_to_insert:
+            t = tuple([d[f] for f in fields])
+            records.append(t)
+
+        try:
+            records_list_template = ','.join(['%s'] * len(records))
+            insert_query = 'insert into {0} ({1}) values {2} ON CONFLICT DO NOTHING'.format(table_name, ','.join(fields), records_list_template)
+            cursor.execute(insert_query, records)
+            self.conn.commit()
+
+        except Exception as e:
+            logging.error('insert statement is {0}'.format(insert_query))
+            logging.exception('insert_dicts failed: {0}'.format(e.diag.message_primary))
+            self.conn.rollback()
+
+        finally:
+            cursor.close()
+        '''
+
+        '''
         if dicts_to_insert:
             cursor = self.conn.cursor()
 
@@ -74,14 +119,13 @@ class NBAPostgres(object):
 
             except Exception as e:
                 logging.error('insert statement is {0}'.format(sql))
-                logging.error('values are {0}'.format(','.join([str(v) for v in dict_to_insert.values()])))
                 logging.exception('insert_dicts failed: {0}'.format(e.diag.message_primary))
-                if dict_to_insert: logging.error(pprint.pformat(dict_to_insert))
                 self.conn.rollback()
 
             finally:
                 cursor.close()
-                
+        '''
+
     def postgres_backup_db(self, dbname, dirname=None):
         '''
         Compressed backup of database

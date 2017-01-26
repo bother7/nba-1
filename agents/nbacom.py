@@ -1,9 +1,8 @@
-import copy
 import datetime as dt
 import logging
 
 try:
-    import pickle as pickle
+    import cPickle as pickle
 
 except:
     import pickle
@@ -12,11 +11,11 @@ from nba.agents.agent import NBAAgent
 from nba.db.nbacom import NBAComPg
 from nba.scrapers.nbacom import NBAComScraper
 from nba.parsers.nbacom import NBAComParser
-from nba.seasons import NBASeasons
+from nba.seasons import *
 from nba.dates import *
 
 
-class NBAComAgent(NBAAgent):
+class NBAComAgent(object):
     '''
     Performs script-like tasks using NBA.com API
     Intended to replace standalone scripts so can use common API and tools
@@ -27,50 +26,40 @@ class NBAComAgent(NBAAgent):
 
     '''
 
-    def __init__(self, db=True, safe=True):
+    def __init__(self, cache_name='nbacom-cache', cookies=None, db=None, safe=False):
         '''
-
         Args:
             db (bool): compose NBAComPg object as self.nbadb
             safe (bool): create backups of tables prior to inserts
-
         '''
 
         logging.getLogger(__name__).addHandler(logging.NullHandler())
-        NBAAgent.__init__(self)
-        self.scraper = NBAComScraper()
+        self.scraper = NBAComScraper(cache_name=cache_name, cookies=cookies)
         self.parser = NBAComParser()
         self.safe = safe
-        self.nbas = NBASeasons()
 
         if db:
-            self.nbadb = NBAComPg()
+            self.nbadb = db
         else:
             self.nbadb = None
 
     def combine_boxscores(self, boxes, advanced_boxes):
         '''
         Combines NBAComScraper.boxscores() and boxscores_advanced()
-
         Arguments:
             boxscores(list): list of 'base' boxscores
             boxscores(list): list of 'advanced' boxscores
-
         Returns:
             merged_players (list): base and advanced combined
             merged_teams (list): base and advanced combined
-
         Examples:
             a = NBAComAgent()
             combined = a.combine_boxscores(boxes, advanced_boxes)
-
         '''
-
         merged_players = []
         merged_teams = []
 
         for gid, box in boxes.items():
-
             # players and teams are lists of dicts
             players, teams, starterbench = self.parser.boxscore(box)
 
@@ -87,75 +76,63 @@ class NBAComAgent(NBAAgent):
             # now loop through players
             for pid, player in players_dict.items():
                 player_adv = players_adv_dict.get(pid)
-
                 if player_adv:
                     merged_players.append(self.merge_boxes(player, player_adv))
 
             # now loop through teams
             for tid, team in teams_dict.items():
                 team_adv = teams_adv_dict.get(tid)
-
                 if team_adv:
                     merged_teams.append(self.merge_boxes(team, team_adv))
 
-        self.nbadb.insert_boxscores(merged_players, merged_teams)
+        if self.nbadb:
+            self.nbadb.insert_boxscores(merged_players, merged_teams)
 
+        return merged_players, merged_teams
 
-    def commonallplayers(self, season):
+    def new_players(self, season, cs_only=1):
         '''
-        Solves problem of players changing teams
-        nba.com updates player teams regularly, so i look every day to make sure lists accurate
-
+        TODO: this does not work
         Arguments:
             season (str): in YYYY-YY format
-
+            cs_only(bool): default is current season only
         Returns:
-            to_insert (list): list of players that needed to be updated
-
+            to_insert (list): list of players that were added to stats.players
         Examples:
             a = NBAComAgent()
-            combined = a.commonallplayers('2015-16')
-
+            combined = a.new_players('2015-16')
         '''
 
-        game_date = dt.datetime.today()
-        players = self.parser.players(self.scraper.players(season=season, cs_only='1'))
-
+        q = 'SELECT * FROM players_to_add'
         to_insert = []
 
-        convert = {
-            "PERSON_ID": 'nbacom_player_id',
-            "DISPLAY_LAST_COMMA_FIRST": '',
-            "DISPLAY_FIRST_LAST": 'display_first_last',
-            "ROSTERSTATUS": 'rosterstatus',
-            "FROM_YEAR": '',
-            "TO_YEAR": '',
-            "PLAYERCODE": '',
-            "TEAM_ID": 'team_id',
-            "TEAM_CITY": '',
-            "TEAM_NAME": '',
-            "TEAM_ABBREVIATION": 'team_code',
-            "TEAM_CODE": '',
-            "GAMES_PLAYED_FLAG": ''
-        }
+        for id in self.nbadb.select_list(q):
+            content = self.scraper.player_info(id, season)
+            to_insert.append(self.parser.player_info(content))
 
-        for p in players:
-            pti = {'game_date': game_date, 'nbacom_season_id': 22015, 'season': 2016}
-
-            for k,v in p.items():
-                converted = convert.get(k)
-                if converted:
-                    pti[converted] = v
-
-            to_insert.append(pti)
-
-        if self.nbadb:
-            if to_insert:
-                self.nbadb.insert_dicts(to_insert, 'stats.playerteams')
+        #if to_insert:
+        #(to_insert, 'stats.players')
 
         return to_insert
 
-    def cs_player_gamelogs(self, season, date_from=None, date_to=None):
+    def merge_boxes(self, b1, b2):
+        '''
+        Combines base and advanced player or team boxscores from same game
+        Arguments:
+            base_box(dict): base boxscore
+            adv_box(dict): advanced boxscore
+        Returns:
+            merged (dict) or None
+        Examples:
+            a = NBAComAgent()
+            merged = a.merge_boxes(base_box, adv_box)
+        '''
+
+        z = b1
+        z.update(b2)
+        return z
+
+    def player_gamelogs(self, season, table_name=None, date_from=None, date_to=None):
         '''
         Fetches player_gamelogs and updates cs_player_gamelogs table
 
@@ -166,21 +143,9 @@ class NBAComAgent(NBAAgent):
              players (list): player dictionary of stats + dfs points
         '''
 
-        gamelogs = self.parser.season_gamelogs(self.scraper.season_gamelogs(season, 'P'), 'P')
+        return self.parser.season_gamelogs(self.scraper.season_gamelogs(season, 'P'), 'P')
 
-        table_name = 'stats.cs_player_gamelogs'
-
-        if self.nbadb:
-            if self.safe:
-                self.nbadb.postgres_backup_table(self.nbadb.database, table_name)
-    
-            gamelogs = self.nbadb.insert_player_gamelogs(gamelogs, table_name)
-            self.nbadb.update_positions(table_name)
-            self.nbadb.update_teamids(table_name)
-
-        return gamelogs
-
-    def cs_playerstats(self, season, date_from=None, date_to=None):
+    def playerstats(self, season, date_from=None, date_to=None):
         '''
         Fetches cs_player_stats and updates database table
 
@@ -203,7 +168,7 @@ class NBAComAgent(NBAAgent):
         yesterday = dt.datetime.strftime(dt.datetime.today() - dt.timedelta(1), '%Y-%m-%d')
 
         if not date_from:
-            date_from = self.nbas.season_start(season)
+            date_from = season_start(season)
 
         if not date_to:
             date_to = yesterday
@@ -220,109 +185,10 @@ class NBAComAgent(NBAAgent):
 
             if base:
                 base.update(ps_adv)
+                base['as_of'] = date_to
                 ps_base[pid] = base
 
         return list(ps_base.values())
-        #return self.nbadb.insert_playerstats(ps_base.values(), table_name='stats.cs_playerstats', game_date=yesterday)
-
-    def cs_team_gamelogs(self, season, date_from=None, date_to=None):
-        '''
-        Fetches team_gamelogs and updates cs_team_gamelogs table
-
-        Arguments:
-             season (str): in YYYY-YY format (2015-16)
-
-        Returns:
-             team_gl (list): player dictionary of stats
-
-        Examples:
-            a = NBAComAgent()
-            tgl = a.cs_team_gamelogs('2015-16')
-            tgl = a.cs_playerstats(season='2015-16', date_from='2016-03-01', date_to='2016-03-08')
-
-        '''
-
-        gamelogs = self.parser.season_gamelogs(self.scraper.season_gamelogs(season='2015-16', player_or_team='T'), 'T')
-        logging.debug('there are {0} team gamelogs'.format(len(gamelogs)))
-
-        if self.nbadb:
-
-            table_name = 'stats.cs_team_gamelogs'
-
-            if self.safe:
-                self.nbadb.postgres_backup_table(self.nbadb.database, table_name)
-
-            gamelogs = self.nbadb.insert_team_gamelogs(gamelogs, table_name)
-            logging.debug('there are now {0} team gamelogs'.format(len(gamelogs)))
-
-        return gamelogs
-
-    def cs_teamstats(self, season, date_from=None, date_to=None):
-        '''
-        Fetches leaguedashteamstats and updates cs_leaguedashteamstats table
-
-        Arguments:
-             season (str): in YYYY-YY format (2015-16)
-             date_from (str): in %Y-%m-%d format, default beginning of season
-             date_from (str): in %Y-%m-%d format, default yesterday
-
-        Returns:
-             teamstats (list): team dictionary of basic and advanced stats
-             
-         Examples:
-            a = NBAComAgent()
-            ps = a.cs_teamstats('2015-16')
-            ps = a.cs_teamstats(season='2015-16', date_from='2016-03-01', date_to='2016-03-08')
-
-        '''
-
-        # default is to get entire season through yesterday
-        yesterday = dt.datetime.strftime(dt.datetime.today() - dt.timedelta(1), '%Y-%m-%d')
-
-        if not date_from:
-            date_from = self.nbas.season_start(season)
-
-        if not date_to:
-            date_to = yesterday
-
-        ts_base = self.parser.teamstats(self.scraper.teamstats(season, DateFrom=date_from, DateTo=date_to))
-        ts_adv = self.parser.teamstats(self.scraper.teamstats(season, DateFrom=date_from, DateTo=date_to, MeasureType='Advanced'))
-
-        # now need to merge base and advanced
-        ts_base = {t['TEAM_ID']: t for t in ts_base}
-
-        for ts_adv in ts_adv:
-            tid = ts_adv['TEAM_ID']
-            base = ts_base.get(tid)
-
-            if base:
-                base.update(ts_adv)
-                ts_base[tid] = base
-
-        self.nbadb.insert_teamstats(list(ts_base.values()), table_name='stats.cs_teamstats', game_date=yesterday)
-
-        return ts_base, ts_adv
-
-    def merge_boxes(self, b1, b2):
-        '''
-        Combines base and advanced player or team boxscores from same game
-
-        Arguments:
-            base_box(dict): base boxscore
-            adv_box(dict): advanced boxscore
-
-        Returns:
-            merged (dict) or None
-
-        Examples:
-            a = NBAComAgent()
-            merged = a.merge_boxes(base_box, adv_box)
-
-        '''
-
-        z = b1
-        z.update(b2)
-        return z
 
     def players_to_add(self):
         '''
@@ -335,8 +201,6 @@ class NBAComAgent(NBAAgent):
             list
         '''
 
-        sql = '''SELECT * FROM vw_add_players_table'''
-        return self.nbadb.select_dict(sql)
 
     def scoreboards(self, season_start, season_end, pkl_fname=None):
         '''
@@ -359,11 +223,11 @@ class NBAComAgent(NBAAgent):
 
         scoreboards = []
 
-        for day in reversed(self.date_list(season_end, season_start)):
+        for day in reversed(date_list(season_end, season_start)):
             game_date = dt.datetime.strftime(day, '%Y-%m-%d')
-            scoreboard_json = self.nbas.scoreboard(game_date=game_date)
-            scoreboard = self.nbap.scoreboard(scoreboard_json, game_date=game_date)
-            scoreboards.append(scoreboard)       
+            scoreboard_json = self.scraper.scoreboard(game_date=game_date)
+            scoreboard = self.parser.scoreboard(scoreboard_json, game_date=game_date)
+            scoreboards.append(scoreboard)
 
         if pkl_fname:
             try:
@@ -374,49 +238,141 @@ class NBAComAgent(NBAAgent):
                 logging.error('could not save scoreboards to {0}'.format(pkl_fname))
 
         return scoreboards
-        
-    def teamgames(self, games):
+
+    def team_gamelogs(self, season, date_from=None, date_to=None):
         '''
-        Converts list of games into list in teamgames format, where there are2 teamgames for every game
+        Fetches team_gamelogs and updates cs_team_gamelogs table
 
         Arguments:
-            games(list): list of games from nba.com where two teams are in 1 row (visitor, home)
+             season (str): in YYYY-YY format (2015-16)
 
         Returns:
-            teamgames(list): list of games in teamgames format, 2 teamgames per game row
-            
-        Examples:
-            # is in format {'game_id', 'visitor_team_id', 'home_team_id', . . . }
-            games = NBAPostgres.select_dict('SELECT * FROM games')
+             team_gl (list): player dictionary of stats
 
-            # is in format {'game_id', 'team_id', 'opponent_team_id', 'is_home' . . . }
-            teamgames = NBAComAgent.teamgames(games)
+        Examples:
+            a = NBAComAgent()
+            tgl = a.cs_team_gamelogs('2015-16')
+            tgl = a.cs_playerstats(season='2015-16', date_from='2016-03-01', date_to='2016-03-08')
 
         '''
 
-        teamgames = []
-        to_drop = ['home_team_code', 'home_team_id', 'visitor_team_code', 'visitor_team_id']
+        gamelogs = self.parser.season_gamelogs(self.scraper.season_gamelogs(season=season, player_or_team='T'), 'T')
+        logging.debug('there are {0} team gamelogs'.format(len(gamelogs)))
 
-        for game in games:
-            tg1 = copy.deepcopy(game)
-            tg1['team_code'] = game['home_team_code']
-            tg1['team_id'] = game['home_team_id']
-            tg1['opponent_team_code'] = game['visitor_team_code']   
-            tg1['opponent_team_id'] = game['visitor_team_id']
-            tg1['is_home'] = True
+        if self.nbadb:
 
-            teamgames.append({k:v for k,v in tg1.items() if not k in to_drop})
+            table_name = 'stats.cs_team_gamelogs'
 
-            tg2 = copy.deepcopy(game)
-            tg2['team_code'] = game['visitor_team_code']
-            tg2['team_id'] = game['visitor_team_id']
-            tg2['opponent_team_code'] = game['home_team_code']
-            tg2['opponent_team_id'] = game['home_team_id']
-            tg2['is_home'] = False
+            if self.safe:
+                self.nbadb.postgres_backup_table(self.nbadb.database, table_name)
 
-            teamgames.append({k:v for k,v in tg2.items() if not k in to_drop})
+            gamelogs = self.nbadb.insert_team_gamelogs(gamelogs, table_name)
+            logging.debug('there are now {0} team gamelogs'.format(len(gamelogs)))
 
-        return teamgames
+        return gamelogs
+
+    def teamstats_daily_range(self, season, date_from, date_to):
+        '''
+        Bulk daily teamstats for days from date_from to date_to
+        Arguments:
+             season (str): in YYYY-YY format (2015-16)
+             date_from (str): in %Y-%m-%d format, default beginning of season
+             date_from (str): in %Y-%m-%d format, default yesterday
+
+        Returns:
+             teamstats (list): team dictionary of basic and advanced stats
+        '''
+        vals = []
+        for d in list(reversed(date_list(date_to, date_from))):
+            vals.append(self.teamstats_daily(season, date_from=date_from, date_to=dt.datetime.strftime(d, '%Y-%m-%d')))
+        return [item for sublist in vals for item in sublist]
+
+    def teamstats_daily(self, season, date_from, date_to):
+        '''
+
+        Arguments:
+             season (str): in YYYY-YY format (2015-16)
+             date_from (str): in %Y-%m-%d format, default beginning of season
+             date_from (str): in %Y-%m-%d format, default yesterday
+
+        Returns:
+             teamstats (list): team dictionary of basic and advanced stats
+
+         Examples:
+            a = NBAComAgent()
+            ps = a.cs_teamstats(season='2015-16', date_from='2016-03-01', date_to='2016-03-08')
+        '''
+
+        # default is to get entire season through yesterday
+        s1, s2 = season.split('-')
+        if not s1 and s2:
+            raise ValueError('season parameter must be in YYYY-YY format')
+
+        ts_base = self.parser.teamstats(self.scraper.teamstats(season, DateFrom=date_from, DateTo=date_to))
+        ts_adv = self.parser.teamstats(self.scraper.teamstats(season, DateFrom=date_from, DateTo=date_to, MeasureType='Advanced'))
+
+        # now need to merge base and advanced
+        ts_base = {t['TEAM_ID']: t for t in ts_base}
+
+        for ts_adv in ts_adv:
+            tid = ts_adv['TEAM_ID']
+            base = ts_base.get(tid)
+
+            if base:
+                base.update(ts_adv)
+                base['season'] = int(s1) + 1
+                base['nbacom_season_id'] = int(s2) + 22000 - 1
+                base['as_of'] = date_to
+                ts_base[tid] = base
+
+        return list(ts_base.values())
+
+    def teamstats(self, season, date_from=None, date_to=None):
+        '''
+        Fetches leaguedashteamstats and updates cs_leaguedashteamstats table
+
+        Arguments:
+             season (str): in YYYY-YY format (2015-16)
+             date_from (str): in %Y-%m-%d format, default beginning of season
+             date_from (str): in %Y-%m-%d format, default yesterday
+
+        Returns:
+             teamstats (list): team dictionary of basic and advanced stats
+             
+         Examples:
+            a = NBAComAgent()
+            ps = a.cs_teamstats('2015-16')
+            ps = a.cs_teamstats(season='2015-16', date_from='2016-03-01', date_to='2016-03-08')
+
+        '''
+
+        # default is to get entire season through yesterday
+        s1, s2 = season.split('-')
+        yesterday = dt.datetime.strftime(dt.datetime.today() - dt.timedelta(1), '%Y-%m-%d')
+
+        if not date_from:
+            date_from = season_start(season)
+
+        if not date_to:
+            date_to = yesterday
+
+        ts_base = self.parser.teamstats(self.scraper.teamstats(season, DateFrom=date_from, DateTo=date_to))
+        ts_adv = self.parser.teamstats(self.scraper.teamstats(season, DateFrom=date_from, DateTo=date_to, MeasureType='Advanced'))
+
+        # now need to merge base and advanced
+        ts_base = {t['TEAM_ID']: t for t in ts_base}
+
+        for ts_adv in ts_adv:
+            tid = ts_adv['TEAM_ID']
+            base = ts_base.get(tid)
+
+            if base:
+                base.update(ts_adv)
+                base['season'] = int(s1) + 1
+                base['nbacom_season_id'] = int(s2) + 22000 - 1
+                ts_base[tid] = base
+
+        return ts_base
 
     def team_opponents(self, season, season_start=None, season_end=None, pkl_fname=None):
         '''
@@ -441,7 +397,7 @@ class NBAComAgent(NBAAgent):
 
         # figure out season_start, season end
         if season_start is None:
-            days = self.nbas.season_dates('2014-15')
+            days = season_dates('2014-15')
             season_start = dt.datetime.strftime(days[-1], '%Y-%m-%d')
         else:
             days = date_list(season_end, season_start)

@@ -80,3 +80,6 @@ def strtodate(d):
     Converts date formats used by different sites
     '''
     return datetime.datetime.strptime(d, format_type(d))
+
+def yesterday(fmt='%Y-%m-%d'):
+    return datetime.datetime.strftime(datetime.datetime.today() - datetime.timedelta(1), fmt)
