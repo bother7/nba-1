@@ -5,7 +5,6 @@ import time
 
 from nba.scrapers.nbacom import NBAComScraper
 from nba.parsers.nbacom import NBAComParser
-from nba.db.pgsql import NBAPostgres
 
 
 class NBAPlayers(object):
@@ -20,14 +19,29 @@ class NBAPlayers(object):
 
     '''
     
-    def __init__(self, db=False):
+    def __init__(self, db=None):
         logging.getLogger(__name__).addHandler(logging.NullHandler())
         self._dk_players = []
         self.scraper = NBAComScraper()
         self.parser = NBAComParser()
 
         if db:
-            self.nbadb = NBAPostgres()
+            self.nbadb = db
+
+    def _convert_heigt(self, h):
+        '''
+        Converts height from 6-11 (feet-inches) to 73 (inches)
+        Args:
+            h(str): e.g. 6-7, 5-11, 7-1
+
+        Returns:
+            height(int): e.g. 79, 71, 85
+        '''
+        try:
+            f, i = h.split('-')
+            return int(f) * 12 + int(i)
+        except:
+            return None
 
     @property
     def dk_players(self):
@@ -65,62 +79,40 @@ class NBAPlayers(object):
         missing = []
 
         # get list of ids that appear in current_season_gamelogs but not players
-        sql = '''
-            SELECT DISTINCT player_id FROM stats.cs_player_gamelogs
-            WHERE player_id NOT IN (SELECT DISTINCT nbacom_player_id FROM stats.players)
-        '''
-        
-        results = self.nbadb.select_list(sql)
+        sql = '''SELECT * FROM stats.players_to_add'''
 
-        if results:
-            for pid in results:
-                content = self.scraper.player_info(pid, season)
-                pi = self.parser.player_info(content)
-                
-                pi = {k.lower(): v for k,v in pi.items()}
-                pi.pop('games_played_flag', None)
-                pi['nbacom_team_id'] = pi.get('team_id', None)
-                pi.pop('team_id', None)
-                pi['nbacom_position'] = pi.get('position', None)
-                pi.pop('position', None)
-                pi['nbacom_player_id'] = pi.get('person_id', None)
-                pi.pop('person_id', None)
+        for pid in self.nbadb.select_list(sql):
+            content = self.scraper.player_info(pid, season)
+            pinfo = self.parser.player_info(content)
 
-                if pi.get('height', None):
-                    try:
-                        feet, inches = pi['height'].split('-')
-                        pi['height'] = int(feet)*12 + int(inches)
+            pi = {k.lower(): v for k,v in pinfo.items()}
+            pi.pop('games_played_flag', None)
+            pi['nbacom_team_id'] = pi.get('team_id', None)
+            pi.pop('team_id', None)
+            pi['nbacom_position'] = pi.get('position', None)
+            pi.pop('position', None)
+            pi['nbacom_player_id'] = pi.get('person_id', None)
+            pi.pop('person_id', None)
 
-                    except: pass
+            if pi.get('height', None):
+                pi['height'] = self._convert_heigt(pi['height'])
 
-                # have to convert empty strings to None, otherwise insert fails for integer/numeric columns
-                player_info= {}
-                for k,v in pi.items():
-                    if not v:
-                        player_info[k] = None
-                    else:
-                        player_info[k] = v
-                missing.append(player_info)
+            # have to convert empty strings to None, otherwise insert fails for integer/numeric columns
+            player_info= {}
+            for k,v in pi.items():
+                if not v:
+                    player_info[k] = None
+                else:
+                    player_info[k] = v
+            missing.append(player_info)
 
-                if self.polite: time.sleep(1)
+            if self.polite:
+                time.sleep(1)
 
-        if missing: self.nbadb.insert_dicts(missing, 'stats.players')
+        if missing:
+            self.nbadb.insert_dicts(missing, 'stats.players')
 
         return missing
-
-    def recent_nbacom_players(self):
-        '''
-        Gets last couple of years of players from nba.com
-        Returns dictionary with key of name + team
-        '''
-        if not self.nbadb:
-            return None
-
-        else:
-            # can also return in dict format
-            # {'{0} {1}'.format(item['player_name'], item.get('team_code')):item for item in self.nbadb.select_dict(sql)}
-            sql = '''SELECT * FROM recent_nba_players'''
-            return self.nbadb.select_dict(sql)
 
     def player_xref(self, site_name):
         '''

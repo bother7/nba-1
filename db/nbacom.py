@@ -23,12 +23,12 @@ class NBAComPg(NBAPostgres):
         '''
         TODO: add table_names as property
         '''
-        logging.getLogger(__name__).addHandler(logging.NullHandler())
         NBAPostgres.__init__(self, username, password, database)
+        logging.getLogger(__name__).addHandler(logging.NullHandler())
         if table_names:
             self.table_names = table_names
         else:
-            self.table_names = {'pgl': None, 'tgl': None, 'pl': None}
+            self.table_names = {'pgl': 'stats.player_gamelogs', 'tgl': 'stats.team_gamelogs', 'pl': 'stats.players'}
 
     def insert_boxscores(self, player_boxscores, team_boxscores, player_table_name, team_table_name):
 
@@ -89,50 +89,47 @@ class NBAComPg(NBAPostgres):
         omit = ['VIDEO_AVAILABLE', 'TEAM_NAME', 'MATCHUP']
 
         if check_date:
-        # figure out the date filter
-        # postgres will return object unless use to_char function
-        # then need to convert it to datetime object for comparison
-        q = """SELECT to_char(max(game_date), 'YYYYMMDD') from stats.player_gamelogs"""
-        last_gamedate = datetime.datetime.strptime(self.select_scalar(q), '%Y%m%d') #- datetime.timedelta(days=7)
+            # figure out the date filter
+            # postgres will return object unless use to_char function
+            # then need to convert it to datetime object for comparison
+            q = """SELECT to_char(max(game_date), 'YYYYMMDD') from stats.player_gamelogs"""
+            last_gamedate = datetime.datetime.strptime(self.select_scalar(q), '%Y%m%d') #- datetime.timedelta(days=7)
 
-        # filter all_gamelogs by date, only want those newer than latest gamelog in table
-        # have to convert to datetime object for comparison
-        today = datetime.datetime.strftime(datetime.datetime.today(), '%Y-%m-%d')
+            # filter all_gamelogs by date, only want those newer than latest gamelog in table
+            # have to convert to datetime object for comparison
+            today = datetime.datetime.strftime(datetime.datetime.today(), '%Y-%m-%d')
+            stats = filter(lambda(x): datetime.datetime.strptime(x['GAME_DATE'], '%Y-%m-%d') > last_gamedate, stats)
 
         for item in stats:
 
             if item.get('GAME_DATE') == today:
                 continue
 
-            elif last_gamedate < datetime.datetime.strptime(item['GAME_DATE'], '%Y-%m-%d'):
-                cleaned_item = {k.lower().strip(): v for k,v in item.iteritems() if k.upper() not in omit}
-                cleaned_item['dk_points'] = dk_points(item)
-                cleaned_item['fd_points'] = fd_points(item)
+            cleaned_item = {k.lower().strip(): v for k,v in item.iteritems() if k.upper() not in omit}
+            cleaned_item['dk_points'] = dk_points(item)
+            cleaned_item['fd_points'] = fd_points(item)
 
-                # convert wl to is_win (boolean)
-                if cleaned_item.get('wl') == 'W':
-                    cleaned_item['is_win'] = True
-
-                else:
-                    cleaned_item['is_win'] = False
-
+            # convert wl to is_win (boolean)
+            if cleaned_item.has_key('wl'):
                 cleaned_item.pop('wl', None)
 
-                # change team_abbreviation to team_code
-                if 'team_abbreviation' in cleaned_item:
-                    cleaned_item['team_code'] = cleaned_item['team_abbreviation']
-                    cleaned_item.pop('team_abbreviation')
+            # change to nbacom_player_id
+            if 'player_id' in cleaned_item:
+                cleaned_item['nbacom_player_id'] = cleaned_item['player_id']
+                cleaned_item.pop('player_id', None)
 
-                # cleanup season_id
-                if 'season_id' in cleaned_item:
-                    cleaned_item['nbacom_season_id'] = int(cleaned_item['season_id'])
-                    cleaned_item['season'] = cleaned_item['nbacom_season_id'] - 20000 + 1
-                    cleaned_item.pop('season_id')
+            # change team_abbreviation to team_code
+            if 'team_abbreviation' in cleaned_item:
+                cleaned_item['team_code'] = cleaned_item['team_abbreviation']
+                cleaned_item.pop('team_abbreviation')
 
-                cleaned_items.append(cleaned_item)
+            # cleanup season_id
+            if 'season_id' in cleaned_item:
+                cleaned_item['nbacom_season_id'] = int(cleaned_item['season_id'])
+                cleaned_item['season'] = cleaned_item['nbacom_season_id'] - 20000 + 1
+                cleaned_item.pop('season_id')
 
-            else:
-                logging.debug('game is already in db: {0}'.format(item.get('GAME_DATE')))
+            cleaned_items.append(cleaned_item)
 
         # add cleaned items to database
         if cleaned_items:
@@ -167,6 +164,10 @@ class NBAComPg(NBAPostgres):
             if 'team_abbreviation' in clean_player:
                 clean_player['team_code'] = clean_player['team_abbreviation']
                 clean_player.pop('team_abbreviation', None)
+
+            if 'player_id' in clean_player:
+                clean_player['nbacom_player_id'] = clean_player['player_id']
+                clean_player.pop('player_id', None)
 
             clean_player['as_of'] = as_of
             clean_player['season'] = season
@@ -267,8 +268,8 @@ class NBAComPg(NBAPostgres):
             table_name = self.table_name.get('pgl')
         sql = """UPDATE {0}
                 SET position_group=subquery.position_group, primary_position=subquery.primary_position
-                FROM (SELECT nbacom_player_id as player_id, position_group, primary_position FROM stats.players) AS subquery
-                WHERE ({0}.position_group IS NULL OR {0}.primary_position IS NULL) AND {0}.player_id=subquery.player_id;
+                FROM (SELECT nbacom_player_id, position_group, primary_position FROM stats.players) AS subquery
+                WHERE ({0}.position_group IS NULL OR {0}.primary_position IS NULL) AND {0}.nbacom_player_id=subquery.nbacom_player_id;
               """
         self.update(sql.format(table_name))
 

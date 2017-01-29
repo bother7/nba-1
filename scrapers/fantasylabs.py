@@ -105,7 +105,7 @@ class FantasyLabsNBAScraper(EWTScraper):
 
         return content
 
-    def model(self, model_day=None, model_name='default'):
+    def model(self, model_day, model_name='default'):
         '''
         Gets json for model, default to Phan model
         Stats in most models the same, main difference is the ranking based on weights of factors present in all models
@@ -127,19 +127,18 @@ class FantasyLabsNBAScraper(EWTScraper):
             logging.debug('scraper.model: using default model'.format(url))
 
         # does not require date in specific format, so need to convert to datetime then properly format
-        if model_day:
-            # ensure proper date format: infer format using format_type, convert to datetime and then back to string
-            fmt = format_type(model_day)
-            logging.debug('scraper.model: date format is {0}'.format(fmt))
-            dt = datetime.datetime.strptime(model_day, fmt)
-            logging.debug('scraper.model: dt is {0}'.format(dt))
-            model_day = datetime.datetime.strftime(dt, site_format('fl'))
-            logging.debug('scraper.model: model_day is {0}'.format(model_day))
+        #if model_day:
+        #    # ensure proper date format: infer format using format_type, convert to datetime and then back to string
+        #    fmt = format_type(model_day)
+        #    logging.debug('scraper.model: date format is {0}'.format(fmt))
+        #    dt = datetime.datetime.strptime(model_day, fmt)
+        #    logging.debug('scraper.model: dt is {0}'.format(dt))
+        #    model_day = datetime.datetime.strftime(dt, site_format('fl'))
+        #    logging.debug('scraper.model: model_day is {0}'.format(model_day))
 
-        else:
-            model_day=datetime.datetime.strftime(datetime.datetime.today(), site_format('fl'))
-            logging.debug('scraper.model: model_day is {0}'.format(model_day))
-
+        #else:
+        #model_day=datetime.datetime.strftime(datetime.datetime.today(), site_format('fl'))
+        #logging.debug('scraper.model: model_day is {0}'.format(model_day))
 
         return self.get_json(url=url.format(model_day)) #, cookies=cj)
 

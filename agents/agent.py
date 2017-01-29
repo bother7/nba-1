@@ -18,13 +18,12 @@ class NBAAgent(object):
 
     '''
 
-    def __init__(self, cookies=None, cache_name=None, db=False, safe=True):
+    def __init__(self, **kwargs):
         '''
 
         Args:
             cookies:
             cache_name:
-            db:
             safe:
         '''
         logging.getLogger(__name__).addHandler(logging.NullHandler())

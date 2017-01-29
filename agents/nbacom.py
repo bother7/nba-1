@@ -15,7 +15,7 @@ from nba.seasons import *
 from nba.dates import *
 
 
-class NBAComAgent(NBAAgent):
+class NBAComAgent(object):
     '''
     Performs script-like tasks using NBA.com API
     Intended to replace standalone scripts so can use common API and tools
@@ -34,7 +34,6 @@ class NBAComAgent(NBAAgent):
         '''
 
         logging.getLogger(__name__).addHandler(logging.NullHandler())
-        NBAAgent.__init__(self)
         self.scraper = NBAComScraper(cache_name=cache_name, cookies=cookies)
         self.parser = NBAComParser()
         self.safe = safe
@@ -91,48 +90,28 @@ class NBAComAgent(NBAAgent):
 
         return merged_players, merged_teams
 
-    def commonallplayers(self, season):
+    def new_players(self, season, cs_only=1):
         '''
-        Solves problem of players changing teams
-        nba.com updates player teams regularly, so i look every day to make sure lists accurate
-
+        TODO: this does not work
         Arguments:
             season (str): in YYYY-YY format
+            cs_only(bool): default is current season only
         Returns:
-            to_insert (list): list of players that needed to be updated
+            to_insert (list): list of players that were added to stats.players
         Examples:
             a = NBAComAgent()
-            combined = a.commonallplayers('2015-16')
+            combined = a.new_players('2015-16')
         '''
-        game_date = dt.datetime.today()
-        players = self.parser.players(self.scraper.players(season=season, cs_only='1'))
+
+        q = 'SELECT * FROM players_to_add'
         to_insert = []
-        convert = {
-            "PERSON_ID": 'nbacom_player_id',
-            "DISPLAY_LAST_COMMA_FIRST": '',
-            "DISPLAY_FIRST_LAST": 'display_first_last',
-            "ROSTERSTATUS": 'rosterstatus',
-            "FROM_YEAR": '',
-            "TO_YEAR": '',
-            "PLAYERCODE": '',
-            "TEAM_ID": 'team_id',
-            "TEAM_CITY": '',
-            "TEAM_NAME": '',
-            "TEAM_ABBREVIATION": 'team_code',
-            "TEAM_CODE": '',
-            "GAMES_PLAYED_FLAG": ''
-        }
 
-        for p in players:
-            pti = {'game_date': game_date, 'nbacom_season_id': 22015, 'season': 2016}
-            for k,v in p.items():
-                converted = convert.get(k)
-                if converted:
-                    pti[converted] = v
-            to_insert.append(pti)
+        for id in self.nbadb.select_list(q):
+            content = self.scraper.player_info(id, season)
+            to_insert.append(self.parser.player_info(content))
 
-        if self.nbadb and to_insert:
-            self.nbadb.insert_dicts(to_insert, 'stats.playerteams')
+        #if to_insert:
+        #(to_insert, 'stats.players')
 
         return to_insert
 

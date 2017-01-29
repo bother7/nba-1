@@ -3,16 +3,12 @@ import json
 import logging
 import os
 
-import browsercookie
-
 from nba.parsers.fantasylabs import FantasyLabsNBAParser
 from nba.scrapers.fantasylabs import FantasyLabsNBAScraper
-from nba.agents.agent import NBAAgent
-from nba.db.fantasylabs import FantasyLabsNBAPg
 from nba.dates import date_list
 
 
-class FantasyLabsNBAAgent(NBAAgent):
+class FantasyLabsNBAAgent(object):
     '''
     Performs script-like tasks using fantasylabs scraper, parser, and db module
     Intended to replace standalone scripts so can use common API and tools
@@ -23,12 +19,19 @@ class FantasyLabsNBAAgent(NBAAgent):
         players, pp_players = a.today_models()
     '''
 
-    def __init__(self, cache_name=None, db=True, safe=True):
+    def __init__(self, cookies=None, cache_name=None, db=None, safe=False):
+        '''
 
-        # see http://stackoverflow.com/questions/8134444
-
-        NBAAgent.__init__(self, cache_name, db=False, safe=safe)
-        self.db = FantasyLabsNBAPg()
+        Args:
+            cookies:
+            cache_name:
+            db:
+            safe:
+        '''
+        logging.getLogger(__name__).addHandler(logging.NullHandler())
+        if db:
+            self.db = db
+        self.scraper = FantasyLabsNBAScraper(cookies=cookies, cache_name=cache_name)
         self.parser = FantasyLabsNBAParser()
 
     def optimizer_pipeline(self, models):
@@ -133,6 +136,15 @@ class FantasyLabsNBAAgent(NBAAgent):
             self.db.insert_salaries(pp_players)
 
         return players, pp_players
+
+    def salaries(self, day):
+        '''
+        Args:
+            day(str): in mm_dd_YYYY format
+        Returns:
+            players(list): of player dict
+        '''
+        return self.parser.dk_salaries(self.scraper.model(day), day)
 
     def today_games(self):
         '''
