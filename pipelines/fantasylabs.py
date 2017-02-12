@@ -1,0 +1,3 @@
+class FantasyLabsNBAPipeline(object):
+    pass
+

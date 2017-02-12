@@ -1,7 +1,6 @@
+from __future__ import print_function
 from collections import defaultdict
-import json
 import logging
-import os
 
 from ewt.scraper import EWTScraper
 
@@ -28,7 +27,7 @@ class NBAComScraper(EWTScraper):
 
         EWTScraper.__init__(self, headers=self.headers, cookies=self.cookies, cache_name=self.cache_name)
 
-    def boxscore(self, game_id, season):
+    def boxscore_traditional(self, game_id):
         '''
         Boxscore from a single game
         Arguments:
@@ -37,24 +36,23 @@ class NBAComScraper(EWTScraper):
         Returns:
             content: python data structure of json documnt
         '''
-        
         base_url = 'http://stats.nba.com/stats/boxscoretraditionalv2?'
-
         params = {
           'EndPeriod': '10',
           'EndRange': '100000',
           'GameID': game_id,
           'RangeType': '2',
-          'Season': season,
           'SeasonType': 'Regular Season',
           'StartPeriod': '1',
           'StartRange': '0'
         }
-
         content = self.get_json(url=base_url, payload=params)
-
-        if not content: logging.error('could not get content from url: {0}'.format(base_url))
-
+        if not content:
+            logging.error('could not get content from url: {0}'.format(base_url))
+        else:
+            fn = '/home/sansbacon/boxes/{}-traditional.json'.format(game_id)
+            with open(fn, 'w') as outfile:
+                print(content, file=outfile)
         return content
 
     def boxscore_advanced(self, game_id):
@@ -82,60 +80,118 @@ class NBAComScraper(EWTScraper):
 
         content = self.get_json(url=base_url, payload=params)
 
-        if not content: logging.error('could not get content from url: {0}'.format(base_url))
+        if not content:
+            logging.error('could not get content from url: {0}'.format(base_url))
+        else:
+            fn = '/home/sansbacon/boxes/{}-advanced.json'.format(game_id)
+            with open(fn, 'w') as outfile:
+                print(content, file=outfile)
 
         return content
 
-    def boxscores(self, gids, season, box_type='both', save=False, savedir=None):
+    def boxscore_misc(self, game_id):
+        '''
+        Boxscore from a single game
+        Arguments:
+            game_id: numeric identifier of game (has to be 10-digit, may need two leading zeroes)
+        Returns:
+            content: python data structure of json document
+        '''
+        base_url = 'http://stats.nba.com/stats/boxscoremiscv2?'
+        if len(str(game_id)) == 8:
+            game_id = '00' + str(game_id)
+        params = {
+            'GameID': game_id,
+            'StartPeriod': 1,
+            'EndPeriod': 10,
+            'StartRange': 0,
+            'EndRange': 28800,
+            'RangeType': 0
+        }
+        content = self.get_json(url=base_url, payload=params)
+        if not content:
+            logging.error('could not get content from url: {0}'.format(base_url))
+        else:
+            fn = '/home/sansbacon/boxes/{}-misc.json'.format(game_id)
+            with open(fn, 'w') as outfile:
+                print(content, file=outfile)
+        return content
+
+    def boxscore_scoring(self, game_id):
+        '''
+        Boxscore from a single game
+        Arguments:
+            game_id: numeric identifier of game (has to be 10-digit, may need two leading zeroes)
+        Returns:
+            content: python data structure of json document
+        '''
+        base_url = 'http://stats.nba.com/stats/boxscorescoringv2?'
+        if len(str(game_id)) == 8:
+            game_id = '00' + str(game_id)
+        params = {
+            'GameID': game_id,
+            'StartPeriod': 1,
+            'EndPeriod': 10,
+            'StartRange': 0,
+            'EndRange': 28800,
+            'RangeType': 0
+        }
+        content = self.get_json(url=base_url, payload=params)
+        if not content:
+            logging.error('could not get content from url: {0}'.format(base_url))
+        else:
+            fn = '/home/sansbacon/boxes/{}-scoring.json'.format(game_id)
+            with open(fn, 'w') as outfile:
+                print(content, file=outfile)
+        return content
+
+    def boxscore_usage(self, game_id):
+        '''
+        Boxscore from a single game
+        Arguments:
+            game_id: numeric identifier of game (has to be 10-digit, may need two leading zeroes)
+        Returns:
+            content: python data structure of json document
+        '''
+        base_url = 'http://stats.nba.com/stats/boxscoreusagev2?'
+        if len(str(game_id)) == 8:
+            game_id = '00' + str(game_id)
+        params = {
+            'GameID': game_id,
+            'StartPeriod': 1,
+            'EndPeriod': 10,
+            'StartRange': 0,
+            'EndRange': 28800,
+            'RangeType': 0
+        }
+        content = self.get_json(url=base_url, payload=params)
+        if not content:
+            logging.error('could not get content from url: {0}'.format(base_url))
+        else:
+            fn = '/home/sansbacon/boxes/{}-usage.json'.format(game_id)
+            with open(fn, 'w') as outfile:
+                print(content, file=outfile)
+        return content
+
+    def combined_boxscore(self, gid):
         '''
         Download boxscores for all of the game_ids provided
         Arguments:
-            gids(list): nba.com game_ids
-            season(str): in '2014-15' format
-            box_type(str): ['base', 'advanced', 'both']
+            gid(list): nba.com game_id
         Returns:
-            boxes(dict): keys are the game_id, value is a dictionary with 'base' and 'adv' keys, that value is parsed json resource
+            boxes(dict): keys are the type of boxscore, value is parsed json
         '''
-
+        # traditional, advanced, misc, scoring, usage
         boxes = defaultdict(dict)
-        box_types = ['base', 'advanced', 'both']
 
-        if box_type.lower() not in box_types:
-            raise ValueError('{0} is not a valid box_type'.format(box_type))
-
-        for gid in gids:
-
-            # transform to string with leading zeroes
-            if len(gid) == 8:
-                gid = '00{0}'.format(gid)
-
-            # each game id has a key for base, advanced, or both
-            if box_type in ('both', 'base'):
-                content = self.boxscore(gid, season)
-                boxes[gid]['base'] = content
-
-                if save and savedir:
-                    try:
-                        fname = os.path.join(savedir, '{0}_box.json'.format(gid))
-
-                        with open(fname, 'w') as outfile:
-                            json.dump(content, outfile)
-                    except:
-                        logging.exception('could not save {0} to file'.format(gid))
-
-            # each game id has a key for base and advanced box
-            if box_type in ('both', 'advanced'):
-                content = self.boxscore_advanced(gid)
-                boxes[gid]['advanced'] = content
-
-                if save and savedir:
-                    try:
-                        fname = os.path.join(savedir, '{0}_box_advanced.json'.format(gid))
-                        with open(fname, 'w') as outfile:
-                            json.dump(content, outfile)
-                    except:
-                        logging.exception('could not save {0} to file'.format(gid))
-
+        # transform to string with leading zeroes
+        if len(gid) == 8:
+            gid = '00{0}'.format(gid)
+        boxes['traditional'] = self.boxscore_traditional(gid)
+        boxes['advanced'] = self.boxscore_advanced(gid)
+        boxes['misc'] = self.boxscore_misc(gid)
+        boxes['scoring'] = self.boxscore_scoring(gid)
+        boxes['usage'] = self.boxscore_usage(gid)
         return boxes
 
     def games(self, season_year):

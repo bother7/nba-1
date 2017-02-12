@@ -11,6 +11,7 @@ from bs4 import BeautifulSoup
 
 from ewt.scraper import EWTScraper
 
+
 class ESPNNBAScraper(EWTScraper):
     '''
 
@@ -23,7 +24,7 @@ class ESPNNBAScraper(EWTScraper):
 
         if not headers:
             self.headers = {'Referer': 'http://www.fantasylabs.com/nfl/player-models/',
-                        'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:50.0) Gecko/20100101 Firefox/50.0'}
+                            'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:50.0) Gecko/20100101 Firefox/50.0'}
         else:
             self.headers = headers
 
@@ -63,27 +64,27 @@ class ESPNNBAScraper(EWTScraper):
         base_url = 'http://stats.nba.com/stats/commonplayerinfo?PlayerID='
         ids = [p['PERSON_ID'] for p in players]
         for id in ids:
-          
-          # create url
-          url = base_url + str(id)
-          logging.debug('url is ' + url)
-          
-          # create filename
-          fn = os.path.join(expanduser("~"), savedir, str(id) + '.json')
-          logging.debug('filename is ' + fn)
-          
-          # get the resource
-          resp, content = h.request(url, "GET")
-          logging.debug('status is ' + str(resp.status))  
 
-          # if request is success, then save resource to file
-          if resp.status == 200:   
-            try:
-              with open(fn, 'w') as outfile:
-                outfile.write(content)
-                logging.debug('saved player ' + str(id) + ' to ' + fn)  
-            except:
-              logging.exception('could not save file ' + fn)
+            # create url
+            url = base_url + str(id)
+            logging.debug('url is ' + url)
+
+            # create filename
+            fn = os.path.join(expanduser("~"), savedir, str(id) + '.json')
+            logging.debug('filename is ' + fn)
+
+            # get the resource
+            resp, content = h.request(url, "GET")
+            logging.debug('status is ' + str(resp.status))
+
+            # if request is success, then save resource to file
+            if resp.status == 200:
+                try:
+                    with open(fn, 'w') as outfile:
+                        outfile.write(content)
+                        logging.debug('saved player ' + str(id) + ' to ' + fn)
+                except:
+                    logging.exception('could not save file ' + fn)
 
         return content
 
@@ -111,7 +112,7 @@ class FiveThirtyEightNBAScraper(EWTScraper):
 
         if not headers:
             self.headers = {'Referer': 'http://www.fantasylabs.com/nfl/player-models/',
-                        'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:50.0) Gecko/20100101 Firefox/50.0'}
+                            'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:50.0) Gecko/20100101 Firefox/50.0'}
         else:
             self.headers = headers
 
@@ -124,7 +125,7 @@ class FiveThirtyEightNBAScraper(EWTScraper):
         # this is a list of lists
         all_players = {}
 
-        page_numbers = range(1,11)
+        page_numbers = range(1, 11)
 
         for page_number in page_numbers:
             url = 'http://espn.go.com/nba/salaries/_/page/{0}/seasontype/1'.format(page_number)
@@ -171,17 +172,69 @@ class FiveThirtyEightNBAScraper(EWTScraper):
                 else:
                     logging.debug('could not get {0}'.format(player_code))
 
-    
     def simscores(self, player_code):
         url = 'http://projects.fivethirtyeight.com/carmelo/{0}.json'.format(player_code)
 
         try:
             content = self.get(url)
             return content
-            
+
         except:
             logging.exception('could not get {0}'.format(url))
             return None
 
+
 if __name__ == "__main__":
     pass
+
+    '''
+    import logging
+    import re
+    import time
+
+    from bs4 import BeautifulSoup
+    from ewt.scraper import EWTScraper
+
+    s = EWTScraper(cache_name='espn-nba')
+
+    teams_page = 'http://www.espn.com/nba/teams'
+    players = []
+    teams = {}
+
+    tpcontent = s.get(teams_page)
+    soup = BeautifulSoup(tpcontent, 'lxml')
+
+    for teama in soup.find_all('a', {'href': re.compile(r'/nba/teams/roster')}):
+        roster_url = 'http://espn.go.com' + teama['href']
+        team_code = roster_url.split('=')[-1]
+        teams[team_code] = {'url': roster_url, 'name': teama.text}
+
+        content = s.get(roster_url)
+        tsoup = BeautifulSoup(content, 'lxml')
+
+        for tr in tsoup.find_all('tr', {'class': re.compile(r'player-\d+')}):
+
+            # get player name and id
+            espn_player_id, espn_player_url = (None, None)
+            links = [td.find('a') for td in tr.find_all('td') if td.find('a')]
+            if links:
+                url = links[0]['href']
+                if url:
+                    espn_player_url = url
+                    match = re.search(r'/id/(\d+)/(\w+-\w+)', url)
+                    if match:
+                        espn_player_id = match.group(1)
+
+            # 0 jersey, 1 name, 2 position, 3 age, 4 height, 5 weight, 6 college, 7 salary
+            headers = ['jersey', 'espn_player_name', 'espn_position', 'age', 'height', 'weight', 'college', 'nba_salary']
+            tds = [td.text for td in tr.find_all('td')]
+            player = dict(zip(headers, tds))
+            player['espn_player_url'] = espn_player_url
+            player['espn_player_id'] = espn_player_id
+            players.append(player)
+
+        time.sleep(2)
+
+    print players
+    print teams
+    '''

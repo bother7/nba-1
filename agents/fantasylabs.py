@@ -163,7 +163,7 @@ class FantasyLabsNBAAgent(object):
 
         return self.parser.games(self.scraper.games_today())
 
-    def today_model(self, model_name='default', fn=None, insert_db=False):
+    def today_model(self, model_name='phan'):
         '''
         Gets list of player models for today's games
 
@@ -182,28 +182,9 @@ class FantasyLabsNBAAgent(object):
             models = a.today_models(model_name='phan')
             models = a.range_models(model_name='phan', insert_db=True)
         '''
-
         today = dt.datetime.strftime(dt.datetime.today(), '%Y-%m-%d')
-
-        if fn:
-            with open(fn, 'r') as infile:
-                model = json.load(infile)
-
-        else:
-            model = self.scraper.model(model_day=today, model_name=model_name)
-
-        players = self.parser.model(content=model, site='dk', gamedate=today)
-
-        if self.db:
-            pp_players = self.db.preprocess_salaries(players)
-
-            if insert_db:
-                self.db.insert_salaries(pp_players)
-
-        else:
-            pp_players = None
-
-        return players, pp_players
+        model = self.scraper.model(model_day=today, model_name=model_name)
+        return self.parser.model(content=model, site='dk', gamedate=today)
 
     def update_models(self, season, model_name='default', insert_db=False):
         '''

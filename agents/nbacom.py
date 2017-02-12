@@ -1,14 +1,12 @@
 import datetime as dt
 import logging
+import time
 
 try:
     import cPickle as pickle
-
 except:
     import pickle
 
-from nba.agents.agent import NBAAgent
-from nba.db.nbacom import NBAComPg
 from nba.scrapers.nbacom import NBAComScraper
 from nba.parsers.nbacom import NBAComParser
 from nba.seasons import *
@@ -29,91 +27,83 @@ class NBAComAgent(object):
     def __init__(self, cache_name='nbacom-cache', cookies=None, db=None, safe=False):
         '''
         Args:
-            db (bool): compose NBAComPg object as self.nbadb
+            db (bool): compose NBAComPg object as self.db
             safe (bool): create backups of tables prior to inserts
         '''
-
         logging.getLogger(__name__).addHandler(logging.NullHandler())
         self.scraper = NBAComScraper(cache_name=cache_name, cookies=cookies)
         self.parser = NBAComParser()
         self.safe = safe
 
         if db:
-            self.nbadb = db
+            self.db = db
         else:
-            self.nbadb = None
+            self.db = None
 
-    def combine_boxscores(self, boxes, advanced_boxes):
+    def _merge(self, merge_dico, dico_list):
         '''
-        Combines NBAComScraper.boxscores() and boxscores_advanced()
-        Arguments:
-            boxscores(list): list of 'base' boxscores
-            boxscores(list): list of 'advanced' boxscores
+        See http://stackoverflow.com/questions/28838291/merging-multiple-dictionaries-in-python
+        Args:
+            merge_dico:
+            dico_list:
+
         Returns:
-            merged_players (list): base and advanced combined
-            merged_teams (list): base and advanced combined
+
+        '''
+        for dico in dico_list:
+            for key, value in dico.items():
+                if type(value) == type(dict()):
+                    merge_dico.setdefault(key, dict())
+                    self._merge(merge_dico[key], [value])
+                else:
+                    merge_dico[key] = value
+        return merge_dico
+
+    def combined_player_boxscores(self, gid):
+        '''
+        Arguments:
+            gid(str): game ID, with leading '00'
+        Returns:
+            players (list): combined traditional, advanced, misc, scoring, usage
+
         Examples:
             a = NBAComAgent()
-            combined = a.combine_boxscores(boxes, advanced_boxes)
+            players = a.combined_player_boxscores('0020161001')
         '''
-        merged_players = []
-        merged_teams = []
+        traditional_players, traditional_teams, traditional_starter_bench = self.parser.boxscore_traditional(self.scraper.boxscore_traditional(gid))
+        adv_players, adv_team = self.parser.boxscore_advanced(self.scraper.boxscore_advanced(gid))
+        misc_players, misc_team = self.parser.boxscore_misc(self.scraper.boxscore_misc(gid))
+        scoring_players, scoring_team = self.parser.boxscore_scoring(self.scraper.boxscore_scoring(gid))
+        usage_players = self.parser.boxscore_usage(self.scraper.boxscore_usage(gid))
 
-        for gid, box in boxes.items():
-            # players and teams are lists of dicts
-            players, teams, starterbench = self.parser.boxscore(box)
+        # now need to combine player and team boxscores
+        players = self._merge(dict(), [{t['PLAYER_ID']: t for t in traditional_players}, {t['PLAYER_ID']: t for t in adv_players},
+                                       {t['PLAYER_ID']: t for t in misc_players}, {t['PLAYER_ID']: t for t in scoring_players},
+                                       {t['PLAYER_ID']: t for t in usage_players}])
 
-            # players_adv and teams_adv are lists of dicts
-            adv_box = advanced_boxes.get(gid)
-            players_adv, teams_adv = self.parser.boxscore_advanced(adv_box)
+        return list(players.values())
 
-            # need to transform into dicts
-            players_dict = {p['PLAYER_ID']: p for p in players}
-            players_adv_dict = {p['PLAYER_ID']: p for p in players_adv}
-            teams_dict = {t['TEAM_ID']: t for t in teams}
-            teams_adv_dict = {t['TEAM_ID']: t for t in teams_adv}
-
-            # now loop through players
-            for pid, player in players_dict.items():
-                player_adv = players_adv_dict.get(pid)
-                if player_adv:
-                    merged_players.append(self.merge_boxes(player, player_adv))
-
-            # now loop through teams
-            for tid, team in teams_dict.items():
-                team_adv = teams_adv_dict.get(tid)
-                if team_adv:
-                    merged_teams.append(self.merge_boxes(team, team_adv))
-
-        if self.nbadb:
-            self.nbadb.insert_boxscores(merged_players, merged_teams)
-
-        return merged_players, merged_teams
-
-    def new_players(self, season, cs_only=1):
+    def combined_team_boxscores(self, gid):
         '''
-        TODO: this does not work
         Arguments:
-            season (str): in YYYY-YY format
-            cs_only(bool): default is current season only
+            gid(str): game ID, with leading '00'
         Returns:
-            to_insert (list): list of players that were added to stats.players
+            teams (list): combined traditional, advanced, misc, scoring
+
         Examples:
             a = NBAComAgent()
-            combined = a.new_players('2015-16')
+            players = a.combined_team_boxscores('0020161001')
         '''
+        traditional_players, traditional_teams, traditional_starter_bench = self.parser.boxscore_traditional(self.scraper.boxscore_traditional(gid))
+        adv_players, adv_teams = self.parser.boxscore_advanced(self.scraper.boxscore_advanced(gid))
+        misc_players, misc_teams = self.parser.boxscore_misc(self.scraper.boxscore_misc(gid))
+        scoring_players, scoring_teams = self.parser.boxscore_scoring(self.scraper.boxscore_scoring(gid))
 
-        q = 'SELECT * FROM players_to_add'
-        to_insert = []
-
-        for id in self.nbadb.select_list(q):
-            content = self.scraper.player_info(id, season)
-            to_insert.append(self.parser.player_info(content))
-
-        #if to_insert:
-        #(to_insert, 'stats.players')
-
-        return to_insert
+        # now need to combine player and team boxscores
+        teams = self._merge(dict(), [{t['TEAM_ID']: t for t in traditional_teams}, {t['TEAM_ID']: t for t in adv_teams},
+                                       {t['TEAM_ID']: t for t in misc_teams}, {t['TEAM_ID']: t for t in scoring_teams}])
+        #teams = self._merge(dict(), traditional_teams, adv_team, misc_team, scoring_team)
+        return list(teams.values())
 
     def merge_boxes(self, b1, b2):
         '''
@@ -131,6 +121,26 @@ class NBAComAgent(object):
         z = b1
         z.update(b2)
         return z
+
+    def new_players(self, season, cs_only=1):
+        '''
+        Arguments:
+            season (str): in YYYY-YY format
+            cs_only(bool): default is current season only
+        Returns:
+            to_insert (list): list of players that were added to stats.players
+        Examples:
+            a = NBAComAgent()
+            combined = a.new_players('2015-16')
+        '''
+        to_insert = []
+        if self.db:
+            q = 'SELECT * FROM stats.players_to_add'
+            for id in self.db.select_list(q):
+                content = self.scraper.player_info(id, season)
+                to_insert.append(self.parser.player_info(content))
+
+        return to_insert
 
     def player_gamelogs(self, season, table_name=None, date_from=None, date_to=None):
         '''
@@ -251,25 +261,15 @@ class NBAComAgent(object):
 
         Examples:
             a = NBAComAgent()
-            tgl = a.cs_team_gamelogs('2015-16')
-            tgl = a.cs_playerstats(season='2015-16', date_from='2016-03-01', date_to='2016-03-08')
+            tgl = a.team_gamelogs('2015-16')
+            tgl = a.team_gamelogs(season='2015-16', date_from='2016-03-01', date_to='2016-03-08')
 
         '''
-
-        gamelogs = self.parser.season_gamelogs(self.scraper.season_gamelogs(season=season, player_or_team='T'), 'T')
-        logging.debug('there are {0} team gamelogs'.format(len(gamelogs)))
-
-        if self.nbadb:
-
-            table_name = 'stats.cs_team_gamelogs'
-
-            if self.safe:
-                self.nbadb.postgres_backup_table(self.nbadb.database, table_name)
-
-            gamelogs = self.nbadb.insert_team_gamelogs(gamelogs, table_name)
-            logging.debug('there are now {0} team gamelogs'.format(len(gamelogs)))
-
-        return gamelogs
+        content = self.scraper.season_gamelogs(season=season, player_or_team='T')
+        if content:
+            return self.parser.season_gamelogs(content, 'T')
+        else:
+            return None
 
     def teamstats_daily_range(self, season, date_from, date_to):
         '''
@@ -421,5 +421,60 @@ class NBAComAgent(object):
 
         return topp
 
+    def update_player_positions(self):
+        '''
+        Trying to make sure all position data is current
+        Only info in nba.com is PLAYER key, this is only Guard, etc.
+        Unclear where the PG, etc. comes from
+        '''
+        if not self.db:
+            raise ValueError('need database connection to update players')
+        q = """SELECT nbacom_player_id FROM stats.players2 WHERE nbacom_position IS NULL or nbacom_position = ''"""
+        uq = """UPDATE stats.players2 SET nbacom_position = '{}' WHERE nbacom_player_id = {}"""
+
+        for pid in self.db.select_list(q):
+            logging.info('getting {}'.format(pid))
+            pinfo = self.parser.player_info(self.scraper.player_info(pid, '2015-16'))
+            if pinfo.get('POSITION'):
+                self.db.update(uq.format(pinfo.get('POSITION'), pid))
+                logging.info('inserted {}'.format(pinfo.get('DISPLAY_FIRST_LAST')))
+
 if __name__ == '__main__':
     pass
+    '''
+    from nba.db.nbacom import NBAPostgres
+    import time
+
+    a = NBAComAgent(cache_name='nbacom-boxes')
+    nbap = NBAPostgres(user='postgres', password='cft091146', database='nba')
+    q = 'SELECT game_id from stats.games where game_date <= now()::date order by game_date DESC'
+    with open('/home/sansbacon/gameids.txt', 'r') as infile:
+        ids_complete = infile.read().splitlines()
+        ids_complete = [int(id) for id in ids_complete if id != '']
+
+    for gid in set(nbap.select_list(q)) - set(ids_complete):
+        gid = '00' + str(gid)
+        a.combined_player_boxscores(gid)
+        a.combined_team_boxscores(gid)
+        print('completed game {}'.format(gid))
+        time.sleep(2)
+    '''
+
+    '''
+    dashboards = []
+    season = '1999-00'
+    st = season_start(season)
+    for d in date_list(season_end(season), st):
+        content = s.team_opponent_dashboard(season=season, DateFrom=st, DateTo=datetime.datetime.strftime(d, '%Y-%m-%d'))
+        as_of = datetime.datetime.strftime(d, '%Y-%m-%d')
+        for dash in p.team_opponent_dashboard(content):
+            dash['as_of'] = as_of
+            dashboards.append(dash)
+        print 'completed {}'.format(d)
+        time.sleep(1)
+
+    for idx, d in enumerate(dashboards):
+        dashboards[idx].pop('cfid', None)
+        dashboards[idx].pop('cfparams', None)
+    db.insert_dicts(dashboards, 'stats.team_opponent_dashboard')
+    '''

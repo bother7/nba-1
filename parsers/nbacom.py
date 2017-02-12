@@ -8,20 +8,16 @@ from nba.seasons import season_start
 class NBAComParser(object):
     '''
     Parses json endpoints of stats.nba.com into lists of dictionaries
-
     Usage:
         s = NBAComScraper()
         jsondoc = s.player_stats()
         p = NBAComParser()
         stats = p.player_stats(jsondoc)
-
         content = s.teams()
         teams = p.teams(content)
-
     '''
 
     def __init__(self):
-
         logging.getLogger(__name__).addHandler(logging.NullHandler())
 
     def _fix_linescores(self, linescores):
@@ -49,27 +45,23 @@ class NBAComParser(object):
 
         return fixed_linescores
 
-    def _fix_player_inof(self, player_info):
+    def _fix_player_info(self, player_info):
         return player_info
 
-    def boxscore(self, content, game_date=None):
+    def boxscore_traditional(self, content, game_date=None):
         '''
-        Represents single nba.com boxscore (base)
-
+        Represents single nba.com boxscore (traditional)
         Arguments:
             content(dict): parsed json
             game_date(str): string representing date of game for boxscore
-
         Returns:
             players(list): dictionary of stats for each player
             teams(list): dictionary of stats for each team
             starter_bench(list): dictionary of stats broken down by starter/bench
         '''
-
         players = []
         teams = []
         starter_bench = []
-
         for rs in content['resultSets']:
             if rs.get('name') == 'PlayerStats':
                 player_results = rs
@@ -77,57 +69,44 @@ class NBAComParser(object):
                 team_results = rs
             elif rs.get('name') == 'TeamStarterBenchStats':
                 starter_bench_results = rs
-
         # add game_date for convenience
         # standardize on TOV rather than TO; playerstats uses TOV
         for row_set in player_results.get('rowSet'):
             player = dict(list(zip(player_results.get('headers'), row_set)))
-
             if game_date:
                 player['GAME_DATE'] = game_date
-
             if 'MIN' in player:
-                player['MIN_PLAYED'], player['SEC_PLAYED'] = player['MIN'].split(':')
-
+                try:
+                    player['MIN_PLAYED'], player['SEC_PLAYED'] = player['MIN'].split(':')
+                except:
+                    player['MIN_PLAYED'], player['SEC_PLAYED'] = (0,0)
             if 'TOV' in player:
                 player['TOV'] = player.pop('TO')
-
             players.append(player)
-
         # add game_date for convenience
         for result in team_results['rowSet']:
             team = dict(list(zip(team_results['headers'], result)))
-
             if game_date:
                 team['GAME_DATE'] = game_date
-
             teams.append(team)
-
         # starter_bench
         for result in starter_bench_results['rowSet']:
             sb = dict(list(zip(team_results['headers'], result)))
-
             if game_date:
                 sb['GAME_DATE'] = game_date
-
             starter_bench.append(sb)
-
         return players, teams, starter_bench
 
-    def boxscore_advanced(self, content, game_date=None):
+    def boxscore_advanced(self, content):
         '''
         Represents single nba.com boxscore (advanced)
-
         Arguments:
             content(dict): parsed json
             game_date(str): string representing date of game for boxscore
-
         Returns:
             players(list): dictionary of stats for each player
             teams(list): dictionary of stats for each team
-            starter_bench(list): dictionary of stats broken down by starter/bench
         '''
-
         players = []
         teams = []
 
@@ -141,31 +120,118 @@ class NBAComParser(object):
         # standardize on TOV rather than TO; playerstats uses TOV
         for row_set in player_results.get('rowSet'):
             player = dict(list(zip(player_results.get('headers'), row_set)))
-
-            if game_date:
-                player['GAME_DATE'] = game_date
-
             if player.get('MIN'):
                 if ':' in player['MIN']:
                     player['MIN_PLAYED'], player['SEC_PLAYED'] = player['MIN'].split(':')
                 else:
                     player['MIN_PLAYED'] = player['MIN']
-
             if 'TO' in player:
                 player['TOV'] = player.pop('TO')
-
             players.append(player)
 
         # add game_date for convenience
         for result in team_results['rowSet']:
             team = dict(list(zip(team_results['headers'], result)))
-
-            if game_date:
-                team['GAME_DATE'] = game_date
-
             teams.append(team)
 
         return players, teams
+
+    def boxscore_misc(self, content):
+        '''
+        Represents single nba.com boxscore (misc)
+        Arguments:
+            content(dict): parsed json
+            game_date(str): string representing date of game for boxscore
+        Returns:
+            players(list): dictionary of stats for each player
+            teams(list): dictionary of stats for each team
+        '''
+        players = []
+        teams = []
+        for rs in content['resultSets']:
+            if rs.get('name') == 'sqlPlayersMisc':
+                player_results = rs
+            elif rs.get('name') == 'sqlTeamsMisc':
+                team_results = rs
+        # add game_date for convenience
+        # standardize on TOV rather than TO; playerstats uses TOV
+        for row_set in player_results.get('rowSet'):
+            player = dict(list(zip(player_results.get('headers'), row_set)))
+            if player.get('MIN'):
+                if ':' in player['MIN']:
+                    player['MIN_PLAYED'], player['SEC_PLAYED'] = player['MIN'].split(':')
+                else:
+                    player['MIN_PLAYED'] = player['MIN']
+            if 'TO' in player:
+                player['TOV'] = player.pop('TO')
+            players.append(player)
+        # add game_date for convenience
+        for result in team_results['rowSet']:
+            team = dict(list(zip(team_results['headers'], result)))
+            teams.append(team)
+
+        return players, teams
+
+    def boxscore_scoring(self, content):
+        '''
+        Represents single nba.com boxscore (scoring)
+        Arguments:
+            content(dict): parsed json
+        Returns:
+            players(list): dictionary of stats for each player
+            teams(list): dictionary of stats for each team
+        '''
+        players = []
+        teams = []
+        for rs in content['resultSets']:
+            if rs.get('name') == 'sqlPlayersScoring':
+                player_results = rs
+            elif rs.get('name') == 'sqlTeamsScoring':
+                team_results = rs
+
+        # standardize on TOV rather than TO; playerstats uses TOV
+        for row_set in player_results.get('rowSet'):
+            player = dict(list(zip(player_results.get('headers'), row_set)))
+            if player.get('MIN'):
+                if ':' in player['MIN']:
+                    player['MIN_PLAYED'], player['SEC_PLAYED'] = player['MIN'].split(':')
+                else:
+                    player['MIN_PLAYED'] = player['MIN']
+            if 'TO' in player:
+                player['TOV'] = player.pop('TO')
+            players.append(player)
+
+        for result in team_results['rowSet']:
+            team = dict(list(zip(team_results['headers'], result)))
+            teams.append(team)
+
+        return players, teams
+
+    def boxscore_usage(self, content):
+        '''
+        Represents single nba.com boxscore (usage)
+        Arguments:
+            content(dict): parsed json
+        Returns:
+            players(list): dictionary of stats for each player
+        '''
+        players = []
+        for rs in content['resultSets']:
+            if rs['name'] == 'sqlPlayersUsage':
+                player_results = rs
+
+        for row_set in player_results.get('rowSet'):
+            player = dict(list(zip(player_results.get('headers'), row_set)))
+            if player.get('MIN'):
+                if ':' in player['MIN']:
+                    player['MIN_PLAYED'], player['SEC_PLAYED'] = player['MIN'].split(':')
+                else:
+                    player['MIN_PLAYED'] = player['MIN']
+            if 'TO' in player:
+                player['TOV'] = player.pop('TO')
+            players.append(player)
+
+        return players
 
     def games(self, content, season):
         '''
@@ -459,7 +525,10 @@ class NBAComParser(object):
         headers = [h.lower() for h in result_set['headers']]
 
         for row_set in result_set['rowSet']:
-            teams.append(dict(list(zip(headers, row_set))))
+            team = dict(list(zip(headers, row_set)))
+            team.pop('cfid', None)
+            team.pop('cfparams', None)
+            teams.append(team)
 
         return teams
 

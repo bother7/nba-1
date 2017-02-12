@@ -1,0 +1,2 @@
+class NBAComPipeline(object):
+    pass

@@ -137,6 +137,46 @@ class NBAComPg(NBAPostgres):
 
         return cleaned_items
 
+    def insert_players(self, players):
+        '''
+        Takes list of players, reformats and inserts into players table
+        Args:
+            players(list): of player dict
+
+        Returns:
+            toins(list): of inserted player dict
+        '''
+        toins = []
+        for p in players:
+            pi = {k.lower(): v for k, v in p.items()}
+            pi.pop('games_played_flag', None)
+            pi['nbacom_team_id'] = pi.get('team_id', None)
+            pi.pop('team_id', None)
+            pi['nbacom_position'] = pi.get('position', None)
+            pi.pop('position', None)
+            pi['nbacom_player_id'] = pi.get('person_id', None)
+            pi.pop('person_id', None)
+
+            # height is in f-i format, convert to inches
+            if pi.get('height', None):
+                try:
+                    f, i = pi['height'].split('-')
+                    pi['height'] = int(f) * 12 + i
+                except:
+                    pi.pop('height', None)
+
+            # have to convert empty strings to None
+            # otherwise insert fails for integer/numeric columns
+            for k, v in pi.items():
+                if not v:
+                    pi[k] = None
+            toins.append(pi)
+
+        if toins:
+            self.insert_dicts(toins, 'stats.players')
+
+        return toins
+
     def insert_playerstats_daily(self, playerstats, season, nbacom_season_id, as_of, table_name):
         '''
         Cleans merged list of player base + advanced stats
@@ -184,7 +224,9 @@ class NBAComPg(NBAPostgres):
         Cleans merged list of team gamelogs base + advanced
         Arguments:
             stats(list): list of dictionaries
-            table_name(str): examples -- 'stats.cs_team_gamelogs', 'stats.team_gamelogs'
+            season(int):
+            nbacom_season_id(int):
+            table_name(str):
         Returns:
             cleaned_items(list)
         '''
@@ -200,7 +242,6 @@ class NBAComPg(NBAPostgres):
         today = datetime.datetime.strftime(datetime.datetime.today(), '%Y-%m-%d')
         q = """SELECT to_char(max(game_date), 'YYYYMMDD') from stats.cs_team_gamelogs"""
         last_gamedate = self.select_scalar(q)
-        logging.debug(today, last_gamedate)
 
         # filter all_gamelogs by date, only want those newer than latest gamelog in table but don't want today's gamelogs
         # have to convert to datetime object for comparison
@@ -221,12 +262,9 @@ class NBAComPg(NBAPostgres):
                 cleaned_item['season'] = season
                 cleaned_item['nbacom_season_id'] = nbacom_season_id
                 cleaned_items.append(cleaned_item)
-            else:
-                logging.debug('game skipped: {0}'.format(item.get('GAME_DATE')))
 
         if cleaned_items:
             self.insert_dicts(cleaned_items, table_name)
-
         return cleaned_items
 
     def insert_teamstats_daily(self, stats, table_name, as_of):
