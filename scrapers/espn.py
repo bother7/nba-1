@@ -9,10 +9,10 @@ import time
 
 from bs4 import BeautifulSoup
 
-from ewt.scraper import EWTScraper
+from nba.scrapers.scraper import BasketballScraper
 
 
-class ESPNNBAScraper(EWTScraper):
+class ESPNNBAScraper(BasketballScraper):
     '''
 
     '''
@@ -31,7 +31,7 @@ class ESPNNBAScraper(EWTScraper):
         self.cookies = cookies
         self.cache_name = cache_name
 
-        EWTScraper.__init__(self, headers=self.headers, cookies=self.cookies, cache_name=self.cache_name)
+        BasketballScraper.__init__(self, headers=self.headers, cookies=self.cookies, cache_name=self.cache_name)
 
         self.maxindex = 400
         base_url = 'http://games.espn.go.com/ffl/tools/projections?'
@@ -118,7 +118,7 @@ class FiveThirtyEightNBAScraper(EWTScraper):
 
         self.cookies = cookies
         self.cache_name = cache_name
-        EWTScraper.__init__(self, headers=self.headers, cookies=self.cookies, cache_name=self.cache_name)
+        BasketballScraper.__init__(self, headers=self.headers, cookies=self.cookies, cache_name=self.cache_name)
 
     def espn_player_ids(self, pklfname=None):
 

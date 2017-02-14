@@ -1,10 +1,10 @@
 import logging
 
-from ewt.scraper import EWTScraper
 from nba.dates import *
+from nba.scrapers.scraper import BasketballScraper
 
 
-class FantasyLabsNBAScraper(EWTScraper):
+class FantasyLabsNBAScraper(BasketballScraper):
     '''
     Usage:
 
@@ -39,7 +39,7 @@ class FantasyLabsNBAScraper(EWTScraper):
         self.cookies = cookies
         self.cache_name = cache_name
 
-        EWTScraper.__init__(self, headers=self.headers, cookies=self.cookies, cache_name=self.cache_name)
+        BasketballScraper.__init__(self, headers=self.headers, cookies=self.cookies, cache_name=self.cache_name)
 
         self.model_urls = {
                 'default': 'http://www.fantasylabs.com/api/playermodel/2/{0}/?modelId=100605',

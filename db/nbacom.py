@@ -1,11 +1,9 @@
 from __future__ import print_function
 
-import datetime
 import logging
 
 from nba.db.pgsql import NBAPostgres
-from nba.dfs import dk_points, fd_points
-
+from nba.pipelines.nbacom import players_table, player_gamelogs_table, playerstats_table, team_gamelogs_table
 
 class NBAComPg(NBAPostgres):
     '''
@@ -19,7 +17,7 @@ class NBAComPg(NBAPostgres):
         nbap.insert_team_gamelogs(tgl, season=2017, nbacom_season_id=22016, table_name)
     '''
 
-    def __init__(self, username, password, database, table_names=None):
+    def __init__(self, username, password, database='nbadb', host='localhost', port=5432, table_names=None):
         '''
         TODO: add table_names as property
         '''
@@ -28,7 +26,28 @@ class NBAComPg(NBAPostgres):
         if table_names:
             self.table_names = table_names
         else:
-            self.table_names = {'pgl': 'stats.player_gamelogs', 'tgl': 'stats.team_gamelogs', 'pl': 'stats.players'}
+            self.table_names = {'pgl': 'player_gamelogs', 'tgl': 'team_gamelogs',
+                                'pl': 'players', 'ps': 'playerstats_daily'}
+
+    def missing_pgl(self):
+        '''
+        Queries nbadb for game_ids of current-season games that don't appear in player_gamelogs
+
+        Returns:
+            List of game_ids(int)
+        '''
+        q = """SELECT game_id FROM missing_cs_pgl"""
+        return self.select_list(q)
+
+    def missing_tgl(self):
+        '''
+        Queries nbadb for game_ids of current-season games that don't appear in team_gamelogs
+
+        Returns:
+            List of game_ids(int)
+        '''
+        q = """SELECT game_id FROM missing_cs_tgl"""
+        return self.select_list(q)
 
     def insert_boxscores(self, player_boxscores, team_boxscores, player_table_name, team_table_name):
 
@@ -43,6 +62,7 @@ class NBAComPg(NBAPostgres):
             clean_player.pop('team_abbreviation')
             cleaned_players.append(clean_player)
 
+        '''
         for team in team_boxscores:
             clean_team = {k.lower():v for k,v in team.iteritems() if k not in omit}
             clean_team['tov'] = clean_team['to']
@@ -55,9 +75,10 @@ class NBAComPg(NBAPostgres):
             clean_team['min'] = minutes
 
             cleaned_teams.append(clean_team)
+        '''
 
         self.insert_dicts(cleaned_players, player_table_name)
-        self.insert_dicts(cleaned_teams, team_table_name)
+        #self.insert_dicts(cleaned_teams, team_table_name)
 
         return cleaned_players, cleaned_teams
 
@@ -73,199 +94,67 @@ class NBAComPg(NBAPostgres):
         '''
         return self.insert_dicts(games, table_name)
 
-    def insert_player_gamelogs(self, stats, table_name, check_date=True):
+    def insert_player_boxscores(self, player_boxscores, player_table_name):
+
+        omit = ['COMMENT', 'FG3_PCT', 'FG_PCT', 'FT_PCT', 'TEAM_CITY', 'TEAM_NAME']
+        cleaned_players = []
+
+        for player in player_boxscores:
+            clean_player = {k.lower(): v for k, v in player.iteritems() if k not in omit}
+            if clean_player.has_key('to'):
+                clean_player['tov'] = clean_player['to']
+                clean_player.pop('to', None)
+            clean_player.pop('team_abbreviation', None)
+            cleaned_players.append(clean_player)
+
+        if cleaned_players:
+            self.insert_dicts(cleaned_players, player_table_name)
+            return cleaned_players
+        else:
+            logging.error('no boxscores to insert')
+
+    def insert_player_gamelogs(self, gl):
         '''
+        Takes list of player gamelogs, reformats and inserts into player gamelogs table
 
-        Arguments:
-            stats(list): list of dictionaries
-            table_name(str): examples -- 'stats.cs_team_gamelogs', 'stats.team_gamelogs'
-
-        Returns:
-            cleaned_items(list)
-
+        Args:
+            players(list): of player dict
         '''
-
-        cleaned_items = []
-        omit = ['VIDEO_AVAILABLE', 'TEAM_NAME', 'MATCHUP']
-
-        if check_date:
-            # figure out the date filter
-            # postgres will return object unless use to_char function
-            # then need to convert it to datetime object for comparison
-            q = """SELECT to_char(max(game_date), 'YYYYMMDD') from stats.player_gamelogs"""
-            last_gamedate = datetime.datetime.strptime(self.select_scalar(q), '%Y%m%d') #- datetime.timedelta(days=7)
-
-            # filter all_gamelogs by date, only want those newer than latest gamelog in table
-            # have to convert to datetime object for comparison
-            today = datetime.datetime.strftime(datetime.datetime.today(), '%Y-%m-%d')
-            stats = filter(lambda(x): datetime.datetime.strptime(x['GAME_DATE'], '%Y-%m-%d') > last_gamedate, stats)
-
-        for item in stats:
-
-            if item.get('GAME_DATE') == today:
-                continue
-
-            cleaned_item = {k.lower().strip(): v for k,v in item.iteritems() if k.upper() not in omit}
-            cleaned_item['dk_points'] = dk_points(item)
-            cleaned_item['fd_points'] = fd_points(item)
-
-            # convert wl to is_win (boolean)
-            if cleaned_item.has_key('wl'):
-                cleaned_item.pop('wl', None)
-
-            # change to nbacom_player_id
-            if 'player_id' in cleaned_item:
-                cleaned_item['nbacom_player_id'] = cleaned_item['player_id']
-                cleaned_item.pop('player_id', None)
-
-            # change team_abbreviation to team_code
-            if 'team_abbreviation' in cleaned_item:
-                cleaned_item['team_code'] = cleaned_item['team_abbreviation']
-                cleaned_item.pop('team_abbreviation')
-
-            # cleanup season_id
-            if 'season_id' in cleaned_item:
-                cleaned_item['nbacom_season_id'] = int(cleaned_item['season_id'])
-                cleaned_item['season'] = cleaned_item['nbacom_season_id'] - 20000 + 1
-                cleaned_item.pop('season_id')
-
-            cleaned_items.append(cleaned_item)
-
-        # add cleaned items to database
-        if cleaned_items:
-            self.insert_dicts(cleaned_items, table_name)
-
-        return cleaned_items
+        toins = player_gamelogs_table(gl)
+        if toins:
+            self.insert_dicts(toins, self.table_names.get('pgl'))
 
     def insert_players(self, players):
         '''
         Takes list of players, reformats and inserts into players table
+
         Args:
             players(list): of player dict
-
-        Returns:
-            toins(list): of inserted player dict
         '''
-        toins = []
-        for p in players:
-            pi = {k.lower(): v for k, v in p.items()}
-            pi.pop('games_played_flag', None)
-            pi['nbacom_team_id'] = pi.get('team_id', None)
-            pi.pop('team_id', None)
-            pi['nbacom_position'] = pi.get('position', None)
-            pi.pop('position', None)
-            pi['nbacom_player_id'] = pi.get('person_id', None)
-            pi.pop('person_id', None)
-
-            # height is in f-i format, convert to inches
-            if pi.get('height', None):
-                try:
-                    f, i = pi['height'].split('-')
-                    pi['height'] = int(f) * 12 + i
-                except:
-                    pi.pop('height', None)
-
-            # have to convert empty strings to None
-            # otherwise insert fails for integer/numeric columns
-            for k, v in pi.items():
-                if not v:
-                    pi[k] = None
-            toins.append(pi)
-
+        toins = players_table(players)
         if toins:
-            self.insert_dicts(toins, 'stats.players')
+            self.insert_dicts(toins, self.table_names.get('pl'))
 
-        return toins
-
-    def insert_playerstats_daily(self, playerstats, season, nbacom_season_id, as_of, table_name):
+    def insert_playerstats(self, ps, as_of):
         '''
-        Cleans merged list of player base + advanced stats
+        Inserts base + advanced playerstats into table
 
         Arguments:
-            table_name(str): examples -- 'stats.cs_playerstats', 'stats.playerstats'
             playerstats(list): list of player dictionaries
-
-        Returns:
-
         '''
+        if ps:
+            self.insert_dicts(playerstats_table(ps, as_of), self.table_names.get('ps'))
 
-        # clean data for insertion
-        omit = ['CFID', 'CFPARAMS', 'COMMENT']
-
-        cleaned_players = []
-
-        for player in playerstats:
-            clean_player = {k.lower(): v for k, v in player.iteritems() if k not in omit}
-
-            if 'to' in clean_player:
-                clean_player['tov'] = clean_player['to']
-                clean_player.pop('to', None)
-
-            if 'team_abbreviation' in clean_player:
-                clean_player['team_code'] = clean_player['team_abbreviation']
-                clean_player.pop('team_abbreviation', None)
-
-            if 'player_id' in clean_player:
-                clean_player['nbacom_player_id'] = clean_player['player_id']
-                clean_player.pop('player_id', None)
-
-            clean_player['as_of'] = as_of
-            clean_player['season'] = season
-            clean_player['nbacom_season_id'] = nbacom_season_id
-            cleaned_players.append(clean_player)
-
-        if cleaned_players:
-            self.insert_dicts(cleaned_players, table_name)
-
-        return cleaned_players
-
-    def insert_team_gamelogs(self, stats, season, nbacom_season_id, table_name=None):
+    def insert_team_gamelogs(self, tgl):
         '''
-        Cleans merged list of team gamelogs base + advanced
+        Inserts merged list of team gamelogs base + advanced
+
         Arguments:
-            stats(list): list of dictionaries
-            season(int):
-            nbacom_season_id(int):
-            table_name(str):
-        Returns:
-            cleaned_items(list)
+            tgl: list of team gamelogs
         '''
-        if not table_name:
-            table_name = self.table_name.get('tgl')
-
-        omit = ['matchup', 'season_id', 'team_name', 'video_available', 'wl']
-        cleaned_items = []
-
-        # figure out the date filter
-        # postgres will return object unless use to_char function
-        # then need to convert it to datetime object for comparison
-        today = datetime.datetime.strftime(datetime.datetime.today(), '%Y-%m-%d')
-        q = """SELECT to_char(max(game_date), 'YYYYMMDD') from stats.cs_team_gamelogs"""
-        last_gamedate = self.select_scalar(q)
-
-        # filter all_gamelogs by date, only want those newer than latest gamelog in table but don't want today's gamelogs
-        # have to convert to datetime object for comparison
-        for item in stats:
-            game_date = item.get('GAME_DATE')
-
-            if game_date == today:
-                continue
-
-            elif datetime.datetime.strptime(last_gamedate, '%Y%m%d') < datetime.datetime.strptime(item.get('GAME_DATE'), '%Y-%m-%d'):
-                cleaned_item = {k.lower(): v for k,v in item.iteritems() if k.lower() not in omit}
-                if cleaned_item.get('team_abbreviation'):
-                    cleaned_item['team_code'] = cleaned_item['team_abbreviation']
-                    cleaned_item.pop('team_abbreviation', None)
-                if cleaned_item.get('min'):
-                    cleaned_item['minutes'] = cleaned_item['min']
-                    cleaned_item.pop('min', None)
-                cleaned_item['season'] = season
-                cleaned_item['nbacom_season_id'] = nbacom_season_id
-                cleaned_items.append(cleaned_item)
-
-        if cleaned_items:
-            self.insert_dicts(cleaned_items, table_name)
-        return cleaned_items
+        toins = team_gamelogs_table(tgl)
+        if toins:
+            self.insert_dicts(toins, self.table_names.get('tgl'))
 
     def insert_teamstats_daily(self, stats, table_name, as_of):
         '''
@@ -325,4 +214,20 @@ class NBAComPg(NBAPostgres):
         self.update(sql.format(table_name))
 
 if __name__ == '__main__':
-    pass
+    import logging
+    import pickle
+
+    from nba.db.nbacom import NBAComPg
+    from nba.agents.nbacom import NBAComAgent
+
+    logging.basicConfig(level=logging.DEBUG)
+    db2 = NBAComPg(username='postgres', password='cft091146', database='nbadb2')
+    a = NBAComAgent(cache_name='missingbox', cookies=None, db=db2)
+    #db2.insert_player_boxscores(box, 'player_boxscores_combined')
+    bs = []
+    for gid in db2.select_list('select * from missing_boxscores_games'):
+        boxes = a.combined_player_boxscores('00{}'.format(gid))
+        logging.info(boxes)
+        bs.append(boxes)
+    with open('missingbs.pkl', 'wb') as outfile:
+        pickle.dump(bs, outfile)

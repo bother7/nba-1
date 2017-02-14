@@ -10,38 +10,42 @@ import psycopg2.extras
 
 class NBAPostgres(object):
 
-    def __init__(self, user, password, database):
+    def __init__(self, user, password, database, chunk_size=5000):
         '''
         Arguments:
             user (str): postgres username
             database (str): postgres database name
 
         '''
-
-        logging.getLogger(__name__).addHandler(logging.NullHandler()) 
+        logging.getLogger(__name__).addHandler(logging.NullHandler())
         self.conn = psycopg2.connect(dbname=database, user=user, password=password)
+        self.chunk_size = chunk_size
+
+    def _chunks(self, l, n):
+        """Yield successive n-sized chunks from l."""
+        for i in xrange(0, len(l), n):
+            yield l[i:i + n]
 
     def _insert_dict(self, dict_to_insert, table_name):
         '''
-        Generic routine to insert dictionary into mysql table
-        TODO: not sure what purpose serving - not called by insert_dicts
-        '''
+        Generic routine to insert dictionary into table. Use as a backup when insert_dicts fails
 
+        Arguments:
+            dict_to_insert: list of dicts
+            table_name: string
+        '''
         cursor = self.conn.cursor()
         placeholders = ', '.join(['%s'] * len(dict_to_insert))
         columns = ', '.join(dict_to_insert.keys())
-        sql = 'INSERT INTO %s ( %s ) VALUES ( %s )' % (table_name, columns, placeholders)
-
+        sql = 'INSERT INTO %s ( %s ) VALUES ( %s ) ON CONFLICT DO NOTHING' % (table_name, columns, placeholders)
         try:
             cursor.execute(sql, dict_to_insert.values())
             self.conn.commit()
-
         except Exception as e:
             logging.error('insert statement is {0}'.format(sql))
             logging.error(pprint.pformat(dict_to_insert))
             logging.exception('insert_dicts failed: {0}'.format(e.message))
             self.conn.rollback()
-
         finally:
             cursor.close()
 
@@ -58,73 +62,30 @@ class NBAPostgres(object):
             None
         '''
         if not dicts_to_insert:
-            return None
+            raise ValueError('nothing to insert')
 
-        cur = self.conn.cursor()
-        fields = tuple(sorted(dicts_to_insert[0].keys()))
-        records = []
-        for d in dicts_to_insert:
-            t = tuple([d[f] for f in fields])
-            records.append(t)
-        records_list_template = ','.join(['%s'] * len(records))
-        insert_query = 'insert into {0} ({1}) values {2} ON CONFLICT DO NOTHING'.format(table_name, ','.join(fields), records_list_template)
-
-        try:
-            cur.execute(cur.mogrify(insert_query, records))
-            self.conn.commit()
-        except Exception as e:
-            logging.error('insert statement is {0}'.format(insert_query))
-            logging.exception('insert_dicts failed: {0}'.format(e.diag.message_primary))
-            self.conn.rollback()
-        finally:
-            cur.close()
-
-        '''
         # https://stackoverflow.com/questions/8134602/psycopg2-insert-multiple-rows-with-one-query/30985541#30985541
         # postgresql will convert list of tuples into postgres records
-        cursor = self.conn.cursor()
-        fields = tuple(sorted(dicts_to_insert[0].keys()))
-        records = []
-        for d in dicts_to_insert:
-            t = tuple([d[f] for f in fields])
-            records.append(t)
+        cur = self.conn.cursor()
 
-        try:
+        for chunk in self._chunks(dicts_to_insert, self.chunk_size):
+            fields = tuple(sorted(chunk[0].keys()))
+            records = []
+            for d in dicts_to_insert:
+                t = tuple([d[f] for f in fields])
+                records.append(t)
             records_list_template = ','.join(['%s'] * len(records))
             insert_query = 'insert into {0} ({1}) values {2} ON CONFLICT DO NOTHING'.format(table_name, ','.join(fields), records_list_template)
-            cursor.execute(insert_query, records)
-            self.conn.commit()
-
-        except Exception as e:
-            logging.error('insert statement is {0}'.format(insert_query))
-            logging.exception('insert_dicts failed: {0}'.format(e.diag.message_primary))
-            self.conn.rollback()
-
-        finally:
-            cursor.close()
-        '''
-
-        '''
-        if dicts_to_insert:
-            cursor = self.conn.cursor()
 
             try:
-                for dict_to_insert in dicts_to_insert:
-                    placeholders = ', '.join(['%s'] * len(dict_to_insert))
-                    columns = ', '.join(dict_to_insert.keys())
-                    sql = 'INSERT INTO %s ( %s ) VALUES ( %s ) ON CONFLICT DO NOTHING' % (table_name, columns, placeholders)
-                    cursor.execute(sql, dict_to_insert.values())
-
+                cur.execute(cur.mogrify(insert_query, records))
                 self.conn.commit()
-
             except Exception as e:
-                logging.error('insert statement is {0}'.format(sql))
+                logging.error('insert statement is {0}'.format(insert_query))
                 logging.exception('insert_dicts failed: {0}'.format(e.diag.message_primary))
                 self.conn.rollback()
 
-            finally:
-                cursor.close()
-        '''
+        cur.close()
 
     def postgres_backup_db(self, dbname, dirname=None):
         '''

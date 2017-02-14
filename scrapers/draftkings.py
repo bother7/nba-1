@@ -1,7 +1,9 @@
 import mmap
 import os
 
-class DraftKingsNBAScraper(object):
+from nba.scrapers.scraper import BasketballScraper
+
+class DraftKingsNBAScraper(BasketballScraper):
     '''
 
     Examples:

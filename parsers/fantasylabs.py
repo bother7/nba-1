@@ -23,23 +23,7 @@ class FantasyLabsNBAParser(object):
         Returns:
             players (list): of player dict
         '''
-
-        site = 'dk'
-        wanted = ['Score', 'Player_Name', 'Position', 'Team', 'Ceiling', 'Floor', 'Salary', 'AvgPts', 'p_own', 'PlayerId']
-        salaries = [{k:v for k,v in p.items() if k in wanted} for p in self.model(content, site=site, gamedate=day)]
-
-        # add columns to ease insertion into salaries table
-        for idx, salary in enumerate(salaries):
-            fx = {'source': 'fantasylabs', 'dfs_site': site, 'game_date': day}
-            fx['source_player_id'] = salary.get('PlayerId')
-            fx['source_player_name'] = salary.get('Player_Name')
-            fx['salary'] = salary.get('Salary')
-            fx['team_code'] = salary.get('Team')
-            fx['dfs_position'] = salary.get('Position')
-            salaries[idx] = fx
-
-        return salaries
-
+        return self.model(content, site='dk', gamedate=day)
 
     def games(self, content, **kwargs):
         '''
@@ -65,7 +49,7 @@ class FantasyLabsNBAParser(object):
         return games
 
 
-    def model(self, content, site, gamedate):
+    def model(self, content, site='dk', gamedate=None):
         '''
         Parses dict associated with model (player stats / projections)
         The model has 3 dicts for each player: DraftKings, FanDuel, Yahoo
@@ -79,45 +63,18 @@ class FantasyLabsNBAParser(object):
         Usage:
             model = p.model(content, site='dk', gamedate='1_14_2017')
         '''
-        players = {}
-        omit_properties = ['IsLocked']
-        omit_other = ['ErrorList', 'LineupCount', 'CurrentExposure', 'ExposureProbability', 'IsExposureLocked', 'Positions', 'PositionCount', 'Exposure', 'IsLiked', 'IsExcluded']
+        players = []
 
-        if content:
-            for md in content.get('PlayerModels'):
-                player = {'site': site, 'gamedate': gamedate}
-
-                for k,v in list(md.items()):
-
-                    if k == 'Properties':
-
-                        for k2,v2 in list(v.items()):
-
-                            if not k2 in omit_properties:
-                                player[k2] = v2
-
-                    elif not k in omit_other:
-                        player[k] = v
-
-                # test if already have this player
-                # use list where 0 index is DK, 1 FD, 2 Yahoo
-                pid = player.get('PlayerId', None)
-                pid_players = players.get(pid, [])
-                pid_players.append(player)
-                players[pid] = pid_players
-
-        if site:
-            site_players = []
-            
-            site_ids = {'dk': 4, 'fd': 3, 'yahoo': 11}               
-
-            for pid, player in list(players.items()):
-                for p in player:
-                    if p.get('SourceId', None) == site_ids.get(site, None):
-                        site_players.append(p)
-
-            players = site_players
-        
+        for md in content.get('PlayerModels'):
+            player = {'site': site}
+            for k,v in list(md.items()):
+                if k == 'Properties':
+                    for k2,v2 in list(v.items()):
+                        player[k2] = v2
+                else:
+                    player[k] = v
+            if player.get('SourceId', None) == 4:
+                players.append(player)
         return players
 
 if __name__ == "__main__":

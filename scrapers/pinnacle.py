@@ -7,7 +7,10 @@ import logging
 
 from ewt.scraper import EWTScraper
 
-class PinnacleNBAScraper(EWTScraper):
+from nba.scrapers.scraper import BasketballScraper
+
+
+class PinnacleNBAScraper(BasketballScraper):
     '''
     Gets daily nba game/odds xml feed from pinnacle sports
     '''
@@ -22,7 +25,7 @@ class PinnacleNBAScraper(EWTScraper):
         '''
         # see http://stackoverflow.com/questions/8134444
         logging.getLogger(__name__).addHandler(logging.NullHandler())
-        EWTScraper.__init__(self, headers, cookies, cache_name)
+        BasketballScraper.__init__(self, headers, cookies, cache_name)
         self.odds_url = 'http://xml.pinnaclesports.com/pinnaclefeed.aspx?sporttype=Basketball'
 
     def odds(self):

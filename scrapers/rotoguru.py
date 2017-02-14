@@ -1,10 +1,10 @@
 from datetime import datetime
 import logging
 
-from ewt.scraper import EWTScraper
+from nba.scrapers.scraper import BasketballScraper
 
 
-class RotoGuruNBAScraper(EWTScraper):
+class RotoGuruNBAScraper(BasketballScraper):
     '''
 
     Usage:
@@ -24,7 +24,7 @@ class RotoGuruNBAScraper(EWTScraper):
         '''
         logging.getLogger(__name__).addHandler(logging.NullHandler())
         # see http://stackoverflow.com/questions/8134444
-        EWTScraper.__init__(self, headers, cookies, cache_name)
+        BasketballScraper.__init__(self, headers, cookies, cache_name)
         
     def data_day(self, day, extra_params=None):
         '''

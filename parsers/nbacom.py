@@ -59,6 +59,8 @@ class NBAComParser(object):
             teams(list): dictionary of stats for each team
             starter_bench(list): dictionary of stats broken down by starter/bench
         '''
+        if not content:
+            raise ValueError('content is {}'.format(content))
         players = []
         teams = []
         starter_bench = []

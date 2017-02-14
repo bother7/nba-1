@@ -1,11 +1,13 @@
 from __future__ import print_function
+
 from collections import defaultdict
 import logging
+import os
 
-from ewt.scraper import EWTScraper
+from nba.scrapers.scraper import BasketballScraper
 
 
-class NBAComScraper(EWTScraper):
+class NBAComScraper(BasketballScraper):
     '''
     Usage:
         s = NBAComScraper()
@@ -13,26 +15,25 @@ class NBAComScraper(EWTScraper):
     '''
 
     def __init__(self, headers=None, cookies=None, cache_name=None):
+        '''
+        Scraper for stats.nba.com (informal) API
 
+        Args:
+            headers:
+            cookies:
+            cache_name:
+        '''
         logging.getLogger(__name__).addHandler(logging.NullHandler())
-
-        if not headers:
-            self.headers = {'Referer': 'http://www.fantasylabs.com/nfl/player-models/',
-                        'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:50.0) Gecko/20100101 Firefox/50.0'}
-        else:
-            self.headers = headers
-
-        self.cookies = cookies
-        self.cache_name = cache_name
-
-        EWTScraper.__init__(self, headers=self.headers, cookies=self.cookies, cache_name=self.cache_name)
+        BasketballScraper.__init__(self, headers=headers, cookies=cookies, cache_name=cache_name)
 
     def boxscore_traditional(self, game_id):
         '''
         Boxscore from a single game
+
         Arguments:
             game_id: numeric identifier of game
             season: string in YYYY-YY format (2015-16)
+
         Returns:
             content: python data structure of json documnt
         '''
@@ -46,14 +47,14 @@ class NBAComScraper(EWTScraper):
           'StartPeriod': '1',
           'StartRange': '0'
         }
-        content = self.get_json(url=base_url, payload=params)
+
+        content = self.get_json(base_url, payload=params)
         if not content:
-            logging.error('could not get content from url: {0}'.format(base_url))
+            logging.error('could not get {}'.format(self.urls[-1]))
         else:
-            fn = '/home/sansbacon/boxes/{}-traditional.json'.format(game_id)
-            with open(fn, 'w') as outfile:
-                print(content, file=outfile)
+            logging.debug('got {}'.format(self.urls[-1]))
         return content
+
 
     def boxscore_advanced(self, game_id):
         '''
@@ -63,12 +64,10 @@ class NBAComScraper(EWTScraper):
         Returns:
             content: python data structure of json document
         '''
-
+        content = None
         base_url = 'http://stats.nba.com/stats/boxscoreadvancedv2?'
-
         if len(str(game_id)) == 8:
             game_id = '00' + str(game_id)
-
         params = {
             'GameID': game_id,
             'StartPeriod': 1,
@@ -78,15 +77,11 @@ class NBAComScraper(EWTScraper):
             'RangeType': 0
         }
 
-        content = self.get_json(url=base_url, payload=params)
-
+        content = self.get_json(base_url, payload=params)
         if not content:
-            logging.error('could not get content from url: {0}'.format(base_url))
+            logging.error('could not get {}'.format(self.urls[-1]))
         else:
-            fn = '/home/sansbacon/boxes/{}-advanced.json'.format(game_id)
-            with open(fn, 'w') as outfile:
-                print(content, file=outfile)
-
+            logging.debug('got {}'.format(self.urls[-1]))
         return content
 
     def boxscore_misc(self, game_id):
@@ -97,6 +92,7 @@ class NBAComScraper(EWTScraper):
         Returns:
             content: python data structure of json document
         '''
+        content = None
         base_url = 'http://stats.nba.com/stats/boxscoremiscv2?'
         if len(str(game_id)) == 8:
             game_id = '00' + str(game_id)
@@ -108,13 +104,12 @@ class NBAComScraper(EWTScraper):
             'EndRange': 28800,
             'RangeType': 0
         }
-        content = self.get_json(url=base_url, payload=params)
+
+        content = self.get_json(base_url, payload=params)
         if not content:
-            logging.error('could not get content from url: {0}'.format(base_url))
+            logging.error('could not get {}'.format(self.urls[-1]))
         else:
-            fn = '/home/sansbacon/boxes/{}-misc.json'.format(game_id)
-            with open(fn, 'w') as outfile:
-                print(content, file=outfile)
+            logging.debug('got {}'.format(self.urls[-1]))
         return content
 
     def boxscore_scoring(self, game_id):
@@ -125,6 +120,7 @@ class NBAComScraper(EWTScraper):
         Returns:
             content: python data structure of json document
         '''
+        content = None
         base_url = 'http://stats.nba.com/stats/boxscorescoringv2?'
         if len(str(game_id)) == 8:
             game_id = '00' + str(game_id)
@@ -136,13 +132,12 @@ class NBAComScraper(EWTScraper):
             'EndRange': 28800,
             'RangeType': 0
         }
-        content = self.get_json(url=base_url, payload=params)
+
+        content = self.get_json(base_url, payload=params)
         if not content:
-            logging.error('could not get content from url: {0}'.format(base_url))
+            logging.error('could not get {}'.format(self.urls[-1]))
         else:
-            fn = '/home/sansbacon/boxes/{}-scoring.json'.format(game_id)
-            with open(fn, 'w') as outfile:
-                print(content, file=outfile)
+            logging.debug('got {}'.format(self.urls[-1]))
         return content
 
     def boxscore_usage(self, game_id):
@@ -153,6 +148,7 @@ class NBAComScraper(EWTScraper):
         Returns:
             content: python data structure of json document
         '''
+        content = None
         base_url = 'http://stats.nba.com/stats/boxscoreusagev2?'
         if len(str(game_id)) == 8:
             game_id = '00' + str(game_id)
@@ -164,13 +160,12 @@ class NBAComScraper(EWTScraper):
             'EndRange': 28800,
             'RangeType': 0
         }
-        content = self.get_json(url=base_url, payload=params)
+
+        content = self.get_json(base_url, payload=params)
         if not content:
-            logging.error('could not get content from url: {0}'.format(base_url))
+            logging.error('could not get {}'.format(self.urls[-1]))
         else:
-            fn = '/home/sansbacon/boxes/{}-usage.json'.format(game_id)
-            with open(fn, 'w') as outfile:
-                print(content, file=outfile)
+            logging.debug('got {}'.format(self.urls[-1]))
         return content
 
     def combined_boxscore(self, gid):
@@ -196,27 +191,34 @@ class NBAComScraper(EWTScraper):
 
     def games(self, season_year):
         '''
+        All of the games in an nba season
 
         Args:
             season_year(int): the 2016-17 season would be 2016
 
         Returns:
-            content(dict): parsed json into dict
+            Parsed json into dict
         '''
-
         url = 'http://data.nba.com/data/10s/v2015/json/mobile_teams/nba/{}/league/00_full_schedule.json'
         content = self.get_json(url=url.format(season_year))
         if not content:
-            logging.error('could not get content: {0}'.format(url))
-            return None
+            logging.error('could not get {}'.format(self.urls[-1]))
         else:
-            return content
+            logging.debug('got {}'.format(self.urls[-1]))
+        return content
 
-    def one_player_gamelogs(self, player_id, season, **kwargs):
+    def one_player_gamelogs(self, player_id, season):
+        '''
+        All of the gamelogs for one player in a single season
 
-        # step two: get player_gamelogs
+        Args:
+            player_id: int
+            season: str e.g. 2016-17
+
+        Returns:
+            Parsed json as dict
+        '''
         base_url = 'http://stats.nba.com/stats/playergamelog?'
-
         params = {
           'LeagueID': '00',
           'PlayerID': player_id,
@@ -224,21 +226,16 @@ class NBAComScraper(EWTScraper):
           'SeasonType': 'Regular Season'
         }
 
-        # override defaults with **kwargs
-        for key, value in kwargs.items():
-            if key in params:
-                params[key] = value
-
-        content = self.get_json(url=base_url, payload=params)
-
-        if not content: logging.error('could not get content: {0}'.format(base_url))
-
+        content = self.get_json(base_url, payload=params)
+        if not content:
+            logging.error('could not get {}'.format(self.urls[-1]))
+        else:
+            logging.debug('got {}'.format(self.urls[-1]))
         return content
 
     def one_team_gamelogs(self, team_id, season):
 
         base_url = 'http://stats.nba.com/stats/teamgamelog?'
-
         params = {
           'LeagueID': '00',
           'TeamID': team_id,
@@ -246,13 +243,14 @@ class NBAComScraper(EWTScraper):
           'SeasonType': 'Regular Season'
         }
 
-        content = self.get_json(url=base_url, payload=params)
-
-        if not content: logging.error('could not get content: {0}'.format(base_url))
-
+        content = self.get_json(base_url, payload=params)
+        if not content:
+            logging.error('could not get {}'.format(self.urls[-1]))
+        else:
+            logging.debug('got {}'.format(self.urls[-1]))
         return content
 
-    def player_info(self, player_id, season, **kwargs):
+    def player_info(self, player_id, season):
 
         player_info = None
         base_url = 'http://stats.nba.com/stats/commonplayerinfo?'
@@ -264,48 +262,46 @@ class NBAComScraper(EWTScraper):
           'SeasonType': 'Regular Season'
         }
 
-        # override defaults with **kwargs
-        for key, value in kwargs.items():
-            if key in params:
-                params[key] = value
-
-        content = self.get_json(url=base_url, payload=params)
-
+        content = self.get_json(base_url, payload=params)
         if not content:
-            logging.error('could not get content: {0}'.format(base_url))
-
+            logging.error('could not get {}'.format(self.urls[-1]))
+        else:
+            logging.debug('got {}'.format(self.urls[-1]))
         return content
 
-    def players (self, season, cs_only=False):
+    def players(self, season, cs_only=0):
+        '''
+        Gets players, either all of them or only those from the current season
 
+        Args:
+            season: str e.g. 2015-16
+            cs_only: bool 1 or 0
+
+        Returns:
+            players: list of player dict
+        '''
         base_url = 'http://stats.nba.com/stats/commonallplayers?'
-
-        # default is all players, can specify only this season
         params = {
-          'IsOnlyCurrentSeason': '0',
+          'IsOnlyCurrentSeason': cs_only,
           'LeagueID': '00',
           'Season': season,
         }
 
-        if cs_only:
-            params['IsOnlyCurrentSeason'] = 1
-
-        url = base_url
-        content = self.get_json(url, payload=params)
-
-        if not content: logging.error('could not get content: {0}'.format(base_url))
-
+        content = self.get_json(base_url, payload=params)
+        if not content:
+            logging.error('could not get {}'.format(self.urls[-1]))
         return content
 
     def playerstats(self, season, **kwargs):
         '''
         Document has one line of stats per player
+
         Arguments:
             season(str): such as 2015-16
+
         Returns:
             content: parsed json response from nba.com
         '''
-
         base_url = 'http://stats.nba.com/stats/leaguedashplayerstats?'
 
         # measure_type allows you to choose between Base and Advanced
@@ -313,7 +309,6 @@ class NBAComScraper(EWTScraper):
         # date_from and date_to allow you to select a specific day or a range of days
         # last_n_games allows picking 3, 5, 10, etc. game window='2014-15',per_mode='Totals',season_type='Regular Season',date_from='',date_to='',measure_type='Base',
         # last_n_games=0,month=0,opponent_team_id=0
-
         params = {
           'DateFrom': '',
           'DateTo': '',
@@ -346,42 +341,46 @@ class NBAComScraper(EWTScraper):
             if key in params:
                 params[key] = value
 
-        content = self.get_json(url=base_url, payload=params)
-
-        if not content: logging.error('could not get content from file or url\n' + fn + '\n' + url)
-
+        content = self.get_json(base_url, payload=params)
+        if not content:
+            logging.error('could not get {}'.format(self.urls[-1]))
         return content
 
-    def scoreboard(self, game_date, **kwargs):
+    def scoreboard(self, game_date):
         '''
-        :param kwargs:
-        :return: content(str): json response
-        '''
+        Scoreboard for single game
 
-        # setup
+        Args:
+            game_date: str YYYY-mm-dd format
+
+        Returns:
+            parsed json
+        '''
         base_url = 'http://stats.nba.com/stats/scoreboardV2?'
-
         params = {
           'DayOffset': '0',
           'LeagueID': '00',
           'GameDate': game_date,
         }
 
-        # override defaults with **kwargs
-        for key, value in kwargs.items():
-            if key in params:
-                params[key] = value
-
-        content = self.get_json(url=base_url, payload=params)
-
-        if not content: logging.error('could not get content: {0}'.format(base_url))
-
+        content = self.get_json(base_url, payload=params)
+        if not content:
+            logging.error('could not get {}'.format(self.urls[-1]))
+        else:
+            logging.debug('got {}'.format(self.urls[-1]))
         return content
 
     def season_gamelogs(self, season, player_or_team, **kwargs):
+        '''
 
+        Args:
+            season: str e.g. 2015-16
+            player_or_team: 'P' or 'T'
+
+        Returns:
+            content: json parsed into dict
+        '''
         base_url = 'http://stats.nba.com/stats/leaguegamelog?'
-
         params = {
           'Counter': '0',
           'Direction': 'DESC',
@@ -397,11 +396,11 @@ class NBAComScraper(EWTScraper):
             if key in params:
                 params[key] = value
 
-        content = self.get_json(url=base_url, payload=params)
-
+        content = self.get_json(base_url, payload=params)
         if not content:
-            logging.error('could not get content: {0}'.format(base_url))
-
+            logging.error('could not get {}'.format(self.urls[-1]))
+        else:
+            logging.debug('got {}'.format(self.urls[-1]))
         return content
 
     def team_dashboard(self, team_id, season, **kwargs):
@@ -413,7 +412,6 @@ class NBAComScraper(EWTScraper):
         '''
 
         base_url = 'http://stats.nba.com/stats/teamdashboardbygeneralsplits?'
-
         params = {
           'DateFrom': '',
           'DateTo': '',
@@ -445,12 +443,11 @@ class NBAComScraper(EWTScraper):
             if key in params:
                 params[key] = value
 
-        content = self.get_json(url=base_url, payload=params)
-
-        # if not from web either, then log an error
+        content = self.get_json(base_url, payload=params)
         if not content:
-            logging.error('could not get content: {0}'.format(base_url))
-
+            logging.error('could not get {}'.format(self.urls[-1]))
+        else:
+            logging.debug('got {}'.format(self.urls[-1]))
         return content
 
     def team_opponent_dashboard(self, season, **kwargs):
@@ -491,11 +488,11 @@ class NBAComScraper(EWTScraper):
             if key in params:
                 params[key] = value
 
-        content = self.get_json(url=base_url, payload=params)
-
-        # if not from web either, then log an error
-        if not content: logging.error('could not get content: {0}'.format(base_url))
-
+        content = self.get_json(base_url, payload=params)
+        if not content:
+            logging.error('could not get {}'.format(self.urls[-1]))
+        else:
+            logging.debug('got {}'.format(self.urls[-1]))
         return content
 
     def teams(self):
@@ -506,14 +503,10 @@ class NBAComScraper(EWTScraper):
         Returns:
             javascript file with js variable containing team_ids and team names
         '''
-
         url = 'http://stats.nba.com/scripts/custom.min.js'
         content = self.get(url)
-
-        # if not from web either, then log an error
         if not content:
-            logging.error('could not get content: {0}'.format(url))
-
+            logging.error('could not get {}'.format(self.urls[-1]))
         return content
 
     def teamstats(self, season, **kwargs):
@@ -560,10 +553,11 @@ class NBAComScraper(EWTScraper):
             if key in params:
                 params[key] = value
 
-        content = self.get_json(url=base_url, payload=params)
-
-        if not content: logging.error('could not get content: {0}'.format(base_url))
-
+        content = self.get_json(base_url, payload=params)
+        if not content:
+            logging.error('could not get {}'.format(self.urls[-1]))
+        else:
+            logging.debug('got {}'.format(self.urls[-1]))
         return content
 
 if __name__ == "__main__":

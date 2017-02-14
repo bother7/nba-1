@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function
 
 import os
 import unittest
@@ -12,7 +12,7 @@ class NBAAgent_test(unittest.TestCase):
         self.a = NBAAgent()
 
     def test_open_file_csv(self):
-        fname = 'sample.csv'
+        fname = 'files/sampleDKSalaries.csv'
         data = self.a.read_file(fname)
         self.assertIsNotNone(data)
         self.assertTrue(len(data) > 0)

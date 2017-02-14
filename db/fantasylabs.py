@@ -4,6 +4,7 @@ import logging
 import re
 
 from nba.db.pgsql import NBAPostgres
+from nba.pipelines.fantasylabs import salaries_table
 from nba.players import NBAPlayers
 
 
@@ -12,11 +13,14 @@ class FantasyLabsNBAPg(NBAPostgres):
     FantasyLabs-specific routines for inserting data into tables
     '''
 
-    def __init__(self):
-        NBAPostgres.__init__(self)
+    def __init__(self, username, password, database = 'nbadb',
+                 host = 'localhost', port = 5432):
+        '''
+
+        '''
+        NBAPostgres.__init__(self, user=username, password=password,
+                             database=database)
         logging.getLogger(__name__).addHandler(logging.NullHandler())
-        self.nbaplayers = NBAPlayers(db=True)
-        self.player_xref = {}
 
     def _convert(self, s0):
         s1 = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', s0)
@@ -46,17 +50,17 @@ class FantasyLabsNBAPg(NBAPostgres):
         if models:
             self.insert_dicts(models, 'dfs.fantasylabs_models')
 
-    def insert_salaries(self, players):
+    def insert_salaries(self, sals):
         '''
         Insert list of player salaries into dfs.salaries table
 
         Args:
             players (list): list of player dictionaries with salaries
-
         '''
-
-        if players:
-            self.insert_dicts(players, 'dfs.salaries')
+        q = "SELECT DISTINCT source_player_id, nbacom_player_id FROM dfs_salaries WHERE source = 'fantasylabs'"
+        allp = {sal.get('source_player_id'): sal.get('nbacom_player_id') for
+            sal in self.select_dict(q)}
+        self.insert_dicts(salaries_table(sals, allp), 'dfs_salaries')
 
     def preprocess_games(self, games):
         '''
@@ -99,46 +103,6 @@ class FantasyLabsNBAPg(NBAPostgres):
                 fixed_games.append(fixed_game)
 
         return fixed_games
-
-    def preprocess_salaries(self, players):
-        '''
-        Returns players ready for insert into dfs tables
-
-        Args:
-            players (list): list of player dictionaries
-
-        Returns:
-            fixed_players (list): list of player dictionaries ready for insert into dfs.salaries
-
-        '''
-
-        fixed_players = []
-
-        if players:
-            for player in players:
-
-                fixed_player = copy.deepcopy(player)
-                site_player_id = int(player.get('PlayerId'))
-                nbacom_player_id = self._nbacom_player_id(site_player_id)
-                fixed_player['nbacom_player_id'] = nbacom_player_id
-                fixed_player['source'] = 'fl'
-                fixed_player['dfs_site'] = 'dk'
-                fixed_player['salary'] = player.get('Salary')
-                fixed_player['site_position'] = player.get('FirstPosition')
-                fixed_player['source_player_name'] = player.get('Player_Name')
-                fixed_player['source_player_id'] = player.get('PlayerId')
-                fixed_player['nbacom_season_id'] = 22015
-                fixed_player['season'] = 2016
-                fixed_player['game_date'] = player.get('gamedate')
-                fixed_players.append(fixed_player)
-
-            wanted_keys = ['game_date', 'season', 'nbacom_season_id', 'source_player_id', 'source_player_name', 'source', 'dfs_site',
-                           'salary', 'site_position', 'nbacom_player_id']
-
-            return [{k.lower(): v for k,v in player.iteritems() if k in wanted_keys} for player in fixed_players]
-
-        else:
-            return fixed_players
 
 if __name__ == '__main__':
     pass

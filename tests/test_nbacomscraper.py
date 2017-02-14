@@ -13,7 +13,19 @@ class NBAComScraper_test(unittest.TestCase):
         self.nbs = NBAComScraper()
 
     def test_boxscore(self):
-        box = self.nbs.boxscore('0021500001', '2016-17')
+        box = self.nbs.boxscore_traditional('0021500001')
+        self.assertIsInstance(box, dict)
+        self.assertIsNotNone(box.get('resultSets', None))
+        box = self.nbs.boxscore_advanced('0021500001')
+        self.assertIsInstance(box, dict)
+        self.assertIsNotNone(box.get('resultSets', None))
+        box = self.nbs.boxscore_scoring('0021500001')
+        self.assertIsInstance(box, dict)
+        self.assertIsNotNone(box.get('resultSets', None))
+        box = self.nbs.boxscore_misc('0021500001')
+        self.assertIsInstance(box, dict)
+        self.assertIsNotNone(box.get('resultSets', None))
+        box = self.nbs.boxscore_usage('0021500001')
         self.assertIsInstance(box, dict)
         self.assertIsNotNone(box.get('resultSets', None))
 

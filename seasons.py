@@ -33,7 +33,7 @@ _seasons = OrderedDict(sorted(list(d.items()), reverse=True))
 def in_what_season(day):
 
     if isinstance(day, str):
-        day = datetime.datetime.strptime(day, '%Y-%m-%d')
+        day = datetime.datetime.strptime(day, format_type(day))
 
     for season in _seasons:
         start = season_start(season)
