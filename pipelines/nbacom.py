@@ -10,6 +10,22 @@ from nba.dfs import dk_points, fd_points
 
 logging.getLogger(__name__).addHandler(logging.NullHandler())
 
+def isfloat(x):
+    try:
+        a = float(x)
+    except Exception as e:
+        return False
+    else:
+        return True
+
+def isint(x):
+    try:
+        a = float(x)
+        b = int(a)
+    except Exception as e:
+        return False
+    else:
+        return a == b
 
 def players_table(players):
     '''
@@ -160,6 +176,18 @@ def team_gamelogs_table(tgl):
             cleaned_item.pop('min', None)
         cleaned_items.append(cleaned_item)
     return cleaned_items
+
+def team_opponent_dashboards_table(dash, as_of):
+    '''
+    TO IMPLEMENT
+    Args:
+        dash:
+        as_of:
+
+    Returns:
+
+    '''
+    return dash
 
 def teamstats_daily_table(ts, as_of):
     '''

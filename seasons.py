@@ -30,7 +30,7 @@ d = {
 
 _seasons = OrderedDict(sorted(list(d.items()), reverse=True))
 
-def in_what_season(day):
+def in_what_season(day, fmt=None):
 
     if isinstance(day, str):
         day = datetime.datetime.strptime(day, format_type(day))
@@ -40,7 +40,10 @@ def in_what_season(day):
         end = season_end(season)
 
         if (day >= start) & (day <= end):
-            return season
+            if fmt:
+                return int(season.split('-')[0]) + 1
+            else:
+                return season
 
     return None
 

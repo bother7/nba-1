@@ -1,6 +1,31 @@
+# dates.py
+# common date routines
+
 import datetime
 import logging
 import re
+
+def convert_format(d, site):
+    '''
+    Converts string from one date format to another
+
+    Args:
+        d: datestring
+        site: 'nba', 'fl', 'std', etc.
+
+    Returns:
+        Datestring in new format
+    '''
+    fmt = format_type(d)
+    newfmt = site_format(site)
+    if fmt and newfmt:
+        try:
+            dt = datetime.datetime.strptime(d, fmt)
+            return datetime.datetime.strftime(dt, newfmt)
+        except:
+            return None
+    else:
+        return None
 
 def date_list(d1, d2):
     '''
@@ -51,13 +76,13 @@ def format_type(datestr):
 
     '''
 
-    if re.match(r'\d{2}_\d{2}_\d{4}', datestr):
+    if re.match(r'\d{1,2}_\d{1,2}_\d{4}', datestr):
         return site_format('fl')
 
     elif re.match(r'\d{4}-\d{2}-\d{2}', datestr):
         return site_format('nba')
 
-    elif re.match(r'\d{2}-\d{2}-\d{4}', datestr):
+    elif re.match(r'\d{1,2}-\d{1,2}-\d{4}', datestr):
         return site_format('std')
 
     else:
@@ -72,8 +97,13 @@ def site_format(site):
         'fl': '%m_%d_%Y',
         'nba': '%Y-%m-%d'
     }
+    return fmt.get(site, None)
 
-    return fmt.get(site)
+def datetostr(d, site):
+    '''
+    Converts datetime object to formats used by different sites
+    '''
+    return datetime.datetime.strftime(d, site_format(site))
 
 def strtodate(d):
     '''

@@ -214,20 +214,4 @@ class NBAComPg(NBAPostgres):
         self.update(sql.format(table_name))
 
 if __name__ == '__main__':
-    import logging
-    import pickle
-
-    from nba.db.nbacom import NBAComPg
-    from nba.agents.nbacom import NBAComAgent
-
-    logging.basicConfig(level=logging.DEBUG)
-    db2 = NBAComPg(username='postgres', password='cft091146', database='nbadb2')
-    a = NBAComAgent(cache_name='missingbox', cookies=None, db=db2)
-    #db2.insert_player_boxscores(box, 'player_boxscores_combined')
-    bs = []
-    for gid in db2.select_list('select * from missing_boxscores_games'):
-        boxes = a.combined_player_boxscores('00{}'.format(gid))
-        logging.info(boxes)
-        bs.append(boxes)
-    with open('missingbs.pkl', 'wb') as outfile:
-        pickle.dump(bs, outfile)
+    pass

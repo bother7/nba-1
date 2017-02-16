@@ -2,7 +2,6 @@
 names.py
 '''
 
-import logging
 import re
 
 from fuzzywuzzy import fuzz, process
@@ -43,20 +42,13 @@ def doug_name(name):
 def espn_doug (self, espn_names, doug_names):
 
     matched_names = []
-    
-    for name in espnnames:
-        if name in _espn_doug:
-            matched.append([name, _espn_doug.get(name, None)])
-
-        else:
-            parts = name.split(' ')
-
-            if len(parts) > 1:
-                dougname = '{0},{1}'.format(parts[1], parts[0])
-                dougname = dougname[0:16].lower()
-                matched.append(match_player(dougname, dougnames))
-
-    return matched
+    for name in espn_names:
+        parts = name.split(' ')
+        if len(parts) > 1:
+            dougname = '{0},{1}'.format(parts[1], parts[0])
+            dougname = dougname[0:16].lower()
+            matched_names.append(match_player(dougname, doug_names))
+    return matched_names
 
 def match_player (to_match, match_from, threshold = .8):
     '''

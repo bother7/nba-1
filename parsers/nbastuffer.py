@@ -674,3 +674,21 @@ if __name__ == "__main__":
                 fixed_games.append(fixed_game)
 
     db.insert_dicts(fixed_games, 'dfs.nbastuffer_boxes')
+
+    '''
+    import csv
+    with open('nbastuffer.csv') as f:
+        meta = [{k:v for k, v in row.items()}
+             for row in csv.DictReader(f, skipinitialspace=True)]
+
+    for idx, m in enumerate(meta):
+        for k,v in m.items():
+            if v == '':
+                meta[idx][k] = None
+            elif v == 'Not available':
+                meta[idx][k] = None
+            elif isint(v):
+                meta[idx][k] = int(v)
+            elif isfloat(v):
+                meta[idx][k] = float(v)
+    '''

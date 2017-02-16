@@ -62,6 +62,21 @@ class FantasyLabsNBAPg(NBAPostgres):
             sal in self.select_dict(q)}
         self.insert_dicts(salaries_table(sals, allp), 'dfs_salaries')
 
+    def insert_salaries_dict(self, sals):
+        '''
+        Insert list of player salaries into dfs.salaries table
+
+        Args:
+            players (list): list of player dictionaries with salaries
+        '''
+        q = "SELECT DISTINCT source_player_id, nbacom_player_id FROM dfs_salaries WHERE source = 'fantasylabs'"
+        allp = {sal.get('source_player_id'): sal.get('nbacom_player_id') for
+            sal in self.select_dict(q)}
+
+        for k,v in sals.items():
+            vals = salaries_table(v, allp, k)
+            self.insert_dicts(vals, 'dfs_salaries')
+
     def preprocess_games(self, games):
         '''
         Returns games ready for insert into dfs tables

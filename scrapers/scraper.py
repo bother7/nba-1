@@ -6,7 +6,7 @@ import requests
 
 class BasketballScraper(object):
 
-    def __init__(self, headers=None, cookies=None, cache_name=None, expire_hours=4):
+    def __init__(self, headers=None, cookies=None, cache_name=None, expire_hours=4, as_string=False):
         '''
         Base class for common scraping tasks
         Args:
@@ -14,6 +14,7 @@ class BasketballScraper(object):
             cookies: cookiejar object
             cache_name: should be full path
             expire_hours: int - default 4
+            as_string: get string rather than parsed json
         '''
         logging.getLogger(__name__).addHandler(logging.NullHandler())
 
@@ -52,21 +53,34 @@ class BasketballScraper(object):
                     pass
         self.s = _s
         self.urls = []
+        self.as_string = as_string
 
     def get(self, url, payload=None):
-        r = self.s.get(url, params=sorted(payload))
+        if payload:
+            r = self.s.get(url, params={k:payload[k] for k in sorted(payload)})
+        else:
+            r = self.s.get(url)
         self.urls.append(r.url)
         r.raise_for_status()
         return r.content
 
     def get_json(self, url, payload=None):
-        r = self.s.get(url, params=sorted(payload))
+        if payload:
+            r = self.s.get(url, params={k:payload[k] for k in sorted(payload)})
+        else:
+            r = self.s.get(url)
         self.urls.append(r.url)
         r.raise_for_status()
-        return r.json()
+        if self.as_string:
+            return r.content
+        else:
+            return r.json()
 
     def post(self, url, payload):
-        r = self.s.post(url, data=sorted(payload))
+        if payload:
+            r = self.s.get(url, params={k:payload[k] for k in sorted(payload)})
+        else:
+            r = self.s.get(url)
         self.urls.append(r.url)
         r.raise_for_status()
         return r.content

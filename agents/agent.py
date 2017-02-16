@@ -20,26 +20,19 @@ class NBAAgent(object):
         self.pipeline = pipeline
         self.db = db
 
-    def csv_to_dict (self, csv_fname):
+    def csv_to_dict (self, fn):
         '''
-        Takes csv filename and returns dictionary
+        Takes csv filename and returns dicts
 
         Arguments:
-            csv_fname: string - name of file to read/parse
+            fn: string - name of file to read/parse
 
         Returns:
-            List of dicts, key is name, value is id
+            List of dicts
         '''
-        list_of_dicts = []
-        if os.path.exists(csv_fname):
-            with open (csv_fname, 'r') as csvfile:
-                reader = csv.reader(csvfile)
-                headers = next(reader)
-                for row in reader:
-                    list_of_dicts.append(dict(list(zip(headers, row))))
-        else:
-            raise ValueError('{0} does not exist'.format(csv_fname))
-        return list_of_dicts
+        with open(fn, "rb") as infile:
+            for row in csv.DictReader(infile, skipinitialspace=True, delimiter=','):
+                yield {k: v for k, v in row.items()}
 
     def json_to_dict (self, json_fname):
         '''

@@ -10,100 +10,43 @@ class FantasyLabsNBAScraper(BasketballScraper):
 
         s = FantasyLabsNBAScraper()
         games_json = s.today()
-        model_json = s.model() # model_name optional
+        model_json = s.model()
         model_json = s.model('bales')
 
         for d in date_list('10_09_2015', '10_04_2015'):
             datestr = datetime.strf
             model_json = s.model(model_date=datestr)
-
     '''
 
-    def __init__(self, headers=None, cookies=None, cache_name=None):
+    def __init__(self, headers=None, cookies=None, cache_name=None, expire_hours=4, as_string=False):
         '''
+        Initialize scraper object
 
         Args:
-            headers:
-            cookies:
-            cache_name:
+            headers: dict of headers
+            cookies: cookies object
+            cache_name: str
+            expire_hours: int hours to keep in cache
+            as_string: bool, false -> returns parsed json, true -> returns string
+
+        Returns:
+            scraper object
         '''
-
         logging.getLogger(__name__).addHandler(logging.NullHandler())
-
         if not headers:
             self.headers = {'Referer': 'http://www.fantasylabs.com/nfl/player-models/',
                         'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:50.0) Gecko/20100101 Firefox/50.0'}
         else:
             self.headers = headers
-
-        self.cookies = cookies
-        self.cache_name = cache_name
-
-        BasketballScraper.__init__(self, headers=self.headers, cookies=self.cookies, cache_name=self.cache_name)
-
+        BasketballScraper.__init__(self, headers=self.headers, cookies=cookies, cache_name=cache_name,
+                                   expire_hours=expire_hours, as_string=as_string)
         self.model_urls = {
                 'default': 'http://www.fantasylabs.com/api/playermodel/2/{0}/?modelId=100605',
                 'bales': 'http://www.fantasylabs.com/api/playermodel/2/{0}/?modelId=193714',
                 'phan': 'http://www.fantasylabs.com/api/playermodel/2/{0}/?modelId=661266',
                 'tournament': 'http://www.fantasylabs.com/api/playermodel/2/{0}/?modelId=193722',
-                'cash': 'http://www.fantasylabs.com/api/playermodel/2/{0}/?modelId=193723'
+                'cash': 'http://www.fantasylabs.com/api/playermodel/2/{0}/?modelId=884277'
         }
-
-    def games_day(self, game_date):
-        '''
-        Gets json for games on single date
-
-        Usage:
-            s = FantasyLabsNBAScraper()
-            content = s.game(game_date='10_04_2015')
-
-        '''
-
-        # test for datestring
-        url = 'http://www.fantasylabs.com/api/sportevents/2/{0}'.format(game_date)
-        content = self.get_json(url)
-
-        if not content:
-            logging.error('could not get content from url: {0}'.format(url))
-
-        return content
-
-    def games_days(self, start_date, end_date):
-        '''
-        Gets json for games in date range
-
-        Usage:
-            s = FantasyLabsNBAScraper()
-            games = s.games(start_date='10_04_2015', end_date='10_09_2015')
-
-        '''
-
-        contents = {}
-
-        for d in date_list(end_date, start_date):
-            datestr = datetime.datetime.strftime(d, site_format('fl'))
-            contents[datestr] = self.games_day(game_date=datestr)
-
-        return contents
-
-    def games_today(self):
-        '''
-        Gets json for today's games
-
-        Usage:
-            s = FantasyLabsNBAScraper()
-            content = s.games_today()
-
-        '''
-
-        day = datetime.datetime.strftime(datetime.datetime.today(), site_format('fl'))
-        url = 'http://www.fantasylabs.com/api/sportevents/2/{0}'.format(day)
-        content = self.get_json(url)
-
-        if not content:
-            logging.error('could not get content from url: {0}'.format(url))
-
-        return content
 
     def model(self, model_day, model_name='default'):
         '''
@@ -126,23 +69,9 @@ class FantasyLabsNBAScraper(BasketballScraper):
             url = self.model_urls.get(self.default_model)
             logging.debug('scraper.model: using default model'.format(url))
 
-        # does not require date in specific format, so need to convert to datetime then properly format
-        #if model_day:
-        #    # ensure proper date format: infer format using format_type, convert to datetime and then back to string
-        #    fmt = format_type(model_day)
-        #    logging.debug('scraper.model: date format is {0}'.format(fmt))
-        #    dt = datetime.datetime.strptime(model_day, fmt)
-        #    logging.debug('scraper.model: dt is {0}'.format(dt))
-        #    model_day = datetime.datetime.strftime(dt, site_format('fl'))
-        #    logging.debug('scraper.model: model_day is {0}'.format(model_day))
-
-        #else:
-        #model_day=datetime.datetime.strftime(datetime.datetime.today(), site_format('fl'))
-        #logging.debug('scraper.model: model_day is {0}'.format(model_day))
-
         return self.get_json(url=url.format(model_day)) #, cookies=cj)
 
-    def models(self, start_date, end_date, model_name=None):
+    def models(self, start_date, end_date, model_name='phan'):
         '''
         Gets json for models in date range, default to Phan model
         Stats in most models the same, main difference is the ranking based on weights of factors present in all models
@@ -163,6 +92,23 @@ class FantasyLabsNBAScraper(BasketballScraper):
             contents[datestr] = self.model(model_day=datestr, model_name=model_name)
 
         return contents
+
+    def ownership(self, game_date):
+        '''
+        Gets ownership percentages
+        Args:
+            game_date:
+
+        Returns:
+            List of percentages
+        '''
+        # check if game_date in proper format
+        base_url = 'http://www.fantasylabs.com/api/contest-ownership/2/{}'
+        fmt = convert_format(game_date, 'fl')
+        if not fmt:
+            raise ValueError('Incorrect date format: {}'.format(game_date))
+        else:
+            return self.get_json(base_url.format(fmt))
 
 if __name__ == "__main__":
     pass

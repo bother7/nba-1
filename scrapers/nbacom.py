@@ -287,10 +287,7 @@ class NBAComScraper(BasketballScraper):
           'Season': season,
         }
 
-        content = self.get_json(base_url, payload=params)
-        if not content:
-            logging.error('could not get {}'.format(self.urls[-1]))
-        return content
+        return self.get_json(base_url, payload=params)
 
     def playerstats(self, season, **kwargs):
         '''

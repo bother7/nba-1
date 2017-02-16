@@ -1,5 +1,4 @@
 import datetime as dt
-import logging
 
 from nba.parsers.nbacom import NBAComParser
 from nba.scrapers.nbacom import NBAComScraper
@@ -10,24 +9,22 @@ from nba.dates import *
 class NBAComAgent(object):
     '''
     Performs script-like tasks using NBA.com API
-    Intended to replace standalone scripts so can use common API and tools
-
-    Examples:
-        a = NBAComAgent()
-        gamelogs = a.cs_player_gamelogs('2015-16')
     '''
 
-    def __init__(self, cache_name, cookies, db):
+    def __init__(self, db=None, cache_name=None, cookies=None):
         '''
         Arguments:
             cache_name: str for scraper cache_name
             cookies: cookie jar
             db: NBAComPg instance
         '''
-        logging.getLogger(__name__).addHandler(logging.NullHandler())
         self.scraper = NBAComScraper(cache_name=cache_name, cookies=cookies)
         self.parser = NBAComParser()
-        self.db = db
+        if db:
+            self.db = db
+            self.insert_db = True
+        else:
+            self.insert_db=False
 
     def _merge(self, merge_dico, dico_list):
         '''
@@ -108,7 +105,13 @@ class NBAComAgent(object):
         currids = set([int(p.get('PERSON_ID',0)) for p in players])
         allids = set(self.db.select_list('SELECT nbacom_player_id from players'))
         missing = currids - allids
-        self.db.insert_players([self.parser.player_info(self.scraper.player_info(pid, season)) for pid in missing])
+        if missing:
+            np = [self.parser.player_info(self.scraper.player_info(pid, season)) for pid in missing]
+            if self.insert_db:
+                self.db.insert_players(np)
+            return np
+        else:
+            return None
 
     def player_gamelogs(self, season, date_from=None, date_to=None):
         '''
@@ -136,13 +139,11 @@ class NBAComAgent(object):
         # now make sure you have no new players
         currids = set([int(p.get('PERSON_ID', 0)) for p in pgl])
         allids = set(self.db.select_list('SELECT nbacom_player_id from players'))
-        missing = currids - allids
-        if missing:
-            self.db.insert_players([self.parser.player_info(self.scraper.player_info(pid, season)) for pid in missing])
 
-        # now insert the gamelogs
-        if pgl:
+        if self.insert_db
+            self.db.insert_players([self.parser.player_info(self.scraper.player_info(pid, season)) for pid in currids - allids])
             self.db.insert_player_gamelogs(pgl)
+        return pgl
 
     def playerstats(self, season, date_from=None, date_to=None):
         '''
@@ -171,9 +172,11 @@ class NBAComAgent(object):
         ps_base = self.parser.playerstats(self.scraper.playerstats(season, DateFrom=date_from, DateTo=date_to))
         ps_advanced = self.parser.playerstats(self.scraper.playerstats(season, DateFrom=date_from, DateTo=date_to, MeasureType='Advanced'))
         ps = [self._merge(dict(), [psb, psadv]) for psb, psadv in zip(ps_base, ps_advanced)]
-        self.db.insert_playerstats(ps, as_of=date_to)
+        if self.insert_db:
+            self.db.insert_playerstats(ps, as_of=date_to)
+        return ps
 
-    def scoreboards(self, season_start, season_end, insert_db=False):
+    def scoreboards(self, season_start, season_end):
         '''
         Downloads and parses range of scoreboards
 
@@ -195,7 +198,8 @@ class NBAComAgent(object):
             scoreboard = self.parser.scoreboard(scoreboard_json, game_date=game_date)
             scoreboards.append(scoreboard)
 
-        # need to insert this
+        if self.insert_db:
+            self.db.insert_scoreboards(scoreboards)
         return scoreboards
 
     def team_gamelogs(self, season, date_from=None, date_to=None):
@@ -217,8 +221,9 @@ class NBAComAgent(object):
         tgl = self.parser.season_gamelogs(content, 'T')
         mtgl = self.db.missing_tgl()
         toins = [gl for gl in tgl if gl.get('GAME_ID', None) in mtgl]
-        if toins:
+        if self.insert_db:
             self.db.insert_team_gamelogs(toins)
+        return toins
 
     def teamstats(self, season, date_from=None, date_to=None):
         '''
@@ -234,22 +239,23 @@ class NBAComAgent(object):
 
          Examples:
             a = NBAComAgent()
-            ps = a.teamstats(season='2015-16', date_from='2016-03-01', date_to='2016-03-08', insert_db=True)
+            ps = a.teamstats(season='2015-16', date_from='2016-03-01', date_to='2016-03-08')
         '''
-        yesterday = dt.datetime.strftime(dt.datetime.today() - dt.timedelta(1), '%Y-%m-%d')
         if not date_from:
             date_from = season_start(season)
         if not date_to:
-            date_to = yesterday
-
+            date_to = yesterday(site_format('nba'))
         ts_base = self.parser.teamstats(self.scraper.teamstats(season, DateFrom=date_from, DateTo=date_to))
         ts_advanced = self.parser.teamstats(self.scraper.teamstats(season, DateFrom=date_from, DateTo=date_to, MeasureType='Advanced'))
         ts = [self._merge(dict(), [tsb, tsadv]) for tsb, tsadv in zip(ts_base, ts_advanced)]
-        self.db.insert_playerstats(ts, as_of=date_to)
+        if self.insert_db:
+            self.db.insert_playerstats(ts, as_of=date_to)
+        return ts
 
-    def team_opponents(self, season, season_start=None, season_end=None, insert_db=True):
+    def team_opponent_dashboards(self, season, start=None, end=None):
         '''
-        Downloads and parses range of team_opponents, optionally saves to pickle file
+        TODO: refactor into database class
+        Downloads and parses range of team_opponents
 
         Arguments:
             season (str): in YYYY-YY format
@@ -261,24 +267,23 @@ class NBAComAgent(object):
 
          Examples:
             a = NBAComAgent()
-            topp = a.team_opponents('2014-15')
-
+            topp = a.team_opponent_dashboards('2014-15')
         '''
         topp = []
-        if season_start is None:
-            days = season_dates('2014-15')
-            season_start = dt.datetime.strftime(days[-1], '%Y-%m-%d')
-        else:
-            days = date_list(season_end, season_start)
-        for day in reversed(days):
-            content = self.scraper.team_opponent_dashboard(season, DateFrom=season_start, DateTo=day)
+        if not start:
+            start = season_start(season)
+        if not end:
+            end = yesterday(site_format('nba'))
+        for day in date_list(end, start):
+            content = self.scraper.team_opponent_dashboard(season, DateFrom=start, DateTo=day)
             teamstats_opp = self.parser.team_opponent_dashboard(content)
             for team in teamstats_opp:
                 fixed_team = {k.lower():v for k,v in team.items()}
-                fixed_team['game_date'] = dt.datetime.strftime(day, '%Y-%m-%d')
+                fixed_team['as_of'] = datetostr(day, 'nba')
                 topp.append(fixed_team)
-        if insert_db:
-            self.db.insert_dicts(topp, 'stats.team_opponent_dashboards')
+        topp = [item for sublist in topp for item in sublist]
+        if self.insert_db:
+            self.db.insert_dicts(team_opponent_dashboards_table(topp), 'team_opponent_dashboards')
         return topp
 
     def update_player_positions(self):

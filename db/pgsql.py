@@ -158,6 +158,7 @@ class NBAPostgres(object):
 
         except Exception as e:
             logging.exception(e.message)
+            self.conn.rollback()
             return None
 
         finally:
@@ -182,6 +183,7 @@ class NBAPostgres(object):
 
         except Exception as e:
             logging.error('sql statement failed: {0}'.format(sql))
+            self.conn.rollback()
             return None
 
         finally:
@@ -206,6 +208,7 @@ class NBAPostgres(object):
 
         except Exception as e:
             logging.error('sql statement failed: {0}'.format(sql))
+            self.conn.rollback()
             return None
 
         finally:

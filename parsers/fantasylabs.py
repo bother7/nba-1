@@ -1,3 +1,4 @@
+import collections
 import logging
 
 
@@ -14,7 +15,25 @@ class FantasyLabsNBAParser(object):
     def __init__(self):
         logging.getLogger(__name__).addHandler(logging.NullHandler())
                         
-    def dk_salaries(self, content, day):
+    def _flatten(self, d):
+        '''
+        Flattens nested dict into single dict
+
+        Args:
+            d: original dict
+
+        Returns:
+            dict
+        '''
+        items = []
+        for k, v in d.items():
+            if isinstance(v, collections.MutableMapping):
+                items.extend(self._flatten(v).items())
+            else:
+                items.append((k, v))
+        return dict(items)
+
+    def dk_salaries(self, content, game_date):
         '''
         Gets list of salaries for one day
         Args:
@@ -23,33 +42,9 @@ class FantasyLabsNBAParser(object):
         Returns:
             players (list): of player dict
         '''
-        return self.model(content, site='dk', gamedate=day)
+        return self.model(content, site='dk', game_date=game_date)
 
-    def games(self, content, **kwargs):
-        '''
-        Parses json that is list of games
-
-        Usage:
-            games = p.games(games_json)
-            games = p.games(games_json, omit=[])
-
-        '''
-
-        if 'omit' in kwargs:
-            omit = kwargs['omit']
-        else:
-            omit = ['ErrorList', 'ReferenceKey', 'HomePrimaryPlayer', 'VisitorPrimaryPlayer', 'HomePitcherThrows', 'VisitorPitcherThrows','LoadWeather', 'StadiumDirection','StadiumStatus', 'StadiumType', 'PeriodDescription', 'IsExcluded' 'SportEventStagingId', 'IsChecked', 'IsPPD', 'AdjWindBearing', 'AdjWindBearingDisplay', 'SelectedTeam', 'IsWeatherLevel1', 'IsWeatherLevel2', 'IsWeatherLevel3', 'WeatherIcon', 'WeatherSummary', 'EventWeather', 'EventWeatherItems', 'UseWeather', 'IsExcluded']
-
-        games = []
-
-        for item in content:
-            game = {k:v for k,v in list(item.items()) if not k in omit}
-            games.append(game)
-            
-        return games
-
-
-    def model(self, content, site='dk', gamedate=None):
+    def model(self, content, site='dk', game_date=None):
         '''
         Parses dict associated with model (player stats / projections)
         The model has 3 dicts for each player: DraftKings, FanDuel, Yahoo
@@ -64,7 +59,6 @@ class FantasyLabsNBAParser(object):
             model = p.model(content, site='dk', gamedate='1_14_2017')
         '''
         players = []
-
         for md in content.get('PlayerModels'):
             player = {'site': site}
             for k,v in list(md.items()):
@@ -77,14 +71,24 @@ class FantasyLabsNBAParser(object):
                 players.append(player)
         return players
 
+    def ownership(self, content, game_date=None):
+        '''
+        Parses ownership json
+        Args:
+            content: parsed json
+            game_date: datestr
+
+        Returns:
+            list of players with ownership percentages
+        '''
+        #omit = ['ErrorList', 'ActualPoints', 'ActualPoints_pct', 'ActualPoints_rnk', 'Average', 'SortValue',
+        #        'Player_Name_pct', 'Player_Name_rnk', 'Team_pct', 'Team_rnk']
+        #return [{k: v for k, v in self._flatten(pl).items() if k not in omit} for pl in content]
+        vals = [self._flatten(pl) for pl in content]
+        if game_date:
+            for idx, _ in enumerate(vals):
+                vals[idx]['game_date'] = game_date
+        return vals
+
 if __name__ == "__main__":
     pass
-    '''
-    import json
-    with open('model-1_26_2017.json', 'r') as infile:
-        content = json.load(infile)
-
-    from nba.parsers.fantasylabs import FantasyLabsNBAParser
-    p = FantasyLabsNBAParser()
-
-    '''

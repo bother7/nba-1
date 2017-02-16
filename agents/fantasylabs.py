@@ -1,5 +1,6 @@
 import datetime as dt
 import logging
+import time
 
 from nba.parsers.fantasylabs import FantasyLabsNBAParser
 from nba.scrapers.fantasylabs import FantasyLabsNBAScraper
@@ -107,16 +108,18 @@ class FantasyLabsNBAAgent(object):
                 self.db.insert_salaries(sals)
             return sals
         elif all_missing:
-            salaries = []
+            salaries = {}
             for day in self.db.select_list('SELECT game_date FROM missing_salaries'):
                 daystr = dt.datetime.strftime(day, '%m_%d_%Y')
                 sals = self.parser.dk_salaries(self.scraper.model(daystr), daystr)
-                salaries.append(sals)
-                if self.insert_db:
-                    self.db.insert_salaries(sals)
-            return [item for sublist in salaries for item in sublist]
+                salaries[dt.datetime.strftime(day, '%Y-%m-%d')] = sals
+                logging.debug('got salaries for {}'.format(daystr))
+                time.sleep(1)
+            if self.insert_db:
+                self.db.insert_salaries_dict(salaries)
+            return salaries
         else:
-            return None
+            raise ValueError('must provide day or set all_missing to True')
 
     def today_model(self, model_name='default'):
         '''
