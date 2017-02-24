@@ -50,7 +50,7 @@ class FantasyLabsNBAPg(NBAPostgres):
         if models:
             self.insert_dicts(models, 'dfs.fantasylabs_models')
 
-    def insert_salaries(self, sals):
+    def insert_salaries(self, sals, game_date):
         '''
         Insert list of player salaries into dfs.salaries table
 
@@ -60,7 +60,7 @@ class FantasyLabsNBAPg(NBAPostgres):
         q = "SELECT DISTINCT source_player_id, nbacom_player_id FROM dfs_salaries WHERE source = 'fantasylabs'"
         allp = {sal.get('source_player_id'): sal.get('nbacom_player_id') for
             sal in self.select_dict(q)}
-        self.insert_dicts(salaries_table(sals, allp), 'dfs_salaries')
+        self.insert_dicts(salaries_table(sals, allp, game_date), 'dfs_salaries')
 
     def insert_salaries_dict(self, sals):
         '''

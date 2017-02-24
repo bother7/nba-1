@@ -4,8 +4,7 @@ import time
 
 from nba.parsers.fantasylabs import FantasyLabsNBAParser
 from nba.scrapers.fantasylabs import FantasyLabsNBAScraper
-from nba.dates import date_list
-from nba.seasons import season_start, season_end
+from nba.dates import convert_format
 
 
 class FantasyLabsNBAAgent(object):
@@ -105,14 +104,14 @@ class FantasyLabsNBAAgent(object):
         if day:
             sals = self.parser.dk_salaries(self.scraper.model(day), day)
             if self.insert_db:
-                self.db.insert_salaries(sals)
+                self.db.insert_salaries(sals, game_date=convert_format(day, 'std'))
             return sals
         elif all_missing:
             salaries = {}
             for day in self.db.select_list('SELECT game_date FROM missing_salaries'):
-                daystr = dt.datetime.strftime(day, '%m_%d_%Y')
+                daystr = datetostr(day, 'fl')
                 sals = self.parser.dk_salaries(self.scraper.model(daystr), daystr)
-                salaries[dt.datetime.strftime(day, '%Y-%m-%d')] = sals
+                salaries[datetostr(day, 'nba')] = sals
                 logging.debug('got salaries for {}'.format(daystr))
                 time.sleep(1)
             if self.insert_db:
@@ -140,4 +139,63 @@ class FantasyLabsNBAAgent(object):
         return self.parser.model(content=model, gamedate=today)
 
 if __name__ == '__main__':
-    pass
+    #pass
+
+    # update-salaries.py
+    # fetches and inserts dfs salaries
+
+    import datetime
+    import logging
+    import os
+    import sys
+
+    import browsercookie
+    from configparser import ConfigParser
+
+    from nba.agents.fantasylabs import FantasyLabsNBAAgent
+    from nba.db.fantasylabs import FantasyLabsNBAPg
+    from nba.dates import *
+    from nba.seasons import *
+
+    logger = logging.getLogger('nbadb-update')
+    hdlr = logging.StreamHandler(sys.stdout)
+    formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
+    hdlr.setFormatter(formatter)
+    logger.addHandler(hdlr)
+    logger.setLevel(logging.INFO)
+    logger.propagate = False
+
+    config = ConfigParser()
+    configfn = os.path.join(os.path.expanduser('~'), '.nbadb')
+    config.read(configfn)
+
+    flpg = FantasyLabsNBAPg(username=config['nbadb']['username'],
+                            password=config['nbadb']['password'],
+                            database=config['nbadb']['database'])
+    fla = FantasyLabsNBAAgent(db=flpg, cache_name='flabs-nba', cookies=browsercookie.firefox())
+
+   # q = """select distinct game_date from games where season = 2015 order by game_date DESC"""
+   # for d in flpg.select_list(q):
+   #     try:
+   #         fla.salaries(day=datetostr(d, site='fl'))
+   #         logger.info('completed {}'.format(d))
+   #     except Exception as e:
+   #         logger.exception('{} failed: {}'.format(d, e))
+   #     finally:
+   #         time.sleep(1.5)
+
+    # salaries to get
+    # 4-3-2015, 2-4-2015, 2-2-2015, 1-31-2015, 1-30-2015, 1-29-2015, 1-17-2015, 10-29-2015
+    # 10-28-2015,
+
+    q = """select distinct game_date from games where season = 2016 order by game_date DESC"""
+    for d in flpg.select_list(q):
+        try:
+            fla.scraper.as_string = True
+            model = fla.scraper.model(model_day=datetostr(d, site='fl'), model_name='phan')
+            flpg._insert_dict({'game_date': d, 'data': model, 'model_name': 'phan'}, 'models')
+            logger.info('completed {}'.format(d))
+        except Exception as e:
+            logger.exception('{} failed: {}'.format(d, e))
+        finally:
+            time.sleep(1.5)

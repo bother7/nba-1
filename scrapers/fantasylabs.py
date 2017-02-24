@@ -50,7 +50,7 @@ class FantasyLabsNBAScraper(BasketballScraper):
 
     def model(self, model_day, model_name='default'):
         '''
-        Gets json for model, default to Phan model
+        Gets json for model
         Stats in most models the same, main difference is the ranking based on weights of factors present in all models
 
         Usage:

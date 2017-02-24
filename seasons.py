@@ -1,7 +1,10 @@
 from collections import OrderedDict
+import csv
+import os
 
 from nba.dates import *
 
+package_directory = os.path.dirname(os.path.abspath(__file__))
 
 # see https://docs.python.org/2/library/collections.html#collections.OrderedDict
 d = {
@@ -53,19 +56,27 @@ def season(key):
     '''
     return _seasons.get(key)
 
-def season_dates(season, start_date=None, end_date=None):
+def season_dates(season):
     '''
     Returns list of datetime objects for entire season or in custom date range
     '''
+    return list(reversed(date_list(season_end(season), season_start(season))))
 
-    # defaults are beginning and end of the season
-    if not start_date:
-        start_date = season_start(season)
+def season_gamedays(season, fmt):
+    '''
+    List of days with actual games during season (excludes all-star break, etc)
+    Args:
+        season: int, e.g., 2016
+        fmt: format of game_dates, such as 'nba', 'fl', 'db', etc.
 
-    if not end_date:
-        end_date = season_end(season)
+    Returns:
+        list of datestrings in %Y-%m-%d format
+    '''
 
-    return list(reversed(date_list(end_date, start_date)))
+    with open(os.path.join(package_directory, 'data', 'game_dates.csv')) as f:
+        rows = [{k: v for k, v in row.items()}
+            for row in csv.DictReader(f, skipinitialspace=True) if int(row['season']) == season]
+    return [convert_format(row.get('game_date'), fmt) for row in rows]
 
 def season_start(key):
     '''

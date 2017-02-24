@@ -6,7 +6,7 @@ import requests
 
 class BasketballScraper(object):
 
-    def __init__(self, headers=None, cookies=None, cache_name=None, expire_hours=4, as_string=False):
+    def __init__(self, headers=None, cookies=None, cache_name=None, expire_hours=12, as_string=False):
         '''
         Base class for common scraping tasks
         Args:
@@ -44,7 +44,7 @@ class BasketballScraper(object):
                 from cachecontrol import CacheControlAdapter
                 from cachecontrol.heuristics import ExpiresAfter
                 from cachecontrol.caches import FileCache
-                _s.mount('http://', CacheControlAdapter(cache=FileCache(cache_name), heuristic=ExpiresAfter(hours=expire_hours)))
+                _s.mount('http://', CacheControlAdapter(cache=FileCache(cache_name), cache_etags = False, heuristic=ExpiresAfter(hours=expire_hours)))
             except ImportError as e:
                 try:
                     import requests_cache

@@ -64,6 +64,12 @@ def date_list(d1, d2):
     season = d1 - d2
     return [d1 - datetime.timedelta(days=x) for x in range(0, season.days+1)]
 
+def datetostr(d, site):
+    '''
+    Converts datetime object to formats used by different sites
+    '''
+    return datetime.datetime.strftime(d, site_format(site))
+
 def format_type(datestr):
     '''
     Uses regular expressions to determine format of datestring
@@ -85,6 +91,9 @@ def format_type(datestr):
     elif re.match(r'\d{1,2}-\d{1,2}-\d{4}', datestr):
         return site_format('std')
 
+    elif re.match(r'\d{8}', datestr):
+        return site_format('db')
+
     else:
         return None
 
@@ -95,15 +104,10 @@ def site_format(site):
     fmt = {
         'std': '%m-%d-%Y',
         'fl': '%m_%d_%Y',
-        'nba': '%Y-%m-%d'
+        'nba': '%Y-%m-%d',
+        'db': '%Y%m%d'
     }
     return fmt.get(site, None)
-
-def datetostr(d, site):
-    '''
-    Converts datetime object to formats used by different sites
-    '''
-    return datetime.datetime.strftime(d, site_format(site))
 
 def strtodate(d):
     '''
@@ -111,5 +115,7 @@ def strtodate(d):
     '''
     return datetime.datetime.strptime(d, format_type(d))
 
-def yesterday(fmt='%Y-%m-%d'):
+def yesterday(fmt=None):
+    if not fmt:
+        fmt = site_format('nba')
     return datetime.datetime.strftime(datetime.datetime.today() - datetime.timedelta(1), fmt)

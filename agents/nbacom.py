@@ -140,7 +140,7 @@ class NBAComAgent(object):
         currids = set([int(p.get('PERSON_ID', 0)) for p in pgl])
         allids = set(self.db.select_list('SELECT nbacom_player_id from players'))
 
-        if self.insert_db
+        if self.insert_db:
             self.db.insert_players([self.parser.player_info(self.scraper.player_info(pid, season)) for pid in currids - allids])
             self.db.insert_player_gamelogs(pgl)
         return pgl
