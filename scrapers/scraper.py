@@ -1,18 +1,20 @@
 import logging
 import os
+import time
 
 import requests
 
 
 class BasketballScraper(object):
 
-    def __init__(self, headers=None, cookies=None, cache_name=None, expire_hours=12, as_string=False):
+    def __init__(self, headers=None, cookies=None, cache_name=None, delay=1, expire_hours=12, as_string=False):
         '''
         Base class for common scraping tasks
         Args:
             headers: dict of headers
             cookies: cookiejar object
             cache_name: should be full path
+            delay: int (be polite!!!)
             expire_hours: int - default 4
             as_string: get string rather than parsed json
         '''
@@ -51,39 +53,82 @@ class BasketballScraper(object):
                     requests_cache.install_cache(cache_name)
                 except:
                     pass
+
         self.s = _s
         self.urls = []
         self.as_string = as_string
 
+        if delay > 0:
+            self.delay = delay
+        else:
+            self.delay = None
+
+
     def get(self, url, payload=None):
+        '''
+
+        Args:
+            url:
+            payload:
+
+        Returns:
+
+        '''
         if payload:
             r = self.s.get(url, params={k:payload[k] for k in sorted(payload)})
         else:
             r = self.s.get(url)
         self.urls.append(r.url)
         r.raise_for_status()
+        if self.delay:
+            time.sleep(self.delay)
         return r.content
 
+
     def get_json(self, url, payload=None):
+        '''
+
+        Args:
+            url:
+            payload:
+
+        Returns:
+
+        '''
         if payload:
             r = self.s.get(url, params={k:payload[k] for k in sorted(payload)})
         else:
             r = self.s.get(url)
         self.urls.append(r.url)
         r.raise_for_status()
+        if self.delay:
+            time.sleep(self.delay)
         if self.as_string:
             return r.content
         else:
             return r.json()
 
+
     def post(self, url, payload):
+        '''
+
+        Args:
+            url:
+            payload:
+
+        Returns:
+
+        '''
         if payload:
             r = self.s.get(url, params={k:payload[k] for k in sorted(payload)})
         else:
             r = self.s.get(url)
         self.urls.append(r.url)
         r.raise_for_status()
+        if self.delay:
+            time.sleep(self.delay)
         return r.content
+
 
 if __name__ == "__main__":
     pass

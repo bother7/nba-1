@@ -4,11 +4,14 @@
 
 
 from __future__ import print_function
+from future.utils import iteritems
 import logging
 
+from nba.dates import convert_format, datetostr, strtodate
 from nba.dfs import dk_points, fd_points
 
 logging.getLogger(__name__).addHandler(logging.NullHandler())
+
 
 def isfloat(x):
     try:
@@ -18,6 +21,7 @@ def isfloat(x):
     else:
         return True
 
+
 def isint(x):
     try:
         a = float(x)
@@ -26,6 +30,7 @@ def isint(x):
         return False
     else:
         return a == b
+
 
 def players_table(players):
     '''
@@ -78,6 +83,7 @@ def players_table(players):
         fixed.append(fp)
     return fixed
 
+
 def player_boxscores_table(pbs):
     '''
     Cleans merged list of player boxscores
@@ -98,6 +104,7 @@ def player_boxscores_table(pbs):
         clean_player.pop('team_abbreviation', None)
         cleaned_players.append(clean_player)
     return cleaned_players
+
 
 def player_gamelogs_table(gl):
     '''
@@ -127,6 +134,7 @@ def player_gamelogs_table(gl):
         fixed.append(cl)
     return fixed
 
+
 def playerstats_table(ps, as_of):
     '''
     Cleans merged list of player base + advanced stats
@@ -140,7 +148,7 @@ def playerstats_table(ps, as_of):
     omit = ['CFID', 'CFPARAMS', 'COMMENT', 'TEAM_NAME']
     cleaned_players = []
     for player in ps:
-        clean_player = {k.lower(): v for k, v in player.iteritems() if k not in omit}
+        clean_player = {k.lower(): v for k, v in iteritems(player) if k not in omit}
         if 'to' in clean_player:
             clean_player['tov'] = clean_player['to']
             clean_player.pop('to', None)
@@ -153,6 +161,7 @@ def playerstats_table(ps, as_of):
         clean_player['as_of'] = as_of
         cleaned_players.append(clean_player)
     return cleaned_players
+
 
 def team_gamelogs_table(tgl):
     '''
@@ -177,9 +186,9 @@ def team_gamelogs_table(tgl):
         cleaned_items.append(cleaned_item)
     return cleaned_items
 
+
 def team_opponent_dashboards_table(dash, as_of):
     '''
-    TO IMPLEMENT
     Args:
         dash:
         as_of:
@@ -187,23 +196,37 @@ def team_opponent_dashboards_table(dash, as_of):
     Returns:
 
     '''
-    return dash
+    topp = []
+    omit = ['CFID', 'CFPARAMS', 'COMMENT', 'TEAM_NAME']
+    for team in dash:
+        fixed_team = {k.lower(): v for k, v in team.items() if k not in omit}
+        fixed_team.pop('team_name', None)
+        fixed_team['as_of'] = convert_format(as_of, 'nba')
+        topp.append(fixed_team)
+    return topp
 
-def teamstats_daily_table(ts, as_of):
+
+def teamstats_table(ts, as_of):
     '''
     Cleans merged list of team base + advanced stats
 
     Arguments:
         ts: list of dictionaries
         as_of(str): in YYYY-MM-DD format
+
     Returns:
         cleaned_items(list): list of cleaned team dictionaries
     '''
-    omit = ['CFID', 'CFPARAMS', 'COMMENT', 'TEAM_CITY']
-    cleaned_items = [{k.lower(): v for k,v in item.iteritems() if k not in omit} for item in ts]
-    for idx, _ in enumerate(cleaned_items):
-        cleaned_items[idx]['as_of'] = as_of
-    return cleaned_items
+    omit = ['CFID', 'CFPARAMS', 'COMMENT', 'TEAM_CITY', 'TEAM_NAME']
+    if ts:
+        cleaned_items = [{k.lower(): v for k,v in iteritems(item) if k not in omit} for item in ts]
+        for idx, _ in enumerate(cleaned_items):
+            cleaned_items[idx]['as_of'] = as_of
+        return cleaned_items
+    else:
+        logging.error('teamstats_table: ts is None')
+        return None
+
 
 if __name__ == '__main__':
     pass

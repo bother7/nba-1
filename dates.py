@@ -115,6 +115,11 @@ def strtodate(d):
     '''
     return datetime.datetime.strptime(d, format_type(d))
 
+def today(fmt=None):
+    if not fmt:
+        fmt = site_format('nba')
+    return datetime.datetime.strftime(datetime.datetime.today(), fmt)
+
 def yesterday(fmt=None):
     if not fmt:
         fmt = site_format('nba')

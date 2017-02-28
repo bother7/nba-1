@@ -372,7 +372,8 @@ class NBAComParser(object):
 
         return p
 
-    def playerstats(self,content,stat_date=None):
+
+    def playerstats(self,content):
         '''
         Document has one line of stats per player
 
@@ -382,25 +383,16 @@ class NBAComParser(object):
 
         Returns:
             ps(list): list of dictionaries, each one is a player's stats
-
         '''
-
         ps = []
-
         result_set = content['resultSets'][0]
-
         for row_set in result_set['rowSet']:
             p = dict(list(zip(result_set['headers'], row_set)))
-
-            if stat_date:
-                p['STATDATE'] = stat_date
-
             if 'MIN' in p:
                 p['SEC_PLAYED'], p['MIN_PLAYED'] = modf(p['MIN'])
-
             ps.append(p)
-
         return ps
+
 
     def scoreboard(self,content,game_date=None):
         '''

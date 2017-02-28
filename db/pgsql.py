@@ -1,8 +1,9 @@
 import datetime as dt
 import logging
 import os
-import pprint
 import subprocess
+
+from builtins import range
 
 import psycopg2
 import psycopg2.extras
@@ -23,8 +24,9 @@ class NBAPostgres(object):
 
     def _chunks(self, l, n):
         """Yield successive n-sized chunks from l."""
-        for i in xrange(0, len(l), n):
+        for i in range(0, len(l), n):
             yield l[i:i + n]
+
 
     def _insert_dict(self, dict_to_insert, table_name):
         '''
@@ -37,17 +39,39 @@ class NBAPostgres(object):
         cursor = self.conn.cursor()
         placeholders = ', '.join(['%s'] * len(dict_to_insert))
         columns = ', '.join(dict_to_insert.keys())
-        sql = 'INSERT INTO %s ( %s ) VALUES ( %s ) ON CONFLICT DO NOTHING' % (table_name, columns, placeholders)
+        sql = 'INSERT INTO %s ( %s ) VALUES ( %s ) ON CONFLICT DO NOTHING;' % (table_name, columns, placeholders)
         try:
             cursor.execute(sql, dict_to_insert.values())
+            logging.info(cursor.query)
             self.conn.commit()
         except Exception as e:
-            logging.error('insert statement is {0}'.format(sql))
-            logging.error(pprint.pformat(dict_to_insert))
-            logging.exception('insert_dicts failed: {0}'.format(e.message))
+            logging.exception('insert_dicts failed: {0}'.format(e))
             self.conn.rollback()
         finally:
             cursor.close()
+
+
+    def execute(self, sql):
+        '''
+        Generic routine to execute statement
+        Will rollback with any errors
+
+        Arguments:
+            sql(str): statement
+
+        Returns:
+            None
+        '''
+        cursor = self.conn.cursor()
+        try:
+            cursor.execute(sql)
+            self.conn.commit()
+        except Exception as e:
+            logging.exception('update failed: {0}'.format(e))
+            self.conn.rollback()
+        finally:
+            cursor.close()
+
 
     def insert_dicts(self, dicts_to_insert, table_name):
         '''
@@ -87,6 +111,7 @@ class NBAPostgres(object):
 
         cur.close()
 
+
     def postgres_backup_db(self, dbname, dirname=None):
         '''
         Compressed backup of database
@@ -111,6 +136,7 @@ class NBAPostgres(object):
 
         if retcode > 0:
             print('Error:', dbname, 'backup error')
+
 
     def postgres_backup_table(self, dbname, tablename, dirname=None, username='postgres'):
         '''
@@ -139,6 +165,7 @@ class NBAPostgres(object):
         if retcode > 0:
             print('Error:', dbname, 'backup error')
 
+
     def select_dict(self, sql):
         '''
         Generic routine to get list of dictionaries from table
@@ -163,6 +190,7 @@ class NBAPostgres(object):
 
         finally:
             cursor.close()
+
 
     def select_list(self, sql):
         '''
@@ -189,6 +217,7 @@ class NBAPostgres(object):
         finally:
             cursor.close()
 
+
     def select_scalar(self, sql):
         '''
         Generic routine to get a single value from a table
@@ -214,6 +243,7 @@ class NBAPostgres(object):
         finally:
             cursor.close()
 
+
     def update(self, sql):
         '''
         Generic routine to update table
@@ -238,6 +268,7 @@ class NBAPostgres(object):
 
         finally:
             cursor.close()
+
 
 if __name__ == '__main__':
     pass

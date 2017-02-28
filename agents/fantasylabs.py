@@ -1,21 +1,23 @@
+from collections import defaultdict
 import datetime as dt
 import logging
 import time
 
+from future.utils import listitems
+
 from nba.parsers.fantasylabs import FantasyLabsNBAParser
 from nba.scrapers.fantasylabs import FantasyLabsNBAScraper
-from nba.dates import convert_format
+from nba.dates import convert_format, datetostr, date_list
+from nba.names import match_player
 
 
 class FantasyLabsNBAAgent(object):
     '''
     Performs script-like tasks using fantasylabs scraper, parser, and db module
-    Intended to replace standalone scripts so can use common API and tools
 
     Examples:
-        a = FantasyLabsNBAAgent()
+        a = FantasyLabsNBAAgent(db=db, cache_name='flabs-agent')
         players = a.today_models()
-        players, pp_players = a.today_models()
     '''
 
     def __init__(self, db, cookies=None, cache_name=None):
@@ -33,6 +35,7 @@ class FantasyLabsNBAAgent(object):
             self.insert_db = True
         else:
             self.insert_db=False
+
 
     def one_model(self, model_day, model_name='default'):
         '''
@@ -58,8 +61,10 @@ class FantasyLabsNBAAgent(object):
             self.db.insert_salaries(players)
         return players
 
+
     def many_models(self, model_name='default', range_start=None, range_end=None, all_missing=False):
         '''
+        TODO: is not implemented
         Gets list of player models for day
 
         Args:
@@ -74,6 +79,9 @@ class FantasyLabsNBAAgent(object):
             a = FantasyLabsNBAAgent()
             models = a.many_models(range_start='2016-03-01', range_end='2016-03-07')
             models = a.many_models(all_missing=True)
+        '''
+        pass
+
         '''
         players = []
         if all_missing:
@@ -93,6 +101,34 @@ class FantasyLabsNBAAgent(object):
                     self.db.insert_models(p)
                 players.append(p)
         return [item for sublist in players for item in sublist]
+        '''
+
+
+    def ownership(self, day=None, all_missing=False):
+        '''
+        Args:
+            day(str): in mm_dd_YYYY format
+            all_missing(bool): single day or all missing days in season?
+        Returns:
+            players(list): of player ownership dict
+        '''
+        if day:
+            day = convert_format(day, 'fl')
+            own = self.scraper.ownership(day)
+            if self.insert_db:
+                self.db.insert_ownership(own, convert_format(day, 'std'))
+            return own
+        elif all_missing:
+            owns = {}
+            for day in self.db.select_list('SELECT game_date FROM missing_ownership'):
+                daystr = datetostr(day, 'fl')
+                own = self.scraper.ownership(daystr)
+                self.db.insert_ownership(own, convert_format(daystr, 'std'))
+                owns[daystr] = own
+            return owns
+        else:
+            raise ValueError('must provide day or set all_missing to True')
+
 
     def salaries(self, day=None, all_missing=False):
         '''
@@ -114,11 +150,12 @@ class FantasyLabsNBAAgent(object):
                 salaries[datetostr(day, 'nba')] = sals
                 logging.debug('got salaries for {}'.format(daystr))
                 time.sleep(1)
-            if self.insert_db:
+            if self.insert_db and salaries:
                 self.db.insert_salaries_dict(salaries)
             return salaries
         else:
             raise ValueError('must provide day or set all_missing to True')
+
 
     def today_model(self, model_name='default'):
         '''
@@ -138,64 +175,52 @@ class FantasyLabsNBAAgent(object):
         model = self.scraper.model(model_day=today, model_name=model_name)
         return self.parser.model(content=model, gamedate=today)
 
+
+    def update_player_xref(self):
+        '''
+        Adds missing players to player_xref table and updates dfs_salaries afterwards
+        '''
+        nbapq = """SELECT nbacom_player_id as id, display_first_last as n FROM players"""
+        nbadict = {}
+        nbacount = defaultdict(int)
+        for p in self.db.select_dict(nbapq):
+            nbadict[p['id']] = p['n']
+            nbacount[p['n']] += 1
+
+        # update table
+        updateq = """UPDATE dfs_salaries SET nbacom_player_id = sq.nbacom_player_id
+                     FROM (SELECT nbacom_player_id, source, source_player_id from player_xref) AS sq
+                     WHERE dfs_salaries.nbacom_player_id IS NULL
+                     AND dfs_salaries.source_player_id = sq.source_player_id
+                     AND dfs_salaries.source = sq.source;"""
+        self.db.update(updateq)
+
+        # loop through missing players
+        # filter out players with duplicate names - need to manually resolve those
+        # then look for direct match where name is not duplicated
+        # then try to match using names
+        missingq = """SELECT * FROM missing_salaries_ids"""
+        insq = """INSERT INTO player_xref (nbacom_player_id, source, source_player_id, source_player_name) VALUES ({}, 'fantasylabs', {}, '{}');"""
+
+        for p in self.db.select_dict(missingq):
+            if nbacount[p['n']] > 1:
+                logging.error('need to manually resolve {}'.format(p))
+                continue
+            match = [k for k,v in listitems(nbadict) if v == p['n']]
+            if match:
+                self.db.update(insq.format(match[0], p['id'], p['n']))
+                logging.info('added to xref: {}'.format(p))
+                continue
+            match = [k for k,v in listitems(nbadict) if v == match_player(p['n'], list(nbadict.values()), threshold=.8)]
+            if match:
+                self.db.update(insq.format(match[0], p['id'], p['n']))
+                logging.info('added to xref: {}'.format(p))
+            else:
+                logging.error('need to manually resolve {}'.format(p))
+
+        # now update dfs_salaries nbacom_player_id from player_xref
+        self.db.update(updateq)
+
+
 if __name__ == '__main__':
-    #pass
-
-    # update-salaries.py
-    # fetches and inserts dfs salaries
-
-    import datetime
-    import logging
-    import os
-    import sys
-
-    import browsercookie
-    from configparser import ConfigParser
-
-    from nba.agents.fantasylabs import FantasyLabsNBAAgent
-    from nba.db.fantasylabs import FantasyLabsNBAPg
-    from nba.dates import *
-    from nba.seasons import *
-
-    logger = logging.getLogger('nbadb-update')
-    hdlr = logging.StreamHandler(sys.stdout)
-    formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
-    hdlr.setFormatter(formatter)
-    logger.addHandler(hdlr)
-    logger.setLevel(logging.INFO)
-    logger.propagate = False
-
-    config = ConfigParser()
-    configfn = os.path.join(os.path.expanduser('~'), '.nbadb')
-    config.read(configfn)
-
-    flpg = FantasyLabsNBAPg(username=config['nbadb']['username'],
-                            password=config['nbadb']['password'],
-                            database=config['nbadb']['database'])
-    fla = FantasyLabsNBAAgent(db=flpg, cache_name='flabs-nba', cookies=browsercookie.firefox())
-
-   # q = """select distinct game_date from games where season = 2015 order by game_date DESC"""
-   # for d in flpg.select_list(q):
-   #     try:
-   #         fla.salaries(day=datetostr(d, site='fl'))
-   #         logger.info('completed {}'.format(d))
-   #     except Exception as e:
-   #         logger.exception('{} failed: {}'.format(d, e))
-   #     finally:
-   #         time.sleep(1.5)
-
-    # salaries to get
-    # 4-3-2015, 2-4-2015, 2-2-2015, 1-31-2015, 1-30-2015, 1-29-2015, 1-17-2015, 10-29-2015
-    # 10-28-2015,
-
-    q = """select distinct game_date from games where season = 2016 order by game_date DESC"""
-    for d in flpg.select_list(q):
-        try:
-            fla.scraper.as_string = True
-            model = fla.scraper.model(model_day=datetostr(d, site='fl'), model_name='phan')
-            flpg._insert_dict({'game_date': d, 'data': model, 'model_name': 'phan'}, 'models')
-            logger.info('completed {}'.format(d))
-        except Exception as e:
-            logger.exception('{} failed: {}'.format(d, e))
-        finally:
-            time.sleep(1.5)
+    pass

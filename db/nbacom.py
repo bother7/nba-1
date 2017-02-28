@@ -3,7 +3,7 @@ from __future__ import print_function
 import logging
 
 from nba.db.pgsql import NBAPostgres
-from nba.pipelines.nbacom import players_table, player_gamelogs_table, playerstats_table, team_gamelogs_table
+from nba.pipelines.nbacom import *
 
 class NBAComPg(NBAPostgres):
     '''
@@ -17,6 +17,7 @@ class NBAComPg(NBAPostgres):
         nbap.insert_team_gamelogs(tgl, season=2017, nbacom_season_id=22016, table_name)
     '''
 
+
     def __init__(self, username, password, database='nbadb', host='localhost', port=5432, table_names=None):
         '''
         TODO: add table_names as property
@@ -27,7 +28,9 @@ class NBAComPg(NBAPostgres):
             self.table_names = table_names
         else:
             self.table_names = {'pgl': 'player_gamelogs', 'tgl': 'team_gamelogs',
-                                'pl': 'players', 'ps': 'playerstats_daily'}
+                                'pl': 'players', 'ps': 'playerstats_daily', 'ts': 'teamstats_daily',
+                                'tod': 'team_opponent_dashboard'}
+
 
     def missing_pgl(self):
         '''
@@ -36,8 +39,9 @@ class NBAComPg(NBAPostgres):
         Returns:
             List of game_ids(int)
         '''
-        q = """SELECT game_id FROM missing_cs_pgl"""
+        q = """SELECT * FROM missing_playergl"""
         return self.select_list(q)
+
 
     def missing_tgl(self):
         '''
@@ -46,41 +50,9 @@ class NBAComPg(NBAPostgres):
         Returns:
             List of game_ids(int)
         '''
-        q = """SELECT game_id FROM missing_cs_tgl"""
+        q = """SELECT * FROM missing_teamgl"""
         return self.select_list(q)
 
-    def insert_boxscores(self, player_boxscores, team_boxscores, player_table_name, team_table_name):
-
-        omit = ['COMMENT', 'FG3_PCT', 'FG_PCT', 'FT_PCT', 'TEAM_CITY', 'TEAM_NAME']
-        cleaned_players = []
-        cleaned_teams = []
-
-        for player in player_boxscores:
-            clean_player = {k.lower():v for k,v in player.iteritems() if k not in omit}
-            clean_player['tov'] = clean_player['to']
-            clean_player.pop('to')
-            clean_player.pop('team_abbreviation')
-            cleaned_players.append(clean_player)
-
-        '''
-        for team in team_boxscores:
-            clean_team = {k.lower():v for k,v in team.iteritems() if k not in omit}
-            clean_team['tov'] = clean_team['to']
-            clean_team.pop('to')
-            clean_team['team_code'] = clean_team['team_abbreviation']
-            clean_team.pop('team_abbreviation')
-
-            # fix minutes, are in mm:ss format
-            minutes, sec = clean_team['min'].split(':')
-            clean_team['min'] = minutes
-
-            cleaned_teams.append(clean_team)
-        '''
-
-        self.insert_dicts(cleaned_players, player_table_name)
-        #self.insert_dicts(cleaned_teams, team_table_name)
-
-        return cleaned_players, cleaned_teams
 
     def insert_games(self, games, table_name):
         '''
@@ -93,6 +65,7 @@ class NBAComPg(NBAPostgres):
             status
         '''
         return self.insert_dicts(games, table_name)
+
 
     def insert_player_boxscores(self, player_boxscores, player_table_name):
 
@@ -113,6 +86,7 @@ class NBAComPg(NBAPostgres):
         else:
             logging.error('no boxscores to insert')
 
+
     def insert_player_gamelogs(self, gl):
         '''
         Takes list of player gamelogs, reformats and inserts into player gamelogs table
@@ -123,6 +97,7 @@ class NBAComPg(NBAPostgres):
         toins = player_gamelogs_table(gl)
         if toins:
             self.insert_dicts(toins, self.table_names.get('pgl'))
+
 
     def insert_players(self, players):
         '''
@@ -135,6 +110,7 @@ class NBAComPg(NBAPostgres):
         if toins:
             self.insert_dicts(toins, self.table_names.get('pl'))
 
+
     def insert_playerstats(self, ps, as_of):
         '''
         Inserts base + advanced playerstats into table
@@ -144,6 +120,7 @@ class NBAComPg(NBAPostgres):
         '''
         if ps:
             self.insert_dicts(playerstats_table(ps, as_of), self.table_names.get('ps'))
+
 
     def insert_team_gamelogs(self, tgl):
         '''
@@ -156,36 +133,55 @@ class NBAComPg(NBAPostgres):
         if toins:
             self.insert_dicts(toins, self.table_names.get('tgl'))
 
-    def insert_teamstats_daily(self, stats, table_name, as_of):
+
+    def insert_team_opponent_dashboards(self, stats, as_of):
         '''
-        Cleans merged list of team base + advanced stats
+        Inserts dashboards
 
         Arguments:
             stats(list): list of dictionaries
-            table_name(str): examples -- 'stats.cs_teamstats', 'stats.teamstats'
             as_of(str): in YYYY-MM-DD format
+
         Returns:
-            cleaned_items(list): list of cleaned team dictionaries
+            list of dict
         '''
-        omit = ['CFID', 'CFPARAMS', 'COMMENT', 'TEAM_CITY']
-        cleaned_items = [{k.lower(): v for k,v in item.iteritems() if k not in omit} for item in stats]
-        for idx, item in enumerate(cleaned_items):
-            cleaned_items[idx]['as_of'] = as_of
-        self.insert_dicts(cleaned_items, table_name)
-        return cleaned_items
+        to_ins = team_opponent_dashboards_table(stats, as_of)
+        if to_ins:
+            self.insert_dicts(to_ins, self.table_names.get('tod'))
+
+
+    def insert_teamstats(self, stats, as_of):
+        '''
+        Inserts base + advanced stats
+
+        Arguments:
+
+            stats(list): list of dictionaries
+            as_of(str): in YYYY-MM-DD format
+
+        Returns:
+            list of dict
+        '''
+        to_ins = teamstats_table(stats, as_of)
+        if to_ins:
+            self.insert_dicts(to_ins, self.table_names.get('ts'))
+
 
     def update_players(self, players, table_name=None):
         '''
         Inserts new players into players table
+
         Args:
             players(list): of player dict
             table_name(str): full name of table, like stats.players
+
         Returns:
             None
         '''
         if not table_name:
             table_name = self.table_names.get('pl')
         self.insert_dicts(players, table_name)
+
 
     def update_positions(self, table_name=None):
         '''
@@ -200,6 +196,7 @@ class NBAComPg(NBAPostgres):
               """
         self.update(sql.format(table_name))
 
+
     def update_teamids(self, table_name=None):
         '''
         Updates gamelogs table with teamids
@@ -212,6 +209,7 @@ class NBAComPg(NBAPostgres):
                 WHERE {0}.team_id IS NULL AND {0}.team_code=subquery.team_code;
               """
         self.update(sql.format(table_name))
+
 
 if __name__ == '__main__':
     pass

@@ -1,11 +1,8 @@
-import copy
-import datetime as dt
+import json
 import logging
-import re
 
 from nba.db.pgsql import NBAPostgres
 from nba.pipelines.fantasylabs import salaries_table
-from nba.players import NBAPlayers
 
 
 class FantasyLabsNBAPg(NBAPostgres):
@@ -16,32 +13,18 @@ class FantasyLabsNBAPg(NBAPostgres):
     def __init__(self, username, password, database = 'nbadb',
                  host = 'localhost', port = 5432):
         '''
-
+        Subclass of NBAPostgres for fantasylabs-specific data
+        Args:
+            username: str 'nba'
+            password: str 'abc123'
+            database: str 'nba'
+            host: default localhost
+            port: defalut 5432
         '''
+        logging.getLogger(__name__).addHandler(logging.NullHandler())
         NBAPostgres.__init__(self, user=username, password=password,
                              database=database)
-        logging.getLogger(__name__).addHandler(logging.NullHandler())
 
-    def _convert(self, s0):
-        s1 = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', s0)
-        return re.sub('([a-z0-9])([A-Z])', r'\1_\2', s1).lower()
-
-    def _nbacom_player_id(self, site_player_id):
-        '''
-        Returns nbacom_player_id for site_player_id
-
-        Args:
-            site_player_id (int): id used by site such as draftkings or fantasylabs
-
-        Returns:
-            nbacom_player_id (int): id used by nba.com
-
-        '''
-
-        if not self.player_xref:
-            self.player_xref = self.nbaplayers.player_xref('fl')
-
-        return self.player_xref.get(site_player_id)
 
     def insert_models(self, models):
         '''
@@ -49,6 +32,7 @@ class FantasyLabsNBAPg(NBAPostgres):
         '''
         if models:
             self.insert_dicts(models, 'dfs.fantasylabs_models')
+
 
     def insert_salaries(self, sals, game_date):
         '''
@@ -60,7 +44,8 @@ class FantasyLabsNBAPg(NBAPostgres):
         q = "SELECT DISTINCT source_player_id, nbacom_player_id FROM dfs_salaries WHERE source = 'fantasylabs'"
         allp = {sal.get('source_player_id'): sal.get('nbacom_player_id') for
             sal in self.select_dict(q)}
-        self.insert_dicts(salaries_table(sals, allp, game_date), 'dfs_salaries')
+        self.insert_dicts(salaries_table(sals, game_date), 'dfs_salaries')
+
 
     def insert_salaries_dict(self, sals):
         '''
@@ -74,50 +59,29 @@ class FantasyLabsNBAPg(NBAPostgres):
             sal in self.select_dict(q)}
 
         for k,v in sals.items():
-            vals = salaries_table(v, allp, k)
+            vals = salaries_table(sals=v, game_date=k)
             self.insert_dicts(vals, 'dfs_salaries')
 
-    def preprocess_games(self, games):
+
+    def insert_ownership(self, own, game_date):
         '''
-        Returns games ready for insert into dfs tables
+        Insert player ownership JSON into table
 
         Args:
-            games (list): list of game dictionaries
-
-        Returns:
-            fixed_games (list): list of game dictionaries ready for insert into dfs.salaries
-
+            own: json string
         '''
-
-        fixed_games = []
-        wanted_keys = ['EventId', 'EventDateTime', 'EventDate', 'HomeTeamShort', 'VisitorTeamShort',
-                       'ProjHomeScore', 'ProjVisitorScore']
-
-        # get list of games from stats.games
-        sql = '''SELECT game_id, gamecode FROM stats.games'''
-
+        cursor = self.conn.cursor()
         try:
-            nbacom_games = {g['gamecode']: g['game_id'] for g in self.select_dict(sql)}
-        except:
-            nbacom_games = {}
+            cursor.execute("""INSERT INTO ownership (game_date, data) VALUES (%s, %s);""", (game_date, json.dumps(own)))
+            self.conn.commit()
+        except Exception as e:
+            logging.exception('update failed: {0}'.format(e))
+            self.conn.rollback()
+        finally:
+            cursor.close()
 
-        if games:
-            for game in games:
-                fixed_game = {self._convert(k):v for k,v in game.iteritems() if k in wanted_keys}
-                away = game['VisitorTeamShort']
-                home = game['HomeTeamShort']
-                event_date = game.get('EventDate')
-                d, t = event_date.split('T')
 
-                if d:
-                    d = dt.datetime.strftime(dt.datetime.strptime(d, '%Y-%m-%d'), '%Y%m%d')
 
-                gamecode = '{0}/{1}{2}'.format(d, away, home)
-                fixed_game['gamecode'] = gamecode
-                fixed_game['nbacom_game_id'] = nbacom_games.get(gamecode)
-                fixed_games.append(fixed_game)
-
-        return fixed_games
 
 if __name__ == '__main__':
     pass
