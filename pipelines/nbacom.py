@@ -32,6 +32,101 @@ def isint(x):
         return a == b
 
 
+def gamedetail(gds):
+    '''
+
+    Args:
+        gds:
+
+    Returns:
+
+    '''
+    wanted = ['q1', 'q2', 'q3', 'q4', 'ot1', 'ot2', 'ot3', 'ot4', 's', 'ta', 'tid']
+
+    linescores = []
+    for gd in gds.values():
+        g = gd['g']
+
+        # get visiting team
+        v = {k: v for k, v in g.items() if k in ['gid', 'gdte', 'gcode']}
+        for k in wanted:
+            v[k] = g['vls'][k]
+        linescores.append(v)
+
+        # get home team
+        h = {k: v for k, v in g.items() if k in ['gid', 'gdte', 'gcode']}
+        for k in wanted:
+            h[k] = g['hls'][k]
+        linescores.append(h)
+
+    return linescores
+
+
+def players_v2015_table(players):
+    '''
+    Converts data from v2015 API players for insertion into database
+
+    Arguments:
+        players: python list of parsed JSON
+
+    Returns:
+        list of player dict
+    '''
+    fixed = []
+    for p in players:
+        f = {}
+        try:
+            pid = int(p['personId'])
+            f['nbacom_player_id'] = pid
+        except:
+            logging.error('could not add {}'.format(p))
+            continue
+        f['first_name'] = p['firstName']
+        f['last_name'] = p['lastName']
+        fl = p['firstName'] + " " + p['lastName']
+        if len(fl) < 5:
+            logging.error('no first_last for {}'.format(p))
+            continue
+        else:
+            f['display_first_last'] = fl
+        f['nbacom_position'] = p['pos']
+        try:
+            f['birthdate'] = strtodate(p['dateOfBirthUTC'])
+        except:
+            f['birthdate'] = None
+        f['school'] = p['collegeName']
+        f['country'] = p['country']
+        f['last_affiliation'] = p['lastAffiliation']
+        try:
+            f['height'] = int(p['heightFeet']) * 6 + int(p['heightInches'])
+        except:
+            f['height'] = None
+        try:
+            f['weight'] = int(p['weightPounds'])
+        except:
+            f['weight'] = None
+        try:
+            f['jersey'] = int(p['jersey'])
+        except:
+            f['jersey'] = None
+        try:
+            f['from_year'] = int(p['nbaDebutYear'])
+        except:
+            f['from_year'] = None
+        try:
+            f['draft_number'] = int(p['draft']['pickNum'])
+            f['draft_round'] = int(p['draft']['roundNum'])
+            f['draft_year'] = int(p['draft']['seasonYear'])
+        except:
+            f['draft_number'] = None
+            f['draft_round'] = None
+            f['draft_year'] = None
+
+        fixed.append(f)
+
+    return fixed
+
+
 def players_table(players):
     '''
     Prepares players for insertion into nbadb players table

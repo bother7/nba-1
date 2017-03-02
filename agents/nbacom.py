@@ -105,15 +105,18 @@ class NBAComAgent(object):
             a = NBAComAgent(cache_name='newplayers', cookies=httplib.CookieJar(), db=NBAComPg(...))
             np = a.new_players(season='2015-16')
         '''
-        content = self.scraper.players(season, cs_only=1)
-        players = self.parser.players(content)
-        currids = set([int(p.get('PERSON_ID',0)) for p in players])
+        content = self.scraper.players_v2015(season)
+        players = self.parser.players_v2015(content)
+        logging.info(players)
+        currids = set([int(p.get('personId',0)) for p in players])
+        logging.info(currids)
         allids = set(self.db.select_list('SELECT nbacom_player_id from players'))
         missing = currids - allids
+        logging.info(missing)
         if missing:
-            np = [self.parser.player_info(self.scraper.player_info(pid, season)) for pid in missing]
+            np = [p for p in players if int(p['personId']) in missing]
             if self.insert_db:
-                self.db.insert_players(np)
+                self.db.insert_players_v2015(np)
             return np
         else:
             return None

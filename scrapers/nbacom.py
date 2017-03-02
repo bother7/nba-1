@@ -26,6 +26,7 @@ class NBAComScraper(BasketballScraper):
         BasketballScraper.__init__(self, headers=headers, cookies=cookies,
                                    cache_name=cache_name, expire_hours=expire_hours, as_string=as_string)
 
+
     def boxscore_traditional(self, game_id):
         '''
         Boxscore from a single game
@@ -83,6 +84,7 @@ class NBAComScraper(BasketballScraper):
             logging.debug('got {}'.format(self.urls[-1]))
         return content
 
+
     def boxscore_misc(self, game_id):
         '''
         Boxscore from a single game
@@ -112,6 +114,7 @@ class NBAComScraper(BasketballScraper):
             logging.debug('got {}'.format(self.urls[-1]))
         return content
 
+
     def boxscore_scoring(self, game_id):
         '''
         Boxscore from a single game
@@ -140,6 +143,7 @@ class NBAComScraper(BasketballScraper):
         else:
             logging.debug('got {}'.format(self.urls[-1]))
         return content
+
 
     def boxscore_usage(self, game_id):
         '''
@@ -171,6 +175,7 @@ class NBAComScraper(BasketballScraper):
             logging.debug('got {}'.format(self.urls[-1]))
         return content
 
+
     def combined_boxscore(self, gid):
         '''
         Download boxscores for all of the game_ids provided
@@ -194,6 +199,26 @@ class NBAComScraper(BasketballScraper):
         boxes['usage'] = self.boxscore_usage(gid)
         return boxes
 
+
+    def gamedetail(self, game_id):
+        '''
+        Details from individual game. Part of v2015 API, does not work before 2015 season.
+
+        Args:
+            game_id:
+
+        Returns:
+            Parsed json into dict
+        '''
+        url = 'http://data.nba.com/data/v2015/json/mobile_teams/nba/2016/scores/gamedetail/{}_gamedetail.json'
+        content = self.get_json(url=url.format(game_id))
+        if not content:
+            logging.error('could not get {}'.format(self.urls[-1]))
+        else:
+            logging.debug('got {}'.format(self.urls[-1]))
+        return content
+
+
     def games(self, season_year):
         '''
         All of the games in an nba season. Part of v2015 API, does not work before 2015 season.
@@ -212,6 +237,7 @@ class NBAComScraper(BasketballScraper):
             logging.debug('got {}'.format(self.urls[-1]))
         return content
 
+
     def league_schedule(self, season_year):
         '''
         All of the games in an nba season. Part of v2015 API, does not work before 2015 season.
@@ -229,6 +255,7 @@ class NBAComScraper(BasketballScraper):
         else:
             logging.debug('got {}'.format(self.urls[-1]))
         return content
+
 
     def one_player_gamelogs(self, player_id, season):
         '''
@@ -256,6 +283,7 @@ class NBAComScraper(BasketballScraper):
             logging.debug('got {}'.format(self.urls[-1]))
         return content
 
+
     def one_team_gamelogs(self, team_id, season):
         '''
         All of the gamelogs for one team in a single season
@@ -281,6 +309,7 @@ class NBAComScraper(BasketballScraper):
         else:
             logging.debug('got {}'.format(self.urls[-1]))
         return content
+
 
     def player_info(self, player_id, season):
         '''
@@ -308,6 +337,7 @@ class NBAComScraper(BasketballScraper):
             logging.debug('got {}'.format(self.urls[-1]))
         return content
 
+
     def players(self, season, cs_only=0):
         '''
         Gets players, either all of them or only those from the current season
@@ -328,6 +358,7 @@ class NBAComScraper(BasketballScraper):
 
         return self.get_json(base_url, payload=params)
 
+
     def players_v2015(self, season_year):
         '''
         All active players. Part of v2015 API, does not work before 2015 season.
@@ -345,6 +376,7 @@ class NBAComScraper(BasketballScraper):
         else:
             logging.debug('got {}'.format(self.urls[-1]))
         return content
+
 
     def playerstats(self, season, **kwargs):
         '''
@@ -400,6 +432,7 @@ class NBAComScraper(BasketballScraper):
             logging.error('could not get {}'.format(self.urls[-1]))
         return content
 
+
     def scoreboard(self, game_date):
         '''
         Scoreboard for single game_date
@@ -423,6 +456,7 @@ class NBAComScraper(BasketballScraper):
         else:
             logging.debug('got {}'.format(self.urls[-1]))
         return content
+
 
     def season_gamelogs(self, season, player_or_team, **kwargs):
         '''
@@ -457,6 +491,7 @@ class NBAComScraper(BasketballScraper):
         else:
             logging.debug('got {}'.format(self.urls[-1]))
         return content
+
 
     def team_dashboard(self, team_id, season, **kwargs):
         '''
@@ -513,6 +548,7 @@ class NBAComScraper(BasketballScraper):
             logging.debug('got {}'.format(self.urls[-1]))
         return content
 
+
     def team_opponent_dashboard(self, season, **kwargs):
         '''
         Returns team_opponent stats for every team in league
@@ -563,6 +599,7 @@ class NBAComScraper(BasketballScraper):
             logging.debug('got {}'.format(self.urls[-1]))
         return content
 
+
     def teams(self):
         '''
         Gets javascript file with js variable containing team_ids and team names
@@ -576,6 +613,7 @@ class NBAComScraper(BasketballScraper):
         if not content:
             logging.error('could not get {}'.format(self.urls[-1]))
         return content
+
 
     def teams_v2015(self, season_year):
         '''
@@ -594,6 +632,7 @@ class NBAComScraper(BasketballScraper):
         else:
             logging.debug('got {}'.format(self.urls[-1]))
         return content
+
 
     def teamstats(self, season, **kwargs):
         '''
@@ -652,6 +691,7 @@ class NBAComScraper(BasketballScraper):
         else:
             logging.debug('got {}'.format(self.urls[-1]))
         return content
+
 
 if __name__ == "__main__":
     pass

@@ -111,6 +111,18 @@ class NBAComPg(NBAPostgres):
             self.insert_dicts(toins, self.table_names.get('pl'))
 
 
+    def insert_players_v2015(self, players):
+        '''
+        Takes list of players, reformats and inserts into players table
+
+        Args:
+            players(list): of player dict
+        '''
+        toins = players_v2015_table(players)
+        if toins:
+            self.insert_dicts(toins, self.table_names.get('pl'))
+
+
     def insert_playerstats(self, ps, as_of):
         '''
         Inserts base + advanced playerstats into table

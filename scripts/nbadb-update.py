@@ -11,7 +11,8 @@ from configparser import ConfigParser
 from nba.agents.nbacom import NBAComAgent
 from nba.db.nbacom import NBAComPg
 from nba.db.fantasylabs import FantasyLabsNBAPg
-from nba.dates import today
+from nba.seasons import season_start
+from nba.dates import today, yesterday, datetostr, convert_format
 
 
 def main():
@@ -40,7 +41,7 @@ def main():
     season = '2016-17'
 
     # ensures players table is up-to-date before inserting gamelogs, etc.
-    a.new_players(season)
+    players = a.new_players(season[0:4])
     logging.info('finished update nba.com players')
 
     # gets all missing (days) salaries from current seasons
@@ -63,6 +64,7 @@ def main():
 
     # playerstats_daily
     ps = a.playerstats(season, all_missing=True)
+    #ps = a.playerstats(season, date_from=datetostr(season_start(season), 'nba'), date_to=yesterday())
     logging.info('finished playerstats daily')
 
     # update team_gamelogs
@@ -80,6 +82,7 @@ def main():
     # refresh all materialized views
     refreshq = """SELECT RefreshAllMaterializedViews('*');"""
     nbapg.execute(refreshq)
+    logging.info('refreshed materialized queries')
 
 
 if __name__ == '__main__':
