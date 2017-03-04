@@ -29,6 +29,33 @@ COMMENT ON EXTENSION plpgsql IS 'PL/pgSQL procedural language';
 
 SET search_path = public, pg_catalog;
 
+--
+-- Name: refreshallmaterializedviews(text, boolean); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION refreshallmaterializedviews(_schema text DEFAULT '*'::text, _concurrently boolean DEFAULT false) RETURNS integer
+    LANGUAGE plpgsql
+    AS $$
+  DECLARE
+    r RECORD;
+  BEGIN
+    RAISE NOTICE 'Refreshing materialized view(s) in % %', CASE WHEN _schema = '*' THEN 'all schemas' ELSE 'schema "'|| _schema || '"' END, CASE WHEN _concurrently THEN 'concurrently' ELSE '' END;
+    IF pg_is_in_recovery() THEN 
+      RETURN 0;
+    ELSE    
+      FOR r IN SELECT schemaname, matviewname FROM pg_matviews WHERE schemaname = _schema OR _schema = '*' 
+      LOOP
+        RAISE NOTICE 'Refreshing materialized view "%"."%"', r.schemaname, r.matviewname;
+        EXECUTE 'REFRESH MATERIALIZED VIEW ' || CASE WHEN _concurrently THEN 'CONCURRENTLY ' ELSE '' END || '"' || r.schemaname || '"."' || r.matviewname || '"'; 
+      END LOOP;
+    END IF;
+    RETURN 1;
+  END 
+$$;
+
+
+ALTER FUNCTION public.refreshallmaterializedviews(_schema text, _concurrently boolean) OWNER TO postgres;
+
 SET default_tablespace = '';
 
 SET default_with_oids = false;
@@ -368,30 +395,76 @@ CREATE MATERIALIZED VIEW dkpoints AS
 ALTER TABLE dkpoints OWNER TO nbadb;
 
 --
--- Name: missing_cs_pgl; Type: VIEW; Schema: public; Owner: nbadb
+-- Name: games_meta; Type: TABLE; Schema: public; Owner: nbadb
 --
 
-CREATE VIEW missing_cs_pgl AS
- SELECT cs_games.game_id
-   FROM cs_games
-  WHERE ((cs_games.game_date < (now() - '1 day'::interval)) AND (NOT (cs_games.game_id IN ( SELECT DISTINCT cs_player_gamelogs.game_id
-           FROM cs_player_gamelogs))));
+CREATE TABLE games_meta (
+    games_meta_id integer NOT NULL,
+    gamecode character(15) NOT NULL,
+    game_date date NOT NULL,
+    team_code character varying(3) NOT NULL,
+    days_last_game smallint,
+    back_to_back boolean,
+    three_in_four boolean,
+    four_in_five boolean,
+    is_ot boolean,
+    q1 smallint,
+    q2 smallint,
+    q3 smallint,
+    q4 smallint,
+    ot1 smallint,
+    ot2 smallint,
+    ot3 smallint,
+    ot4 smallint,
+    opening_spread numeric,
+    opening_game_ou numeric,
+    opening_implied_total numeric,
+    consensus_spread numeric,
+    consensus_game_ou numeric,
+    consensus_implied_total numeric,
+    ref1 character varying(30) DEFAULT NULL::character varying,
+    ref2 character varying(30) DEFAULT NULL::character varying,
+    s smallint,
+    ref3 character varying(40)
+);
 
 
-ALTER TABLE missing_cs_pgl OWNER TO nbadb;
+ALTER TABLE games_meta OWNER TO nbadb;
 
 --
--- Name: missing_cs_tgl; Type: VIEW; Schema: public; Owner: nbadb
+-- Name: games_meta_games_meta_id_seq; Type: SEQUENCE; Schema: public; Owner: nbadb
 --
 
-CREATE VIEW missing_cs_tgl AS
- SELECT cs_games.game_id
-   FROM cs_games
-  WHERE ((cs_games.game_date < (now() - '1 day'::interval)) AND (NOT (cs_games.game_id IN ( SELECT DISTINCT cs_team_gamelogs.game_id
-           FROM cs_team_gamelogs))));
+CREATE SEQUENCE games_meta_games_meta_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
 
 
-ALTER TABLE missing_cs_tgl OWNER TO nbadb;
+ALTER TABLE games_meta_games_meta_id_seq OWNER TO nbadb;
+
+--
+-- Name: games_meta_games_meta_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: nbadb
+--
+
+ALTER SEQUENCE games_meta_games_meta_id_seq OWNED BY games_meta.games_meta_id;
+
+
+--
+-- Name: models; Type: TABLE; Schema: public; Owner: nbadb
+--
+
+CREATE TABLE models (
+    models_id integer NOT NULL,
+    game_date date NOT NULL,
+    data jsonb NOT NULL,
+    model_name character varying(20)
+);
+
+
+ALTER TABLE models OWNER TO nbadb;
 
 --
 -- Name: seasons; Type: TABLE; Schema: public; Owner: nbadb
@@ -409,6 +482,190 @@ CREATE TABLE seasons (
 ALTER TABLE seasons OWNER TO nbadb;
 
 --
+-- Name: missing_models; Type: VIEW; Schema: public; Owner: nbadb
+--
+
+CREATE VIEW missing_models AS
+ SELECT DISTINCT games.game_date
+   FROM games
+  WHERE ((games.season = ( SELECT max(seasons.season) AS max
+           FROM seasons)) AND (games.game_date <= (now())::date) AND ((games.game_type)::text = 'regular'::text) AND (NOT (games.game_date IN ( SELECT DISTINCT models.game_date
+           FROM models))))
+  ORDER BY games.game_date DESC;
+
+
+ALTER TABLE missing_models OWNER TO nbadb;
+
+--
+-- Name: ownership; Type: TABLE; Schema: public; Owner: nbadb
+--
+
+CREATE TABLE ownership (
+    ownership_id integer NOT NULL,
+    game_date date NOT NULL,
+    data jsonb NOT NULL
+);
+
+
+ALTER TABLE ownership OWNER TO nbadb;
+
+--
+-- Name: missing_ownership; Type: VIEW; Schema: public; Owner: nbadb
+--
+
+CREATE VIEW missing_ownership AS
+ SELECT DISTINCT games.game_date
+   FROM games
+  WHERE ((games.season = ( SELECT max(seasons.season) AS max
+           FROM seasons)) AND (games.game_date < (now())::date) AND ((games.game_type)::text = 'regular'::text) AND (NOT (games.game_date IN ( SELECT DISTINCT ownership.game_date
+           FROM ownership))))
+  ORDER BY games.game_date DESC;
+
+
+ALTER TABLE missing_ownership OWNER TO nbadb;
+
+--
+-- Name: missing_playergl; Type: VIEW; Schema: public; Owner: nbadb
+--
+
+CREATE VIEW missing_playergl AS
+ SELECT DISTINCT games.game_date
+   FROM games
+  WHERE ((NOT (games.game_id IN ( SELECT DISTINCT cs_player_gamelogs.game_id
+           FROM cs_player_gamelogs))) AND (games.game_date < (now())::date) AND (games.season = ( SELECT max(seasons.season) AS max
+           FROM seasons)) AND ((games.game_type)::text = 'regular'::text))
+  ORDER BY games.game_date DESC;
+
+
+ALTER TABLE missing_playergl OWNER TO nbadb;
+
+--
+-- Name: playerstats_daily; Type: TABLE; Schema: public; Owner: nbadb
+--
+
+CREATE TABLE playerstats_daily (
+    as_of date,
+    season smallint,
+    nbacom_player_id integer,
+    player_name character varying(50),
+    team_id integer,
+    age numeric,
+    ast smallint,
+    ast_rank smallint,
+    blk smallint,
+    blka smallint,
+    blka_rank smallint,
+    blk_rank smallint,
+    dd2 smallint,
+    dd2_rank smallint,
+    dreb smallint,
+    dreb_rank smallint,
+    fg3a smallint,
+    fg3a_rank smallint,
+    fg3m smallint,
+    fg3m_rank smallint,
+    fg3_pct numeric,
+    fg3_pct_rank smallint,
+    fga smallint,
+    fga_rank smallint,
+    fgm smallint,
+    fgm_rank smallint,
+    fg_pct numeric,
+    fg_pct_rank smallint,
+    fta smallint,
+    fta_rank smallint,
+    ftm smallint,
+    ftm_rank smallint,
+    ft_pct numeric,
+    ft_pct_rank smallint,
+    gp smallint,
+    gp_rank smallint,
+    l smallint,
+    l_rank smallint,
+    min numeric,
+    min_played numeric,
+    min_rank smallint,
+    oreb smallint,
+    oreb_rank smallint,
+    pf smallint,
+    pfd smallint,
+    pfd_rank smallint,
+    pf_rank smallint,
+    plus_minus smallint,
+    plus_minus_rank smallint,
+    pts smallint,
+    pts_rank smallint,
+    reb smallint,
+    reb_rank smallint,
+    sec_played numeric,
+    stl smallint,
+    stl_rank smallint,
+    td3 smallint,
+    td3_rank smallint,
+    tov smallint,
+    tov_rank smallint,
+    w smallint,
+    w_pct numeric,
+    w_pct_rank smallint,
+    w_rank smallint,
+    reb_pct_rank smallint,
+    reb_pct numeric,
+    oreb_pct numeric,
+    dreb_pct numeric,
+    usg_pct numeric,
+    ast_pct numeric,
+    ast_ratio_rank smallint,
+    dreb_pct_rank smallint,
+    dreb_rating_rank smallint,
+    def_rating_rank smallint,
+    ts_pct_rank smallint,
+    ast_to_rank smallint,
+    tm_tov_pct_rank smallint,
+    ast_ratio smallint,
+    pace_rank smallint,
+    fgm_pg_rank smallint,
+    net_rating numeric,
+    ts_pct numeric,
+    tm_tov_pct numeric,
+    efg_pct_rank numeric,
+    fga_pg numeric,
+    oreb_pct_rank smallint,
+    off_rating numeric,
+    off_rating_rank smallint,
+    pace numeric,
+    def_rating numeric,
+    pie numeric,
+    ast_to numeric,
+    team_code character varying(10),
+    efg_pct numeric,
+    fga_pg_rank smallint,
+    fgm_pg smallint,
+    net_rating_rank smallint,
+    ast_pct_rank smallint,
+    usg_pct_rank smallint,
+    pie_rank smallint,
+    playerstats_daily_id integer NOT NULL
+);
+
+
+ALTER TABLE playerstats_daily OWNER TO nbadb;
+
+--
+-- Name: missing_playerstats; Type: VIEW; Schema: public; Owner: nbadb
+--
+
+CREATE VIEW missing_playerstats AS
+ SELECT DISTINCT games.game_date
+   FROM games
+  WHERE ((games.season = ( SELECT max(seasons.season) AS max
+           FROM seasons)) AND (games.game_date < (now())::date) AND ((games.game_type)::text = 'regular'::text) AND (NOT (games.game_date IN ( SELECT DISTINCT playerstats_daily.as_of
+           FROM playerstats_daily))))
+  ORDER BY games.game_date DESC;
+
+
+ALTER TABLE missing_playerstats OWNER TO nbadb;
+
+--
 -- Name: missing_salaries; Type: VIEW; Schema: public; Owner: nbadb
 --
 
@@ -416,12 +673,271 @@ CREATE VIEW missing_salaries AS
  SELECT DISTINCT games.game_date
    FROM games
   WHERE ((games.season = ( SELECT max(seasons.season) AS max
-           FROM seasons)) AND (games.game_date <= (now())::date) AND (NOT (games.game_date IN ( SELECT DISTINCT dfs_salaries.game_date
+           FROM seasons)) AND (games.game_date <= (now())::date) AND ((games.game_type)::text = 'regular'::text) AND (NOT (games.game_date IN ( SELECT DISTINCT dfs_salaries.game_date
            FROM dfs_salaries))))
   ORDER BY games.game_date DESC;
 
 
 ALTER TABLE missing_salaries OWNER TO nbadb;
+
+--
+-- Name: missing_salaries_ids; Type: VIEW; Schema: public; Owner: nbadb
+--
+
+CREATE VIEW missing_salaries_ids AS
+ SELECT DISTINCT dfs_salaries.source_player_name AS n,
+    dfs_salaries.source_player_id AS id
+   FROM dfs_salaries
+  WHERE (dfs_salaries.nbacom_player_id IS NULL);
+
+
+ALTER TABLE missing_salaries_ids OWNER TO nbadb;
+
+--
+-- Name: team_opponent_dashboard; Type: TABLE; Schema: public; Owner: nbadb
+--
+
+CREATE TABLE team_opponent_dashboard (
+    team_opponent_dashboard_id integer NOT NULL,
+    team_id integer,
+    as_of date,
+    gp smallint,
+    gp_rank smallint,
+    l smallint,
+    l_rank smallint,
+    min numeric,
+    min_rank smallint,
+    opp_ast numeric,
+    opp_ast_rank smallint,
+    opp_blk numeric,
+    opp_blk_rank smallint,
+    opp_blka numeric,
+    opp_blka_rank smallint,
+    opp_dreb numeric,
+    opp_dreb_rank smallint,
+    opp_fg3_pct numeric,
+    opp_fg3_pct_rank smallint,
+    opp_fg3a numeric,
+    opp_fg3a_rank smallint,
+    opp_fg3m numeric,
+    opp_fg3m_rank smallint,
+    opp_fg_pct numeric,
+    opp_fg_pct_rank smallint,
+    opp_fga numeric,
+    opp_fga_rank smallint,
+    opp_fgm numeric,
+    opp_fgm_rank smallint,
+    opp_ft_pct numeric,
+    opp_ft_pct_rank smallint,
+    opp_fta numeric,
+    opp_fta_rank smallint,
+    opp_ftm numeric,
+    opp_ftm_rank smallint,
+    opp_oreb numeric,
+    opp_oreb_rank smallint,
+    opp_pf numeric,
+    opp_pf_rank smallint,
+    opp_pfd numeric,
+    opp_pfd_rank smallint,
+    opp_pts numeric,
+    opp_pts_rank smallint,
+    opp_reb numeric,
+    opp_reb_rank smallint,
+    opp_stl numeric,
+    opp_stl_rank smallint,
+    opp_tov numeric,
+    opp_tov_rank smallint,
+    plus_minus numeric,
+    plus_minus_rank smallint,
+    w smallint,
+    w_pct numeric,
+    w_pct_rank smallint,
+    w_rank smallint
+);
+
+
+ALTER TABLE team_opponent_dashboard OWNER TO nbadb;
+
+--
+-- Name: missing_team_opponent_dashboard; Type: VIEW; Schema: public; Owner: nbadb
+--
+
+CREATE VIEW missing_team_opponent_dashboard AS
+ SELECT DISTINCT games.game_date
+   FROM games
+  WHERE ((games.season = ( SELECT max(seasons.season) AS max
+           FROM seasons)) AND (games.game_date < (now())::date) AND ((games.game_type)::text = 'regular'::text) AND (NOT (games.game_date IN ( SELECT DISTINCT team_opponent_dashboard.as_of
+           FROM team_opponent_dashboard))))
+  ORDER BY games.game_date DESC;
+
+
+ALTER TABLE missing_team_opponent_dashboard OWNER TO nbadb;
+
+--
+-- Name: missing_teamgl; Type: VIEW; Schema: public; Owner: nbadb
+--
+
+CREATE VIEW missing_teamgl AS
+ SELECT DISTINCT games.game_date
+   FROM games
+  WHERE ((NOT (games.game_id IN ( SELECT DISTINCT cs_team_gamelogs.game_id
+           FROM cs_team_gamelogs))) AND (games.game_date < (now())::date) AND (games.season = ( SELECT max(seasons.season) AS max
+           FROM seasons)) AND ((games.game_type)::text = 'regular'::text))
+  ORDER BY games.game_date DESC;
+
+
+ALTER TABLE missing_teamgl OWNER TO nbadb;
+
+--
+-- Name: teamstats_daily; Type: TABLE; Schema: public; Owner: nbadb
+--
+
+CREATE TABLE teamstats_daily (
+    teamstats_daily_id integer NOT NULL,
+    as_of date NOT NULL,
+    team_id integer,
+    ast numeric,
+    ast_pct numeric,
+    ast_pct_rank smallint,
+    ast_rank smallint,
+    ast_ratio numeric,
+    ast_ratio_rank smallint,
+    ast_to numeric,
+    ast_to_rank smallint,
+    blk numeric,
+    blka numeric,
+    blka_rank smallint,
+    blk_rank smallint,
+    def_rating numeric,
+    def_rating_rank smallint,
+    dreb numeric,
+    dreb_pct numeric,
+    dreb_pct_rank smallint,
+    dreb_rank smallint,
+    efg_pct numeric,
+    efg_pct_rank smallint,
+    fg3a numeric,
+    fg3a_rank smallint,
+    fg3m numeric,
+    fg3m_rank smallint,
+    fg3_pct numeric,
+    fg3_pct_rank smallint,
+    fga numeric,
+    fga_rank smallint,
+    fgm numeric,
+    fgm_rank smallint,
+    fg_pct numeric,
+    fg_pct_rank smallint,
+    fta numeric,
+    fta_rank smallint,
+    ftm numeric,
+    ftm_rank smallint,
+    ft_pct numeric,
+    ft_pct_rank smallint,
+    gp smallint,
+    gp_rank smallint,
+    l smallint,
+    l_rank smallint,
+    min numeric,
+    min_rank smallint,
+    net_rating numeric,
+    net_rating_rank smallint,
+    off_rating numeric,
+    off_rating_rank smallint,
+    oreb numeric,
+    oreb_pct numeric,
+    oreb_pct_rank smallint,
+    oreb_rank smallint,
+    pace numeric,
+    pace_rank smallint,
+    pf numeric,
+    pfd numeric,
+    pfd_rank smallint,
+    pf_rank smallint,
+    pie numeric,
+    pie_rank smallint,
+    plus_minus numeric,
+    plus_minus_rank smallint,
+    pts numeric,
+    pts_rank smallint,
+    reb numeric,
+    reb_pct numeric,
+    reb_pct_rank smallint,
+    reb_rank smallint,
+    stl numeric,
+    stl_rank smallint,
+    tm_tov_pct numeric,
+    tm_tov_pct_rank smallint,
+    tov numeric,
+    tov_rank smallint,
+    ts_pct numeric,
+    ts_pct_rank smallint,
+    w smallint,
+    w_pct numeric,
+    w_pct_rank smallint,
+    w_rank smallint,
+    season smallint
+);
+
+
+ALTER TABLE teamstats_daily OWNER TO nbadb;
+
+--
+-- Name: missing_teamstats; Type: VIEW; Schema: public; Owner: nbadb
+--
+
+CREATE VIEW missing_teamstats AS
+ SELECT DISTINCT games.game_date
+   FROM games
+  WHERE ((games.season = ( SELECT max(seasons.season) AS max
+           FROM seasons)) AND (games.game_date < (now())::date) AND ((games.game_type)::text = 'regular'::text) AND (NOT (games.game_date IN ( SELECT DISTINCT teamstats_daily.as_of
+           FROM teamstats_daily))))
+  ORDER BY games.game_date DESC;
+
+
+ALTER TABLE missing_teamstats OWNER TO nbadb;
+
+--
+-- Name: models_models_id_seq; Type: SEQUENCE; Schema: public; Owner: nbadb
+--
+
+CREATE SEQUENCE models_models_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE models_models_id_seq OWNER TO nbadb;
+
+--
+-- Name: models_models_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: nbadb
+--
+
+ALTER SEQUENCE models_models_id_seq OWNED BY models.models_id;
+
+
+--
+-- Name: ownership_ownership_id_seq; Type: SEQUENCE; Schema: public; Owner: nbadb
+--
+
+CREATE SEQUENCE ownership_ownership_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE ownership_ownership_id_seq OWNER TO nbadb;
+
+--
+-- Name: ownership_ownership_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: nbadb
+--
+
+ALTER SEQUENCE ownership_ownership_id_seq OWNED BY ownership.ownership_id;
+
 
 --
 -- Name: player_boxscores_combined; Type: TABLE; Schema: public; Owner: nbadb
@@ -629,50 +1145,6 @@ CREATE TABLE players (
 ALTER TABLE players OWNER TO nbadb;
 
 --
--- Name: players_bbref; Type: TABLE; Schema: public; Owner: nbadb
---
-
-CREATE TABLE players_bbref (
-    players_bbref_id integer NOT NULL,
-    player_code character varying(10),
-    player_name character varying(50),
-    birth_date date,
-    college_name character varying(100),
-    height character varying(10),
-    player_url character varying(100),
-    pos character varying(10),
-    weight smallint,
-    year_min smallint,
-    year_max smallint,
-    active boolean,
-    nbacom_player_id integer
-);
-
-
-ALTER TABLE players_bbref OWNER TO nbadb;
-
---
--- Name: players_bbref_players_bbref_id_seq; Type: SEQUENCE; Schema: public; Owner: nbadb
---
-
-CREATE SEQUENCE players_bbref_players_bbref_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
-ALTER TABLE players_bbref_players_bbref_id_seq OWNER TO nbadb;
-
---
--- Name: players_bbref_players_bbref_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: nbadb
---
-
-ALTER SEQUENCE players_bbref_players_bbref_id_seq OWNED BY players_bbref.players_bbref_id;
-
-
---
 -- Name: players_players_id_seq; Type: SEQUENCE; Schema: public; Owner: nbadb
 --
 
@@ -692,130 +1164,6 @@ ALTER TABLE players_players_id_seq OWNER TO nbadb;
 
 ALTER SEQUENCE players_players_id_seq OWNED BY players.players_id;
 
-
---
--- Name: players_to_add; Type: VIEW; Schema: public; Owner: postgres
---
-
-CREATE VIEW players_to_add AS
- SELECT DISTINCT cs_player_gamelogs.nbacom_player_id
-   FROM cs_player_gamelogs
-  WHERE (NOT (cs_player_gamelogs.nbacom_player_id IN ( SELECT DISTINCT players.nbacom_player_id
-           FROM players)));
-
-
-ALTER TABLE players_to_add OWNER TO postgres;
-
---
--- Name: playerstats_daily; Type: TABLE; Schema: public; Owner: nbadb
---
-
-CREATE TABLE playerstats_daily (
-    as_of date,
-    season smallint,
-    nbacom_player_id integer,
-    player_name character varying(50),
-    team_id integer,
-    age numeric,
-    ast smallint,
-    ast_rank smallint,
-    blk smallint,
-    blka smallint,
-    blka_rank smallint,
-    blk_rank smallint,
-    dd2 smallint,
-    dd2_rank smallint,
-    dreb smallint,
-    dreb_rank smallint,
-    fg3a smallint,
-    fg3a_rank smallint,
-    fg3m smallint,
-    fg3m_rank smallint,
-    fg3_pct numeric,
-    fg3_pct_rank smallint,
-    fga smallint,
-    fga_rank smallint,
-    fgm smallint,
-    fgm_rank smallint,
-    fg_pct numeric,
-    fg_pct_rank smallint,
-    fta smallint,
-    fta_rank smallint,
-    ftm smallint,
-    ftm_rank smallint,
-    ft_pct numeric,
-    ft_pct_rank smallint,
-    gp smallint,
-    gp_rank smallint,
-    l smallint,
-    l_rank smallint,
-    min numeric,
-    min_played numeric,
-    min_rank smallint,
-    oreb smallint,
-    oreb_rank smallint,
-    pf smallint,
-    pfd smallint,
-    pfd_rank smallint,
-    pf_rank smallint,
-    plus_minus smallint,
-    plus_minus_rank smallint,
-    pts smallint,
-    pts_rank smallint,
-    reb smallint,
-    reb_rank smallint,
-    sec_played numeric,
-    stl smallint,
-    stl_rank smallint,
-    td3 smallint,
-    td3_rank smallint,
-    tov smallint,
-    tov_rank smallint,
-    w smallint,
-    w_pct numeric,
-    w_pct_rank smallint,
-    w_rank smallint,
-    reb_pct_rank smallint,
-    reb_pct numeric,
-    oreb_pct numeric,
-    dreb_pct numeric,
-    usg_pct numeric,
-    ast_pct numeric,
-    ast_ratio_rank smallint,
-    dreb_pct_rank smallint,
-    dreb_rating_rank smallint,
-    def_rating_rank smallint,
-    ts_pct_rank smallint,
-    ast_to_rank smallint,
-    tm_tov_pct_rank smallint,
-    ast_ratio smallint,
-    pace_rank smallint,
-    fgm_pg_rank smallint,
-    net_rating numeric,
-    ts_pct numeric,
-    tm_tov_pct numeric,
-    efg_pct_rank numeric,
-    fga_pg numeric,
-    oreb_pct_rank smallint,
-    off_rating numeric,
-    off_rating_rank smallint,
-    pace numeric,
-    def_rating numeric,
-    pie numeric,
-    ast_to numeric,
-    team_code character varying(10),
-    efg_pct numeric,
-    fga_pg_rank smallint,
-    fgm_pg smallint,
-    net_rating_rank smallint,
-    ast_pct_rank smallint,
-    usg_pct_rank smallint,
-    pie_rank smallint,
-    playerstats_daily_id integer NOT NULL
-);
-
-
-ALTER TABLE playerstats_daily OWNER TO nbadb;
 
 --
 -- Name: playerstats_daily_playerstats_daily_id_seq; Type: SEQUENCE; Schema: public; Owner: nbadb
@@ -955,6 +1303,27 @@ CREATE MATERIALIZED VIEW playerstats_season AS
 ALTER TABLE playerstats_season OWNER TO nbadb;
 
 --
+-- Name: starters; Type: VIEW; Schema: public; Owner: nbadb
+--
+
+CREATE VIEW starters AS
+ SELECT g.game_id,
+    g.game_date,
+    pbc.player_name,
+    pbc.team_id,
+    pbc.start_position,
+        CASE
+            WHEN (pbc.start_position IS NULL) THEN false
+            ELSE true
+        END AS is_starter
+   FROM (player_boxscores_combined pbc
+     JOIN games g ON ((pbc.game_id = g.game_id)))
+  ORDER BY g.game_date, pbc.team_id, pbc.start_position;
+
+
+ALTER TABLE starters OWNER TO nbadb;
+
+--
 -- Name: team_boxscores_combined; Type: TABLE; Schema: public; Owner: nbadb
 --
 
@@ -1071,71 +1440,6 @@ ALTER SEQUENCE team_gamelogs_team_gamelogs_id_seq OWNED BY team_gamelogs.team_ga
 
 
 --
--- Name: team_opponent_dashboard; Type: TABLE; Schema: public; Owner: nbadb
---
-
-CREATE TABLE team_opponent_dashboard (
-    team_opponent_dashboard_id integer NOT NULL,
-    team_id integer,
-    as_of date,
-    gp smallint,
-    gp_rank smallint,
-    l smallint,
-    l_rank smallint,
-    min numeric,
-    min_rank smallint,
-    opp_ast numeric,
-    opp_ast_rank smallint,
-    opp_blk numeric,
-    opp_blk_rank smallint,
-    opp_blka numeric,
-    opp_blka_rank smallint,
-    opp_dreb numeric,
-    opp_dreb_rank smallint,
-    opp_fg3_pct numeric,
-    opp_fg3_pct_rank smallint,
-    opp_fg3a numeric,
-    opp_fg3a_rank smallint,
-    opp_fg3m numeric,
-    opp_fg3m_rank smallint,
-    opp_fg_pct numeric,
-    opp_fg_pct_rank smallint,
-    opp_fga numeric,
-    opp_fga_rank smallint,
-    opp_fgm numeric,
-    opp_fgm_rank smallint,
-    opp_ft_pct numeric,
-    opp_ft_pct_rank smallint,
-    opp_fta numeric,
-    opp_fta_rank smallint,
-    opp_ftm numeric,
-    opp_ftm_rank smallint,
-    opp_oreb numeric,
-    opp_oreb_rank smallint,
-    opp_pf numeric,
-    opp_pf_rank smallint,
-    opp_pfd numeric,
-    opp_pfd_rank smallint,
-    opp_pts numeric,
-    opp_pts_rank smallint,
-    opp_reb numeric,
-    opp_reb_rank smallint,
-    opp_stl numeric,
-    opp_stl_rank smallint,
-    opp_tov numeric,
-    opp_tov_rank smallint,
-    plus_minus numeric,
-    plus_minus_rank smallint,
-    w smallint,
-    w_pct numeric,
-    w_pct_rank smallint,
-    w_rank smallint
-);
-
-
-ALTER TABLE team_opponent_dashboard OWNER TO nbadb;
-
---
 -- Name: team_opponent_dashboard_team_opponent_dashboard_id_seq; Type: SEQUENCE; Schema: public; Owner: nbadb
 --
 
@@ -1193,99 +1497,6 @@ ALTER SEQUENCE teams_teams_id_seq OWNED BY teams.teams_id;
 
 
 --
--- Name: teamstats_daily; Type: TABLE; Schema: public; Owner: nbadb
---
-
-CREATE TABLE teamstats_daily (
-    teamstats_daily_id integer NOT NULL,
-    as_of date NOT NULL,
-    team_id integer,
-    ast numeric,
-    ast_pct numeric,
-    ast_pct_rank smallint,
-    ast_rank smallint,
-    ast_ratio numeric,
-    ast_ratio_rank smallint,
-    ast_to numeric,
-    ast_to_rank smallint,
-    blk numeric,
-    blka numeric,
-    blka_rank smallint,
-    blk_rank smallint,
-    def_rating numeric,
-    def_rating_rank smallint,
-    dreb numeric,
-    dreb_pct numeric,
-    dreb_pct_rank smallint,
-    dreb_rank smallint,
-    efg_pct numeric,
-    efg_pct_rank smallint,
-    fg3a numeric,
-    fg3a_rank smallint,
-    fg3m numeric,
-    fg3m_rank smallint,
-    fg3_pct numeric,
-    fg3_pct_rank smallint,
-    fga numeric,
-    fga_rank smallint,
-    fgm numeric,
-    fgm_rank smallint,
-    fg_pct numeric,
-    fg_pct_rank smallint,
-    fta numeric,
-    fta_rank smallint,
-    ftm numeric,
-    ftm_rank smallint,
-    ft_pct numeric,
-    ft_pct_rank smallint,
-    gp smallint,
-    gp_rank smallint,
-    l smallint,
-    l_rank smallint,
-    min numeric,
-    min_rank smallint,
-    net_rating numeric,
-    net_rating_rank smallint,
-    off_rating numeric,
-    off_rating_rank smallint,
-    oreb numeric,
-    oreb_pct numeric,
-    oreb_pct_rank smallint,
-    oreb_rank smallint,
-    pace numeric,
-    pace_rank smallint,
-    pf numeric,
-    pfd numeric,
-    pfd_rank smallint,
-    pf_rank smallint,
-    pie numeric,
-    pie_rank smallint,
-    plus_minus numeric,
-    plus_minus_rank smallint,
-    pts numeric,
-    pts_rank smallint,
-    reb numeric,
-    reb_pct numeric,
-    reb_pct_rank smallint,
-    reb_rank smallint,
-    stl numeric,
-    stl_rank smallint,
-    tm_tov_pct numeric,
-    tm_tov_pct_rank smallint,
-    tov numeric,
-    tov_rank smallint,
-    ts_pct numeric,
-    ts_pct_rank smallint,
-    w smallint,
-    w_pct numeric,
-    w_pct_rank smallint,
-    w_rank smallint
-);
-
-
-ALTER TABLE teamstats_daily OWNER TO nbadb;
-
---
 -- Name: teamstats_daily_teamstats_daily_id_seq; Type: SEQUENCE; Schema: public; Owner: nbadb
 --
 
@@ -1307,10 +1518,130 @@ ALTER SEQUENCE teamstats_daily_teamstats_daily_id_seq OWNED BY teamstats_daily.t
 
 
 --
+-- Name: teamstats_season; Type: MATERIALIZED VIEW; Schema: public; Owner: nbadb
+--
+
+CREATE MATERIALIZED VIEW teamstats_season AS
+ SELECT teamstats_daily.teamstats_daily_id,
+    teamstats_daily.as_of,
+    teamstats_daily.team_id,
+    teamstats_daily.ast,
+    teamstats_daily.ast_pct,
+    teamstats_daily.ast_pct_rank,
+    teamstats_daily.ast_rank,
+    teamstats_daily.ast_ratio,
+    teamstats_daily.ast_ratio_rank,
+    teamstats_daily.ast_to,
+    teamstats_daily.ast_to_rank,
+    teamstats_daily.blk,
+    teamstats_daily.blka,
+    teamstats_daily.blka_rank,
+    teamstats_daily.blk_rank,
+    teamstats_daily.def_rating,
+    teamstats_daily.def_rating_rank,
+    teamstats_daily.dreb,
+    teamstats_daily.dreb_pct,
+    teamstats_daily.dreb_pct_rank,
+    teamstats_daily.dreb_rank,
+    teamstats_daily.efg_pct,
+    teamstats_daily.efg_pct_rank,
+    teamstats_daily.fg3a,
+    teamstats_daily.fg3a_rank,
+    teamstats_daily.fg3m,
+    teamstats_daily.fg3m_rank,
+    teamstats_daily.fg3_pct,
+    teamstats_daily.fg3_pct_rank,
+    teamstats_daily.fga,
+    teamstats_daily.fga_rank,
+    teamstats_daily.fgm,
+    teamstats_daily.fgm_rank,
+    teamstats_daily.fg_pct,
+    teamstats_daily.fg_pct_rank,
+    teamstats_daily.fta,
+    teamstats_daily.fta_rank,
+    teamstats_daily.ftm,
+    teamstats_daily.ftm_rank,
+    teamstats_daily.ft_pct,
+    teamstats_daily.ft_pct_rank,
+    teamstats_daily.gp,
+    teamstats_daily.gp_rank,
+    teamstats_daily.l,
+    teamstats_daily.l_rank,
+    teamstats_daily.min,
+    teamstats_daily.min_rank,
+    teamstats_daily.net_rating,
+    teamstats_daily.net_rating_rank,
+    teamstats_daily.off_rating,
+    teamstats_daily.off_rating_rank,
+    teamstats_daily.oreb,
+    teamstats_daily.oreb_pct,
+    teamstats_daily.oreb_pct_rank,
+    teamstats_daily.oreb_rank,
+    teamstats_daily.pace,
+    teamstats_daily.pace_rank,
+    teamstats_daily.pf,
+    teamstats_daily.pfd,
+    teamstats_daily.pfd_rank,
+    teamstats_daily.pf_rank,
+    teamstats_daily.pie,
+    teamstats_daily.pie_rank,
+    teamstats_daily.plus_minus,
+    teamstats_daily.plus_minus_rank,
+    teamstats_daily.pts,
+    teamstats_daily.pts_rank,
+    teamstats_daily.reb,
+    teamstats_daily.reb_pct,
+    teamstats_daily.reb_pct_rank,
+    teamstats_daily.reb_rank,
+    teamstats_daily.stl,
+    teamstats_daily.stl_rank,
+    teamstats_daily.tm_tov_pct,
+    teamstats_daily.tm_tov_pct_rank,
+    teamstats_daily.tov,
+    teamstats_daily.tov_rank,
+    teamstats_daily.ts_pct,
+    teamstats_daily.ts_pct_rank,
+    teamstats_daily.w,
+    teamstats_daily.w_pct,
+    teamstats_daily.w_pct_rank,
+    teamstats_daily.w_rank,
+    teamstats_daily.season
+   FROM teamstats_daily
+  WHERE (teamstats_daily.as_of IN ( SELECT max(teamstats_daily_1.as_of) AS max
+           FROM teamstats_daily teamstats_daily_1
+          GROUP BY teamstats_daily_1.season))
+  ORDER BY teamstats_daily.season DESC
+  WITH NO DATA;
+
+
+ALTER TABLE teamstats_season OWNER TO nbadb;
+
+--
 -- Name: salaries_id; Type: DEFAULT; Schema: public; Owner: nbadb
 --
 
 ALTER TABLE ONLY dfs_salaries ALTER COLUMN salaries_id SET DEFAULT nextval('dfs_salaries_salaries_id_seq'::regclass);
+
+
+--
+-- Name: games_meta_id; Type: DEFAULT; Schema: public; Owner: nbadb
+--
+
+ALTER TABLE ONLY games_meta ALTER COLUMN games_meta_id SET DEFAULT nextval('games_meta_games_meta_id_seq'::regclass);
+
+
+--
+-- Name: models_id; Type: DEFAULT; Schema: public; Owner: nbadb
+--
+
+ALTER TABLE ONLY models ALTER COLUMN models_id SET DEFAULT nextval('models_models_id_seq'::regclass);
+
+
+--
+-- Name: ownership_id; Type: DEFAULT; Schema: public; Owner: nbadb
+--
+
+ALTER TABLE ONLY ownership ALTER COLUMN ownership_id SET DEFAULT nextval('ownership_ownership_id_seq'::regclass);
 
 
 --
@@ -1339,13 +1670,6 @@ ALTER TABLE ONLY player_xref ALTER COLUMN player_xref_id SET DEFAULT nextval('pl
 --
 
 ALTER TABLE ONLY players ALTER COLUMN players_id SET DEFAULT nextval('players_players_id_seq'::regclass);
-
-
---
--- Name: players_bbref_id; Type: DEFAULT; Schema: public; Owner: nbadb
---
-
-ALTER TABLE ONLY players_bbref ALTER COLUMN players_bbref_id SET DEFAULT nextval('players_bbref_players_bbref_id_seq'::regclass);
 
 
 --
@@ -1415,11 +1739,51 @@ ALTER TABLE ONLY games
 
 
 --
+-- Name: games_meta_pkey; Type: CONSTRAINT; Schema: public; Owner: nbadb
+--
+
+ALTER TABLE ONLY games_meta
+    ADD CONSTRAINT games_meta_pkey PRIMARY KEY (games_meta_id);
+
+
+--
 -- Name: games_pkey; Type: CONSTRAINT; Schema: public; Owner: nbadb
 --
 
 ALTER TABLE ONLY games
     ADD CONSTRAINT games_pkey PRIMARY KEY (game_id);
+
+
+--
+-- Name: models_game_date_key; Type: CONSTRAINT; Schema: public; Owner: nbadb
+--
+
+ALTER TABLE ONLY models
+    ADD CONSTRAINT models_game_date_key UNIQUE (game_date);
+
+
+--
+-- Name: models_pkey; Type: CONSTRAINT; Schema: public; Owner: nbadb
+--
+
+ALTER TABLE ONLY models
+    ADD CONSTRAINT models_pkey PRIMARY KEY (models_id);
+
+
+--
+-- Name: ownership_game_date_key; Type: CONSTRAINT; Schema: public; Owner: nbadb
+--
+
+ALTER TABLE ONLY ownership
+    ADD CONSTRAINT ownership_game_date_key UNIQUE (game_date);
+
+
+--
+-- Name: ownership_pkey; Type: CONSTRAINT; Schema: public; Owner: nbadb
+--
+
+ALTER TABLE ONLY ownership
+    ADD CONSTRAINT ownership_pkey PRIMARY KEY (ownership_id);
 
 
 --
@@ -1460,30 +1824,6 @@ ALTER TABLE ONLY player_gamelogs
 
 ALTER TABLE ONLY player_xref
     ADD CONSTRAINT player_xref_pkey PRIMARY KEY (player_xref_id);
-
-
---
--- Name: players_bbref_pkey; Type: CONSTRAINT; Schema: public; Owner: nbadb
---
-
-ALTER TABLE ONLY players_bbref
-    ADD CONSTRAINT players_bbref_pkey PRIMARY KEY (players_bbref_id);
-
-
---
--- Name: players_bbref_player_code_key; Type: CONSTRAINT; Schema: public; Owner: nbadb
---
-
-ALTER TABLE ONLY players_bbref
-    ADD CONSTRAINT players_bbref_player_code_key UNIQUE (player_code);
-
-
---
--- Name: players_bbref_player_name_birth_date_key; Type: CONSTRAINT; Schema: public; Owner: nbadb
---
-
-ALTER TABLE ONLY players_bbref
-    ADD CONSTRAINT players_bbref_player_name_birth_date_key UNIQUE (player_name, birth_date);
 
 
 --
@@ -1607,6 +1947,22 @@ ALTER TABLE ONLY team_boxscores_combined
 
 
 --
+-- Name: uq_game_date_dfs_site_source_player_id; Type: CONSTRAINT; Schema: public; Owner: nbadb
+--
+
+ALTER TABLE ONLY dfs_salaries
+    ADD CONSTRAINT uq_game_date_dfs_site_source_player_id UNIQUE (game_date, dfs_site, source_player_id);
+
+
+--
+-- Name: uq_gamecode_team_code; Type: CONSTRAINT; Schema: public; Owner: nbadb
+--
+
+ALTER TABLE ONLY games_meta
+    ADD CONSTRAINT uq_gamecode_team_code UNIQUE (gamecode, team_code);
+
+
+--
 -- Name: uq_pid_gid; Type: CONSTRAINT; Schema: public; Owner: nbadb
 --
 
@@ -1615,11 +1971,55 @@ ALTER TABLE ONLY player_boxscores_combined
 
 
 --
+-- Name: uq_spc_source; Type: CONSTRAINT; Schema: public; Owner: nbadb
+--
+
+ALTER TABLE ONLY player_xref
+    ADD CONSTRAINT uq_spc_source UNIQUE (source, source_player_code);
+
+
+--
+-- Name: uq_spid_source; Type: CONSTRAINT; Schema: public; Owner: nbadb
+--
+
+ALTER TABLE ONLY player_xref
+    ADD CONSTRAINT uq_spid_source UNIQUE (source, source_player_id);
+
+
+--
 -- Name: uq_team_code; Type: CONSTRAINT; Schema: public; Owner: nbadb
 --
 
 ALTER TABLE ONLY teams
     ADD CONSTRAINT uq_team_code UNIQUE (team_code);
+
+
+--
+-- Name: idx_btree_models_data; Type: INDEX; Schema: public; Owner: nbadb
+--
+
+CREATE INDEX idx_btree_models_data ON models USING gin (data);
+
+
+--
+-- Name: idx_btree_playerid; Type: INDEX; Schema: public; Owner: nbadb
+--
+
+CREATE INDEX idx_btree_playerid ON ownership USING gin (data);
+
+
+--
+-- Name: playerstats_season_season_nbacom_player_id_idx; Type: INDEX; Schema: public; Owner: nbadb
+--
+
+CREATE INDEX playerstats_season_season_nbacom_player_id_idx ON playerstats_season USING btree (season, nbacom_player_id);
+
+
+--
+-- Name: teamstats_season_season_team_id_idx; Type: INDEX; Schema: public; Owner: nbadb
+--
+
+CREATE INDEX teamstats_season_season_team_id_idx ON teamstats_season USING btree (season, team_id);
 
 
 --
@@ -1652,6 +2052,22 @@ ALTER TABLE ONLY dfs_salaries
 
 ALTER TABLE ONLY games
     ADD CONSTRAINT games_home_team_code_fkey FOREIGN KEY (home_team_code) REFERENCES teams(team_code);
+
+
+--
+-- Name: games_meta_gamecode_fkey; Type: FK CONSTRAINT; Schema: public; Owner: nbadb
+--
+
+ALTER TABLE ONLY games_meta
+    ADD CONSTRAINT games_meta_gamecode_fkey FOREIGN KEY (gamecode) REFERENCES games(gamecode);
+
+
+--
+-- Name: games_meta_team_code_fkey; Type: FK CONSTRAINT; Schema: public; Owner: nbadb
+--
+
+ALTER TABLE ONLY games_meta
+    ADD CONSTRAINT games_meta_team_code_fkey FOREIGN KEY (team_code) REFERENCES teams(team_code);
 
 
 --
@@ -1716,14 +2132,6 @@ ALTER TABLE ONLY player_gamelogs
 
 ALTER TABLE ONLY player_xref
     ADD CONSTRAINT player_xref_nbacom_player_id_fkey FOREIGN KEY (nbacom_player_id) REFERENCES players(nbacom_player_id);
-
-
---
--- Name: players_bbref_nbacom_player_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: nbadb
---
-
-ALTER TABLE ONLY players_bbref
-    ADD CONSTRAINT players_bbref_nbacom_player_id_fkey FOREIGN KEY (nbacom_player_id) REFERENCES players(nbacom_player_id);
 
 
 --

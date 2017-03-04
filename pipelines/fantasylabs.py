@@ -8,25 +8,10 @@ from datetime import datetime as dt
 import logging
 
 from nba.seasons import in_what_season
+from nba.utility import isfloat, isint
+
 #from pydfs_lineup_optimizer import Player
 
-
-def isfloat(x):
-    try:
-        a = float(x)
-    except Exception as e:
-        return False
-    else:
-        return True
-
-def isint(x):
-    try:
-        a = float(x)
-        b = int(a)
-    except Exception as e:
-        return False
-    else:
-        return a == b
 
 '''
 def make_player(p, weights=[.6, .3, .1]):

@@ -5,7 +5,7 @@ from nba.parsers.nbacom import NBAComParser
 from nba.scrapers.nbacom import NBAComScraper
 from nba.seasons import season_start
 from nba.dates import convert_format, date_list, datetostr, yesterday
-
+from nba.utility import merge
 
 class NBAComAgent(object):
     '''
@@ -28,25 +28,6 @@ class NBAComAgent(object):
             self.insert_db=False
 
 
-    def _merge(self, merge_dico, dico_list):
-        '''
-        See http://stackoverflow.com/questions/28838291/merging-multiple-dictionaries-in-python
-        Args:
-            merge_dico:
-            dico_list:
-        Returns:
-            merged dictionary
-        '''
-        for dico in dico_list:
-            for key, value in dico.items():
-                if type(value) == type(dict()):
-                    merge_dico.setdefault(key, dict())
-                    self._merge(merge_dico[key], [value])
-                else:
-                    merge_dico[key] = value
-        return merge_dico
-
-
     def combined_player_boxscores(self, gid):
         '''
         Combines 5 types of boxscores from nba.com API into list of boxscores
@@ -65,7 +46,7 @@ class NBAComAgent(object):
         usage_players = self.parser.boxscore_usage(self.scraper.boxscore_usage(gid))
 
         # now need to combine player and team boxscores
-        players = self._merge(dict(), [{t['PLAYER_ID']: t for t in traditional_players}, {t['PLAYER_ID']: t for t in adv_players},
+        players = merge(dict(), [{t['PLAYER_ID']: t for t in traditional_players}, {t['PLAYER_ID']: t for t in adv_players},
                                        {t['PLAYER_ID']: t for t in misc_players}, {t['PLAYER_ID']: t for t in scoring_players},
                                        {t['PLAYER_ID']: t for t in usage_players}])
         return list(players.values())
@@ -88,7 +69,7 @@ class NBAComAgent(object):
         scoring_players, scoring_teams = self.parser.boxscore_scoring(self.scraper.boxscore_scoring(gid))
 
         # now need to combine player and team boxscores
-        teams = self._merge(dict(), [{t['TEAM_ID']: t for t in traditional_teams}, {t['TEAM_ID']: t for t in adv_teams},
+        teams = merge(dict(), [{t['TEAM_ID']: t for t in traditional_teams}, {t['TEAM_ID']: t for t in adv_teams},
                                        {t['TEAM_ID']: t for t in misc_teams}, {t['TEAM_ID']: t for t in scoring_teams}])
         return list(teams.values())
 
@@ -176,7 +157,7 @@ class NBAComAgent(object):
         if date_from and date_to:
             ps_base = self.parser.playerstats(self.scraper.playerstats(season, DateFrom=date_from, DateTo=date_to))
             ps_advanced = self.parser.playerstats(self.scraper.playerstats(season, DateFrom=date_from, DateTo=date_to, MeasureType='Advanced'))
-            ps = [self._merge(dict(), [psb, psadv]) for psb, psadv in zip(ps_base, ps_advanced)]
+            ps = [merge(dict(), [psb, psadv]) for psb, psadv in zip(ps_base, ps_advanced)]
             if self.insert_db:
                 self.db.insert_playerstats(ps, as_of=date_to)
             return ps
@@ -187,7 +168,7 @@ class NBAComAgent(object):
                 daystr = datetostr(day, 'nba')
                 ps_base = self.parser.playerstats(self.scraper.playerstats(season, DateFrom=start, DateTo=daystr))
                 ps_advanced = self.parser.playerstats(self.scraper.playerstats(season, DateFrom=start, DateTo=daystr, MeasureType='Advanced'))
-                ps = [self._merge(dict(), [psb, psadv]) for psb, psadv in zip(ps_base, ps_advanced)]
+                ps = [merge(dict(), [psb, psadv]) for psb, psadv in zip(ps_base, ps_advanced)]
                 pstats[daystr] = ps
                 if self.insert_db:
                     self.db.insert_playerstats(ps, as_of=daystr)
@@ -271,7 +252,7 @@ class NBAComAgent(object):
         if date_from and date_to:
             ts_base = self.parser.teamstats(self.scraper.teamstats(season, DateFrom=date_from, DateTo=date_to))
             ts_advanced = self.parser.teamstats(self.scraper.teamstats(season, DateFrom=date_from, DateTo=date_to, MeasureType='Advanced'))
-            ts = [self._merge(dict(), [psb, psadv]) for psb, psadv in zip(ts_base, ts_advanced)]
+            ts = [merge(dict(), [psb, psadv]) for psb, psadv in zip(ts_base, ts_advanced)]
             if self.insert_db:
                 self.db.insert_teamstats(ts, as_of=date_to)
             return ts
@@ -282,7 +263,7 @@ class NBAComAgent(object):
                 daystr = datetostr(day, 'nba')
                 ts_base = self.parser.teamstats(self.scraper.teamstats(season, DateFrom=start, DateTo=daystr))
                 ts_advanced = self.parser.teamstats(self.scraper.teamstats(season, DateFrom=start, DateTo=daystr, MeasureType='Advanced'))
-                ts = [self._merge(dict(), [psb, psadv]) for psb, psadv in zip(ts_base, ts_advanced)]
+                ts = [merge(dict(), [psb, psadv]) for psb, psadv in zip(ts_base, ts_advanced)]
                 tstats[daystr] = ts
                 if self.insert_db:
                     self.db.insert_teamstats(ts, as_of=daystr)

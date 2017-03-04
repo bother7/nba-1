@@ -4,6 +4,8 @@ from math import modf
 import re
 
 from nba.seasons import season_start
+from nba.utility import flatten, merge
+
 
 class NBAComParser(object):
     '''
@@ -27,28 +29,18 @@ class NBAComParser(object):
         '''
         fixed_linescores = []
         exclude = ['game_sequence']
-
         for linescore in linescores:
             fixed_linescore = {k.lower():v for k,v in list(linescore.items())}
             fixed_linescore.pop('game_sequence', None)
-
             fixed_linescore['team_game_id'] = '{0}:{1}'.format(fixed_linescore['team_id'], fixed_linescore['game_id'])
             twl = fixed_linescore.get('team_wins_losses', None)
-
             if twl:
                 wins, losses = twl.split('-')
-
                 if wins and losses:
                     fixed_linescore['team_wins'] = wins
                     fixed_linescore['team_losses'] = losses
-
             fixed_linescores.append(fixed_linescore)
-
         return fixed_linescores
-
-
-    def _fix_player_info(self, player_info):
-        return player_info
 
 
     def boxscore_traditional(self, content, game_date=None):
@@ -316,7 +308,6 @@ class NBAComParser(object):
         
         basedict = {item.get(key): item for item in base_boxscore}
         advdict = {item.get(key): item for item in advanced_boxscore}
-
         z = basedict
         z.update(advdict)
         return z

@@ -1,5 +1,6 @@
-import collections
 import logging
+
+from nba.utility import flatten
 
 
 class FantasyLabsNBAParser(object):
@@ -15,23 +16,6 @@ class FantasyLabsNBAParser(object):
     def __init__(self):
         logging.getLogger(__name__).addHandler(logging.NullHandler())
                         
-    def _flatten(self, d):
-        '''
-        Flattens nested dict into single dict
-
-        Args:
-            d: original dict
-
-        Returns:
-            dict
-        '''
-        items = []
-        for k, v in d.items():
-            if isinstance(v, collections.MutableMapping):
-                items.extend(self._flatten(v).items())
-            else:
-                items.append((k, v))
-        return dict(items)
 
     def dk_salaries(self, content, game_date):
         '''
@@ -43,6 +27,7 @@ class FantasyLabsNBAParser(object):
             players (list): of player dict
         '''
         return self.model(content, site='dk', game_date=game_date)
+
 
     def model(self, content, site='dk', game_date=None):
         '''
@@ -71,6 +56,7 @@ class FantasyLabsNBAParser(object):
                 players.append(player)
         return players
 
+
     def ownership(self, content, game_date=None):
         '''
         Parses ownership json
@@ -81,14 +67,12 @@ class FantasyLabsNBAParser(object):
         Returns:
             list of players with ownership percentages
         '''
-        #omit = ['ErrorList', 'ActualPoints', 'ActualPoints_pct', 'ActualPoints_rnk', 'Average', 'SortValue',
-        #        'Player_Name_pct', 'Player_Name_rnk', 'Team_pct', 'Team_rnk']
-        #return [{k: v for k, v in self._flatten(pl).items() if k not in omit} for pl in content]
-        vals = [self._flatten(pl) for pl in content]
+        vals = [flatten(pl) for pl in content]
         if game_date:
             for idx, _ in enumerate(vals):
                 vals[idx]['game_date'] = game_date
         return vals
+
 
 if __name__ == "__main__":
     pass

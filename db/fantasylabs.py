@@ -28,10 +28,22 @@ class FantasyLabsNBAPg(NBAPostgres):
 
     def insert_models(self, models):
         '''
-        TODO: code this out
+        Adds model JSON to table
+
+        Args:
+            models: dict of game_date, model, model_name
         '''
-        if models:
-            self.insert_dicts(models, 'dfs.fantasylabs_models')
+        cursor = self.conn.cursor()
+        try:
+            for model in models:
+                cursor.execute("""INSERT INTO models (game_date, data, model_name) VALUES (%s, %s);""",
+                               (model['game_date'], json.dumps(model['model'], model['model_name'])))
+            self.conn.commit()
+        except Exception as e:
+            logging.exception('update failed: {0}'.format(e))
+            self.conn.rollback()
+        finally:
+            cursor.close()
 
 
     def insert_salaries(self, sals, game_date):
@@ -79,8 +91,6 @@ class FantasyLabsNBAPg(NBAPostgres):
             self.conn.rollback()
         finally:
             cursor.close()
-
-
 
 
 if __name__ == '__main__':

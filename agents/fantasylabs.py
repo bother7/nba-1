@@ -80,28 +80,26 @@ class FantasyLabsNBAAgent(object):
             models = a.many_models(range_start='2016-03-01', range_end='2016-03-07')
             models = a.many_models(all_missing=True)
         '''
-        pass
-
-        '''
-        players = []
+        models = []
         if all_missing:
-            # THIS NEEDS TO BE ADAPTED
-            salaries = []
-            for day in self.db.select_list('SELECT game_date FROM missing_salaries'):
-                daystr = dt.datetime.strftime(day, '%m_%d_%Y')
-                sals = self.parser.dk_salaries(self.scraper.model(daystr), daystr)
-                salaries.append(sals)
-                if self.insert_db:
-                    self.db.insert_salaries(sals)
-            return [item for sublist in salaries for item in sublist]
+            for d in self.db.select_list('SELECT game_date FROM missing_models'):
+                daystr = datetostr(d, 'fl')
+                models.append({
+                    'game_date': daystr,
+                    'data': self.one_model(model_day=daystr, model_name=model_name),
+                    'model_name': model_name
+                })
         else:
             for d in date_list(range_end, range_start):
-                p = self.one_model(model_day=dt.datetime.strftime(d, '%m_%d_%Y'), model_name=model_name)
-                if self.insert_db:
-                    self.db.insert_models(p)
-                players.append(p)
-        return [item for sublist in players for item in sublist]
-        '''
+                daystr = datetostr(d, 'fl')
+                models.append({
+                    'game_date': daystr,
+                    'data': self.one_model(model_day=daystr, model_name=model_name),
+                    'model_name': model_name
+                })
+        if self.insert_db:
+            self.db.insert_models(models)
+        return models
 
 
     def ownership(self, day=None, all_missing=False):
@@ -180,20 +178,20 @@ class FantasyLabsNBAAgent(object):
         '''
         Adds missing players to player_xref table and updates dfs_salaries afterwards
         '''
-        nbapq = """SELECT nbacom_player_id as id, display_first_last as n FROM players"""
-        nbadict = {}
-        nbacount = defaultdict(int)
-        for p in self.db.select_dict(nbapq):
-            nbadict[p['id']] = p['n']
-            nbacount[p['n']] += 1
-
-        # update table
+        # now update dfs_salaries nbacom_player_id from player_xref
         updateq = """UPDATE dfs_salaries SET nbacom_player_id = sq.nbacom_player_id
                      FROM (SELECT nbacom_player_id, source, source_player_id from player_xref) AS sq
                      WHERE dfs_salaries.nbacom_player_id IS NULL
                      AND dfs_salaries.source_player_id = sq.source_player_id
                      AND dfs_salaries.source = sq.source;"""
         self.db.update(updateq)
+
+        nbapq = """SELECT nbacom_player_id as id, display_first_last as n FROM players"""
+        nbadict = {}
+        nbacount = defaultdict(int)
+        for p in self.db.select_dict(nbapq):
+            nbadict[p['id']] = p['n']
+            nbacount[p['n']] += 1
 
         # loop through missing players
         # filter out players with duplicate names - need to manually resolve those

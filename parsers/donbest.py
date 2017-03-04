@@ -40,6 +40,7 @@ class DonBestNBAParser():
     def __init__(self):
         logging.getLogger(__name__).addHandler(logging.NullHandler())
 
+
     def _median(self, lst):
         lst = sorted(lst)
         if len(lst) < 1:
@@ -48,6 +49,7 @@ class DonBestNBAParser():
             return lst[((len(lst) + 1) / 2) - 1]
         else:
             return float(sum(lst[(len(lst) / 2) - 1:(len(lst) / 2) + 1])) / 2.0
+
 
     def _odds_total(self, x1, x2):
         '''
@@ -78,6 +80,7 @@ class DonBestNBAParser():
             total = float(x2)
             order = 'st'
         return (spread, total, order)
+
 
     def odds(self, content, game_date):
         '''
@@ -148,6 +151,7 @@ class DonBestNBAParser():
             results.append(result)
 
         return results
+
 
 if __name__ == "__main__":
     pass

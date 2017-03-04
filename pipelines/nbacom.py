@@ -9,27 +9,9 @@ import logging
 
 from nba.dates import convert_format, datetostr, strtodate
 from nba.dfs import dk_points, fd_points
+from nba.utility import isfloat, isint
 
 logging.getLogger(__name__).addHandler(logging.NullHandler())
-
-
-def isfloat(x):
-    try:
-        a = float(x)
-    except Exception as e:
-        return False
-    else:
-        return True
-
-
-def isint(x):
-    try:
-        a = float(x)
-        b = int(a)
-    except Exception as e:
-        return False
-    else:
-        return a == b
 
 
 def gamedetail(gds):

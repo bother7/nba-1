@@ -5,6 +5,7 @@ import datetime
 import logging
 import re
 
+
 def convert_format(d, site):
     '''
     Converts string from one date format to another
@@ -27,6 +28,7 @@ def convert_format(d, site):
     else:
         return None
 
+
 def date_list(d1, d2):
     '''
     Takes two datetime objects or datestrings and returns a list of datetime objects
@@ -42,33 +44,33 @@ def date_list(d1, d2):
         for d in date_list('10_09_2015', '10_04_2015'):
             print datetime.strftime(d, '%m_%d_%Y')
     '''
-
-    # convert datestring into datetime object
-    # strtodate knows the formats used by various sites
     if isinstance(d1, str):
         try:
             d1 = strtodate(d1)
-
         except:
             logging.error('{0} is not in %m_%d_%Y format'.format(d1))
-
-    # convert datestring into datetime object
-    # strtodate knows the formats used by various sites
     if isinstance(d2, str):
         try:
             d2 = strtodate(d2)
-
         except:
             logging.error('{0} is not in %m_%d_%Y format'.format(d1))
-
     season = d1 - d2
     return [d1 - datetime.timedelta(days=x) for x in range(0, season.days+1)]
+
 
 def datetostr(d, site):
     '''
     Converts datetime object to formats used by different sites
+
+    Args:
+        d: DateTime object
+        site: str, such as 'nba' or 'fl'
+
+    Returns:
+        datestr in specified format
     '''
     return datetime.datetime.strftime(d, site_format(site))
+
 
 def format_type(datestr):
     '''
@@ -97,6 +99,7 @@ def format_type(datestr):
     else:
         return None
 
+
 def site_format(site):
     '''
     Stores date formats used by different sites
@@ -109,18 +112,39 @@ def site_format(site):
     }
     return fmt.get(site, None)
 
+
 def strtodate(d):
     '''
     Converts date formats used by different sites
     '''
     return datetime.datetime.strptime(d, format_type(d))
 
+
 def today(fmt=None):
+    '''
+    Datestring for today's date
+
+    Args:
+        fmt: str, code like 'nba'
+
+    Returns:
+        datestr
+    '''
     if not fmt:
         fmt = site_format('nba')
     return datetime.datetime.strftime(datetime.datetime.today(), fmt)
 
+
 def yesterday(fmt=None):
+    '''
+    Datestring for yesterday's date
+
+    Args:
+        fmt: str, code like 'nba'
+
+    Returns:
+        datestr
+    '''
     if not fmt:
         fmt = site_format('nba')
     return datetime.datetime.strftime(datetime.datetime.today() - datetime.timedelta(1), fmt)
