@@ -28,7 +28,7 @@ class NBAComAgent(object):
             self.insert_db=False
 
 
-    def combined_player_boxscores(self, gid):
+    def _combined_player_boxscores(self, gid):
         '''
         Combines 5 types of boxscores from nba.com API into list of boxscores
         Arguments:
@@ -49,7 +49,62 @@ class NBAComAgent(object):
         players = merge(dict(), [{t['PLAYER_ID']: t for t in traditional_players}, {t['PLAYER_ID']: t for t in adv_players},
                                        {t['PLAYER_ID']: t for t in misc_players}, {t['PLAYER_ID']: t for t in scoring_players},
                                        {t['PLAYER_ID']: t for t in usage_players}])
-        return list(players.values())
+        return players.values()
+
+
+    def player_boxscores_combined(self):
+        '''
+        Fetches player boxscores combined
+
+        Arguments:
+            season: str in YYYY-YY format (2015-16)
+
+        Returns:
+             players (list): player boxscores
+        '''
+        pboxes = []
+        q = "select '00' || game_id::text from missing_player_boxscores"
+        gids = self.db.select_list(q)
+        if not gids:
+            logging.error('no missing gameids found')
+            return None
+        logging.info('there are {} missing game boxscores'.format(len(gids)))
+        for gid in gids:
+            logging.info('getting {}'.format(gid))
+            box = self._combined_player_boxscores(gid)
+            if not box:
+                logging.error('no box for {}'.format(gid))
+                continue
+            if self.insert_db:
+                self.db.insert_player_boxscores(box)
+                pboxes.append(box)
+        return [item for sublist in pboxes for item in sublist]
+
+
+    def team_boxscores_combined(self):
+        '''
+        Fetches team boxscores combined
+
+        Returns:
+             tboxes: list of boxscores
+        '''
+        tboxes = []
+        q = "select '00' || game_id::text from missing_team_boxscores"
+        gids = self.db.select_list(q)
+        if not gids:
+            logging.error('no missing gameids found')
+            return None
+        logging.info('there are {} missing game boxscores'.format(len(gids)))
+        for gid in gids:
+            logging.info('getting {}'.format(gid))
+            box = self.combined_team_boxscores(gid)
+            if not box:
+                logging.error('no box for {}'.format(gid))
+                continue
+            if self.insert_db:
+                self.db.insert_team_boxscores(box)
+                tboxes.append(box)
+        return [item for sublist in tboxes for item in sublist]
 
 
     def combined_team_boxscores(self, gid):
@@ -88,12 +143,10 @@ class NBAComAgent(object):
         '''
         content = self.scraper.players_v2015(season)
         players = self.parser.players_v2015(content)
-        logging.info(players)
         currids = set([int(p.get('personId',0)) for p in players])
-        logging.info(currids)
+        logging.debug(currids)
         allids = set(self.db.select_list('SELECT nbacom_player_id from players'))
         missing = currids - allids
-        logging.info(missing)
         if missing:
             np = [p for p in players if int(p['personId']) in missing]
             if self.insert_db:
@@ -111,30 +164,15 @@ class NBAComAgent(object):
             season: str in YYYY-YY format (2015-16)
             date_from: str in YYYY-mm-dd format
             date_to: str in YYYY-mm-dd format
-            insert_db: add list to database
 
         Returns:
              players (list): player dictionary of stats + dfs points
 
-        Examples:
-            a = NBAComAgent()
-            np = a.player_gamelogs(season='2015-16', date_from='2016-03-01', date_to='2016-03-08', insert_db=True)
         '''
-        # mpgl -> list of game_ids for which there are no player gamelogs
-        # filter gamelogs to those from missing game_ids
         pgl = self.parser.season_gamelogs(self.scraper.season_gamelogs(season, 'P'), 'P')
-        mpgl = self.db.missing_pgl()
-        if pgl and mpgl:
-            pgl = [gl for gl in pgl if gl.get('GAME_ID', None) in mpgl]
-            # now make sure you have no new players
-            currids = set([int(p.get('PERSON_ID', 0)) for p in pgl])
-            allids = set(self.db.select_list('SELECT nbacom_player_id from players'))
-            if self.insert_db:
-                self.db.insert_players([self.parser.player_info(self.scraper.player_info(pid, season)) for pid in currids - allids])
-                self.db.insert_player_gamelogs(pgl)
-            return pgl
-        else:
-            return None
+        if self.insert_db:
+            self.db.insert_player_gamelogs(pgl)
+        return pgl
 
 
     def playerstats(self, season, date_from=None, date_to=None, all_missing=False):
@@ -267,7 +305,7 @@ class NBAComAgent(object):
                 tstats[daystr] = ts
                 if self.insert_db:
                     self.db.insert_teamstats(ts, as_of=daystr)
-                    logging.info('teamstats: completed {}'.format(daystr))
+                    logging.debug('teamstats: completed {}'.format(daystr))
                 else:
                     logging.error('did not insert: {}'.format(ts))
             return tstats
@@ -328,11 +366,11 @@ class NBAComAgent(object):
         uq = """UPDATE stats.players2 SET nbacom_position = '{}' WHERE nbacom_player_id = {}"""
 
         for pid in self.db.select_list(q):
-            logging.info('getting {}'.format(pid))
+            logging.debug('getting {}'.format(pid))
             pinfo = self.parser.player_info(self.scraper.player_info(pid, '2015-16'))
             if pinfo.get('POSITION'):
                 self.db.update(uq.format(pinfo.get('POSITION'), pid))
-                logging.info('inserted {}'.format(pinfo.get('DISPLAY_FIRST_LAST')))
+                logging.debug('inserted {}'.format(pinfo.get('DISPLAY_FIRST_LAST')))
 
 
 if __name__ == '__main__':

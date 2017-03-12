@@ -33,12 +33,7 @@ class FantasyLabsNBAScraper(BasketballScraper):
             scraper object
         '''
         logging.getLogger(__name__).addHandler(logging.NullHandler())
-        if not headers:
-            self.headers = {'Referer': 'http://www.fantasylabs.com/nfl/player-models/',
-                        'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:50.0) Gecko/20100101 Firefox/50.0'}
-        else:
-            self.headers = headers
-        BasketballScraper.__init__(self, headers=self.headers, cookies=cookies, cache_name=cache_name,
+        BasketballScraper.__init__(self, headers=headers, cookies=cookies, cache_name=cache_name,
                                    expire_hours=expire_hours, as_string=as_string)
         self.model_urls = {
                 'default': 'http://www.fantasylabs.com/api/playermodel/2/{0}/?modelId=100605',
@@ -48,28 +43,22 @@ class FantasyLabsNBAScraper(BasketballScraper):
                 'cash': 'http://www.fantasylabs.com/api/playermodel/2/{0}/?modelId=884277'
         }
 
+
     def model(self, model_day, model_name='default'):
         '''
-        Gets json for model
-        Stats in most models the same, main difference is the ranking based on weights of factors present in all models
 
-        Usage:
-            phan_model_json = s.model()
-            bales_model_json = s.model('bales')
+        Args:
+            model_day:
+            model_name:
+
+        Returns:
 
         '''
+        url = self.model_urls.get(model_name)
+        if not url:
+            raise ValueError('invalid model name - could not find url')
+        return self.get_json(url=url.format(model_day))
 
-        # if model_name is none or not in dict, use default
-        if self.model_urls.get(model_name):
-            url = self.model_urls.get(model_name)
-            logging.debug('model: model_url is {0}'.format(url))
-
-        else:
-            logging.warn('scraper.model: could not find url for {0} model'.format(model_name))
-            url = self.model_urls.get(self.default_model)
-            logging.debug('scraper.model: using default model'.format(url))
-
-        return self.get_json(url=url.format(model_day)) #, cookies=cj)
 
     def models(self, start_date, end_date, model_name='phan'):
         '''

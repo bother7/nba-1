@@ -207,12 +207,12 @@ class FantasyLabsNBAAgent(object):
             match = [k for k,v in listitems(nbadict) if v == p['n']]
             if match:
                 self.db.update(insq.format(match[0], p['id'], p['n']))
-                logging.info('added to xref: {}'.format(p))
+                logging.debug('added to xref: {}'.format(p))
                 continue
             match = [k for k,v in listitems(nbadict) if v == match_player(p['n'], list(nbadict.values()), threshold=.8)]
             if match:
                 self.db.update(insq.format(match[0], p['id'], p['n']))
-                logging.info('added to xref: {}'.format(p))
+                logging.debug('added to xref: {}'.format(p))
             else:
                 logging.error('need to manually resolve {}'.format(p))
 

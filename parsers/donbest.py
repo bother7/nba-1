@@ -136,14 +136,14 @@ class DonBestNBAParser():
                         cs.append(0-float(x1))
                         ct.append(float(x2))
                     except:
-                        logging.info('x1 is {} ({}) and x2 is {} ({})'.format(x1, type(x1), x2, type(x2)))
+                        logging.debug('x1 is {} ({}) and x2 is {} ({})'.format(x1, type(x1), x2, type(x2)))
 
                 elif order == 'ts':
                     try:
                         cs.append(float(x2))
                         ct.append(float(x1))
                     except:
-                        logging.info('x1 is {} ({}) and x2 is {} ({})'.format(x1, type(x1), x2, type(x2)))
+                        logging.debug('x1 is {} ({}) and x2 is {} ({})'.format(x1, type(x1), x2, type(x2)))
 
             # use median as consensus
             result['consensus_spread'] = self._median(cs)

@@ -1,0 +1,451 @@
+players_espn_id,player_id,player_name,college_name,height,weight,player_url,pos,jersey
+104,4240,Avery Bradley,Texas,6-2,180,http://www.espn.com/nba/player/_/id/4240/avery-bradley,SG,0
+105,3917376,Jaylen Brown,California,6-7,225,http://www.espn.com/nba/player/_/id/3917376/jaylen-brown,SF,7
+106,6581,Jae Crowder,Marquette,6-6,235,http://www.espn.com/nba/player/_/id/6581/jae-crowder,SF,99
+107,2761,Gerald Green, ,6-7,205,http://www.espn.com/nba/player/_/id/2761/gerald-green,SF,30
+108,3213,Al Horford,Florida,6-10,245,http://www.espn.com/nba/player/_/id/3213/al-horford,C,42
+109,3059273,Demetrius Jackson,Notre Dame,6-1,201,http://www.espn.com/nba/player/_/id/3059273/demetrius-jackson,PG,9
+110,3998,Jonas Jerebko, ,6-10,231,http://www.espn.com/nba/player/_/id/3998/jonas-jerebko,PF,8
+111,2769,Amir Johnson, ,6-9,240,http://www.espn.com/nba/player/_/id/2769/amir-johnson,PF,90
+112,3064520,Jordan Mickey,LSU,6-8,235,http://www.espn.com/nba/player/_/id/3064520/jordan-mickey,PF,55
+113,2489663,Kelly Olynyk,Gonzaga,7-0,238,http://www.espn.com/nba/player/_/id/2489663/kelly-olynyk,C,41
+114,3074752,Terry Rozier,Louisville,6-2,190,http://www.espn.com/nba/player/_/id/3074752/terry-rozier,PG,12
+115,2990992,Marcus Smart,Oklahoma State,6-4,220,http://www.espn.com/nba/player/_/id/2990992/marcus-smart,PG,36
+116,6472,Isaiah Thomas,Washington,5-9,185,http://www.espn.com/nba/player/_/id/6472/isaiah-thomas,PG,4
+117,3064509,James Young,Kentucky,6-6,215,http://www.espn.com/nba/player/_/id/3064509/james-young,SG,13
+118,6631,Tyler Zeller,North Carolina,7-0,253,http://www.espn.com/nba/player/_/id/6631/tyler-zeller,C,44
+119,6576,Quincy Acy,Baylor,6-7,240,http://www.espn.com/nba/player/_/id/6576/quincy-acy,SF,13
+120,3593,Bojan Bogdanovic, ,6-8,225,http://www.espn.com/nba/player/_/id/3593/bojan-bogdanovic,SG,44
+121,4270,Trevor Booker,Clemson,6-8,228,http://www.espn.com/nba/player/_/id/4270/trevor-booker,PF,35
+122,2580782,Spencer Dinwiddie,Colorado,6-6,200,http://www.espn.com/nba/player/_/id/2580782/spencer-dinwiddie,PG,8
+123,3003,Randy Foye,Villanova,6-4,218,http://www.espn.com/nba/player/_/id/3003/randy-foye,SG,2
+124,6590,Justin Hamilton,LSU,7-0,255,http://www.espn.com/nba/player/_/id/6590/justin-hamilton,C,41
+125,2528794,Joe Harris,Virginia,6-6,219,http://www.espn.com/nba/player/_/id/2528794/joe-harris,SF,12
+126,3064291,Rondae Hollis-Jefferson,Arizona,6-7,214,http://www.espn.com/nba/player/_/id/3064291/rondae-hollis-jefferson,SF,24
+127,2488689,Sean Kilpatrick,Cincinnati,6-4,219,http://www.espn.com/nba/player/_/id/2488689/sean-kilpatrick,SG,6
+128,2991043,Caris LeVert,Michigan,6-7,203,http://www.espn.com/nba/player/_/id/2991043/caris-levert,SG,22
+129,4299,Jeremy Lin,Harvard,6-3,200,http://www.espn.com/nba/player/_/id/4299/jeremy-lin,PG,7
+130,3448,Brook Lopez,Stanford,7-0,268,http://www.espn.com/nba/player/_/id/3448/brook-lopez,C,11
+131,3153165,Chris McCullough,Syracuse,6-9,215,http://www.espn.com/nba/player/_/id/3153165/chris-mccullough,PF,1
+132,1781,Luis Scola, ,6-9,241,http://www.espn.com/nba/player/_/id/1781/luis-scola,PF,4
+133,3136477,Isaiah Whitehead,Seton Hall,6-4,213,http://www.espn.com/nba/player/_/id/3136477/isaiah-whitehead,PG,15
+134,1975,Carmelo Anthony,Syracuse,6-8,240,http://www.espn.com/nba/player/_/id/1975/carmelo-anthony,SF,7
+135,2580349,Ron Baker,Wichita State,6-4,220,http://www.espn.com/nba/player/_/id/2580349/ron-baker,SG,31
+136,2999409,Willy Hernangomez, ,6-11,240,http://www.espn.com/nba/player/_/id/2999409/willy-hernangomez,C,14
+137,2284101,Justin Holiday,Washington,6-6,185,http://www.espn.com/nba/player/_/id/2284101/justin-holiday,SG,8
+138,3997,Brandon Jennings, ,6-1,170,http://www.espn.com/nba/player/_/id/3997/brandon-jennings,PG,3
+139,3138120,Mindaugas Kuzminskas, ,6-9,215,http://www.espn.com/nba/player/_/id/3138120/mindaugas-kuzminskas,SF,91
+140,3445,Courtney Lee,Western Kentucky,6-5,200,http://www.espn.com/nba/player/_/id/3445/courtney-lee,SG,5
+141,3063982,Maurice Ndour,Ohio,6-9,200,http://www.espn.com/nba/player/_/id/3063982/maurice-ndour,SF,2
+142,3224,Joakim Noah,Florida,6-11,230,http://www.espn.com/nba/player/_/id/3224/joakim-noah,C,13
+143,6615,Kyle O'Quinn,Norfolk State,6-10,250,http://www.espn.com/nba/player/_/id/6615/kyle-o'quinn,C,9
+144,2566748,Marshall Plumlee,Duke,7-0,250,http://www.espn.com/nba/player/_/id/2566748/marshall-plumlee,C,40
+145,3102531,Kristaps Porzingis, ,7-3,240,http://www.espn.com/nba/player/_/id/3102531/kristaps-porzingis,PF,6
+146,3456,Derrick Rose,Memphis,6-3,190,http://www.espn.com/nba/player/_/id/3456/derrick-rose,PG,25
+147,6485,Lance Thomas,Duke,6-8,235,http://www.espn.com/nba/player/_/id/6485/lance-thomas,SF,42
+148,2421,Sasha Vujacic, ,6-7,195,http://www.espn.com/nba/player/_/id/2421/sasha-vujacic,SG,18
+149,3417,Jerryd Bayless,Arizona,6-3,200,http://www.espn.com/nba/player/_/id/3417/jerryd-bayless,PG,0
+150,2490620,Robert Covington,Tennessee State,6-9,215,http://www.espn.com/nba/player/_/id/2490620/robert-covington,SF,33
+151,3059318,Joel Embiid,Kansas,7-0,250,http://www.espn.com/nba/player/_/id/3059318/joel-embiid,C,21
+152,3993,Gerald Henderson,Duke,6-5,215,http://www.espn.com/nba/player/_/id/3993/gerald-henderson,SG,12
+153,2993370,Richaun Holmes,Bowling Green,6-10,245,http://www.espn.com/nba/player/_/id/2993370/richaun-holmes,PF,22
+154,2767,Ersan Ilyasova, ,6-10,235,http://www.espn.com/nba/player/_/id/2767/ersan-ilyasova,PF,7
+155,3893019,Timothe Luwawu-Cabarrot, ,6-6,205,http://www.espn.com/nba/player/_/id/3893019/timothe-luwawu-cabarrot,SG,20
+156,2530530,TJ McConnell,Arizona,6-2,200,http://www.espn.com/nba/player/_/id/2530530/tj-mcconnell,PG,1
+157,2991280,Nerlens Noel,Kentucky,6-11,228,http://www.espn.com/nba/player/_/id/2991280/nerlens-noel,PF,4
+158,3135048,Jahlil Okafor,Duke,6-11,275,http://www.espn.com/nba/player/_/id/3135048/jahlil-okafor,C,8
+159,2580898,Chasson Randle,Stanford,6-2,185,http://www.espn.com/nba/player/_/id/2580898/chasson-randle,PG,5
+160,3025,Sergio Rodriguez, ,6-3,176,http://www.espn.com/nba/player/_/id/3025/sergio-rodriguez,PG,14
+161,3032978,Dario Saric, ,6-10,223,http://www.espn.com/nba/player/_/id/3032978/dario-saric,PF,9
+162,3907387,Ben Simmons,LSU,6-10,240,http://www.espn.com/nba/player/_/id/3907387/ben-simmons,SF,25
+163,2991042,Nik Stauskas,Michigan,6-6,205,http://www.espn.com/nba/player/_/id/2991042/nik-stauskas,SG,11
+164,3113297,Bruno Caboclo, ,6-9,205,http://www.espn.com/nba/player/_/id/3113297/bruno-caboclo,SF,20
+165,3970,DeMarre Carroll,Missouri,6-8,212,http://www.espn.com/nba/player/_/id/3970/demarre-carroll,SF,5
+166,3978,DeMar DeRozan,USC,6-7,220,http://www.espn.com/nba/player/_/id/3978/demar-derozan,SG,10
+167,6446,Cory Joseph,Texas,6-3,190,http://www.espn.com/nba/player/_/id/6446/cory-joseph,PG,6
+168,3012,Kyle Lowry,Villanova,6-0,205,http://www.espn.com/nba/player/_/id/3012/kyle-lowry,PG,7
+169,3032980,Lucas Nogueira, ,7-0,220,http://www.espn.com/nba/player/_/id/3032980/lucas-nogueira,C,92
+170,4264,Patrick Patterson,Kentucky,6-9,235,http://www.espn.com/nba/player/_/id/4264/patrick-patterson,PF,54
+171,3134908,Jakob Poeltl,Utah,7-0,230,http://www.espn.com/nba/player/_/id/3134908/jakob-poeltl,C,42
+172,2595516,Norman Powell,UCLA,6-4,215,http://www.espn.com/nba/player/_/id/2595516/norman-powell,SG,24
+173,6619,Terrence Ross,Washington,6-7,195,http://www.espn.com/nba/player/_/id/6619/terrence-ross,SF,31
+174,3149673,Pascal Siakam,New Mexico State,6-9,230,http://www.espn.com/nba/player/_/id/3149673/pascal-siakam,PF,43
+175,6624,Jared Sullinger,Ohio State,6-9,260,http://www.espn.com/nba/player/_/id/6624/jared-sullinger,C,0
+176,6477,Jonas Valanciunas, ,7-0,255,http://www.espn.com/nba/player/_/id/6477/jonas-valanciunas,C,17
+177,2991230,Fred VanVleet,Wichita State,6-0,195,http://www.espn.com/nba/player/_/id/2991230/fred-vanvleet,PG,23
+178,3064447,Delon Wright,Utah,6-5,190,http://www.espn.com/nba/player/_/id/3064447/delon-wright,PG,55
+179,2489785,Ian Clark,Belmont,6-3,175,http://www.espn.com/nba/player/_/id/2489785/ian-clark,SG,21
+180,3975,Stephen Curry,Davidson,6-3,190,http://www.espn.com/nba/player/_/id/3975/stephen-curry,PG,30
+181,3202,Kevin Durant,Texas,6-9,240,http://www.espn.com/nba/player/_/id/3202/kevin-durant,SF,35
+182,6589,Draymond Green,Michigan State,6-7,230,http://www.espn.com/nba/player/_/id/6589/draymond-green,PF,23
+183,2386,Andre Iguodala,Arizona,6-6,215,http://www.espn.com/nba/player/_/id/2386/andre-iguodala,SF,9
+184,3064559,Damian Jones,Vanderbilt,7-0,245,http://www.espn.com/nba/player/_/id/3064559/damian-jones,C,15
+185,2393,Shaun Livingston, ,6-7,192,http://www.espn.com/nba/player/_/id/2393/shaun-livingston,PG,34
+186,3155535,Kevon Looney,UCLA,6-9,220,http://www.espn.com/nba/player/_/id/3155535/kevon-looney,SF,5
+187,2594818,James Michael McAdoo,North Carolina,6-9,240,http://www.espn.com/nba/player/_/id/2594818/james-michael-mcadoo,SF,20
+188,3137730,Patrick McCaw,UNLV,6-7,185,http://www.espn.com/nba/player/_/id/3137730/patrick-mccaw,PG,0
+189,3452,JaVale McGee,Nevada,7-0,270,http://www.espn.com/nba/player/_/id/3452/javale-mcgee,C,1
+190,2016,Zaza Pachulia, ,6-11,275,http://www.espn.com/nba/player/_/id/2016/zaza-pachulia,C,27
+191,6475,Klay Thompson,Washington State,6-7,215,http://www.espn.com/nba/player/_/id/6475/klay-thompson,SG,11
+192,2419,Anderson Varejao, ,6-11,273,http://www.espn.com/nba/player/_/id/2419/anderson-varejao,C,18
+193,2595229,Briante Weber,Virginia Commonwealth,6-2,165,http://www.espn.com/nba/player/_/id/2595229/briante-weber,PG,2
+194,2177,David West,Xavier,6-9,250,http://www.espn.com/nba/player/_/id/2177/david-west,PF,3
+195,6569,Alan Anderson,Michigan State,6-6,220,http://www.espn.com/nba/player/_/id/6569/alan-anderson,SG,9
+196,2745,Brandon Bass,LSU,6-8,250,http://www.espn.com/nba/player/_/id/2745/brandon-bass,PF,30
+197,165,Jamal Crawford,Michigan,6-5,195,http://www.espn.com/nba/player/_/id/165/jamal-crawford,SG,11
+198,2753,Raymond Felton,North Carolina,6-1,205,http://www.espn.com/nba/player/_/id/2753/raymond-felton,PG,2
+199,3989,Blake Griffin,Oklahoma,6-10,251,http://www.espn.com/nba/player/_/id/3989/blake-griffin,PF,32
+200,2982330,Brice Johnson,North Carolina,6-10,230,http://www.espn.com/nba/player/_/id/2982330/brice-johnson,F,10
+201,4247,Wesley Johnson,Syracuse,6-7,215,http://www.espn.com/nba/player/_/id/4247/wesley-johnson,SF,33
+202,3442,DeAndre Jordan,Texas A&M,6-11,265,http://www.espn.com/nba/player/_/id/3442/deandre-jordan,C,6
+203,3451,Luc Mbah a Moute,UCLA,6-8,230,http://www.espn.com/nba/player/_/id/3451/luc-mbah-a-moute,PF,12
+204,2779,Chris Paul,Wake Forest,6-0,175,http://www.espn.com/nba/player/_/id/2779/chris-paul,PG,3
+205,662,Paul Pierce,Kansas,6-7,235,http://www.espn.com/nba/player/_/id/662/paul-pierce,SF,34
+206,3024,J.J. Redick,Duke,6-4,190,http://www.espn.com/nba/player/_/id/3024/j.j.-redick,SG,4
+207,6617,Austin Rivers,Duke,6-4,200,http://www.espn.com/nba/player/_/id/6617/austin-rivers,PG,25
+208,3460,Marreese Speights,Florida,6-10,255,http://www.espn.com/nba/player/_/id/3460/marreese-speights,C,5
+209,3924880,Diamond Stone,Maryland,6-11,255,http://www.espn.com/nba/player/_/id/3924880/diamond-stone,C,0
+210,2528393,Tarik Black,Kansas,6-9,250,http://www.espn.com/nba/player/_/id/2528393/tarik-black,C,28
+211,2806,Jose Calderon, ,6-3,200,http://www.espn.com/nba/player/_/id/2806/jose-calderon,PG,5
+212,2528426,Jordan Clarkson,Missouri,6-5,194,http://www.espn.com/nba/player/_/id/2528426/jordan-clarkson,PG,6
+213,2429,Luol Deng,Duke,6-9,220,http://www.espn.com/nba/player/_/id/2429/luol-deng,SF,9
+214,2968363,Marcelo Huertas, ,6-3,200,http://www.espn.com/nba/player/_/id/2968363/marcelo-huertas,PG,4
+215,3913176,Brandon Ingram,Duke,6-9,190,http://www.espn.com/nba/player/_/id/3913176/brandon-ingram,SF,14
+216,4298,Timofey Mozgov, ,7-1,275,http://www.espn.com/nba/player/_/id/4298/timofey-mozgov,C,20
+217,2580365,Larry Nance Jr.,Wyoming,6-9,230,http://www.espn.com/nba/player/_/id/2580365/larry-nance-jr.,PF,7
+218,3064514,Julius Randle,Kentucky,6-9,250,http://www.espn.com/nba/player/_/id/3064514/julius-randle,PF,30
+219,6618,Thomas Robinson,Kansas,6-10,237,http://www.espn.com/nba/player/_/id/6618/thomas-robinson,PF,15
+220,3136776,D'Angelo Russell,Ohio State,6-5,195,http://www.espn.com/nba/player/_/id/3136776/d'angelo-russell,PG,1
+221,2799,Louis Williams, ,6-1,175,http://www.espn.com/nba/player/_/id/2799/louis-williams,SG,23
+222,25,Metta World Peace,St. John's,6-7,260,http://www.espn.com/nba/player/_/id/25/metta-world-peace,SF,37
+223,3243,Nick Young,USC,6-7,210,http://www.espn.com/nba/player/_/id/3243/nick-young,SG,0
+224,4017837,Ivica Zubac, ,7-1,240,http://www.espn.com/nba/player/_/id/4017837/ivica-zubac,C,40
+225,2166,Leandro Barbosa, ,6-3,194,http://www.espn.com/nba/player/_/id/2166/leandro-barbosa,SG,19
+226,4011991,Dragan Bender, ,7-1,225,http://www.espn.com/nba/player/_/id/4011991/dragan-bender,PF,35
+227,4238,Eric Bledsoe,Kentucky,6-1,205,http://www.espn.com/nba/player/_/id/4238/eric-bledsoe,PG,2
+228,3136193,Devin Booker,Kentucky,6-6,206,http://www.espn.com/nba/player/_/id/3136193/devin-booker,SG,1
+229,984,Tyson Chandler, ,7-1,240,http://www.espn.com/nba/player/_/id/984/tyson-chandler,C,4
+230,3907487,Marquese Chriss,Washington,6-10,233,http://www.espn.com/nba/player/_/id/3907487/marquese-chriss,PF,0
+231,3201,Jared Dudley,Boston College,6-7,225,http://www.espn.com/nba/player/_/id/3201/jared-dudley,SF,3
+232,3936099,Derrick Jones Jr.,UNLV,6-7,190,http://www.espn.com/nba/player/_/id/3936099/derrick-jones-jr.,SF,10
+233,6448,Brandon Knight,Kentucky,6-3,195,http://www.espn.com/nba/player/_/id/6448/brandon-knight,PG,11
+234,2596107,Alex Len,Maryland,7-1,260,http://www.espn.com/nba/player/_/id/2596107/alex-len,C,21
+235,2807,Ronnie Price,Utah Valley,6-2,190,http://www.espn.com/nba/player/_/id/2807/ronnie-price,PG,14
+236,3033,P.J. Tucker,Texas,6-6,245,http://www.espn.com/nba/player/_/id/3033/p.j.-tucker,SF,17
+237,3136194,Tyler Ulis,Kentucky,5-10,150,http://www.espn.com/nba/player/_/id/3136194/tyler-ulis,PG,8
+238,2982334,TJ Warren,North Carolina State,6-8,225,http://www.espn.com/nba/player/_/id/2982334/tj-warren,SF,12
+239,2579326,Alan Williams,UC Santa Barbara,6-8,260,http://www.espn.com/nba/player/_/id/2579326/alan-williams,PF,15
+240,3187,Arron Afflalo,UCLA,6-5,210,http://www.espn.com/nba/player/_/id/3187/arron-afflalo,SG,40
+241,1765,Matt Barnes,UCLA,6-7,226,http://www.espn.com/nba/player/_/id/1765/matt-barnes,SF,22
+242,3554,Omri Casspi, ,6-9,225,http://www.espn.com/nba/player/_/id/3554/omri-casspi,SF,18
+243,2991282,Willie Cauley-Stein,Kentucky,7-0,240,http://www.espn.com/nba/player/_/id/2991282/willie-cauley-stein,C,00
+244,3973,Darren Collison,UCLA,6-0,175,http://www.espn.com/nba/player/_/id/3973/darren-collison,PG,7
+245,4258,DeMarcus Cousins,Kentucky,6-11,270,http://www.espn.com/nba/player/_/id/4258/demarcus-cousins,PF,15
+246,3005,Rudy Gay,Connecticut,6-8,230,http://www.espn.com/nba/player/_/id/3005/rudy-gay,SF,8
+247,3444,Kosta Koufos,Ohio State,7-0,265,http://www.espn.com/nba/player/_/id/3444/kosta-koufos,C,41
+248,3936296,Skal Labissiere,Kentucky,6-11,225,http://www.espn.com/nba/player/_/id/3936296/skal-labissiere,PF,3
+249,4000,Ty Lawson,North Carolina,5-11,195,http://www.espn.com/nba/player/_/id/4000/ty-lawson,PG,10
+250,2578213,Ben McLemore,Kansas,6-5,195,http://www.espn.com/nba/player/_/id/2578213/ben-mclemore,SG,23
+251,4017846,Georgios Papagiannis, ,7-1,240,http://www.espn.com/nba/player/_/id/4017846/georgios-papagiannis,C,13
+252,3934663,Malachi Richardson,Syracuse,6-6,205,http://www.espn.com/nba/player/_/id/3934663/malachi-richardson,SG,5
+253,4023,Garrett Temple,LSU,6-6,195,http://www.espn.com/nba/player/_/id/4023/garrett-temple,SG,17
+254,3276,Anthony Tolliver,Creighton,6-8,240,http://www.espn.com/nba/player/_/id/3276/anthony-tolliver,PF,43
+255,6430,Jimmy Butler,Marquette,6-7,231,http://www.espn.com/nba/player/_/id/6430/jimmy-butler,SF,21
+256,2490589,Isaiah Canaan,Murray State,6-0,201,http://www.espn.com/nba/player/_/id/2490589/isaiah-canaan,PG,0
+257,2596108,Michael Carter-Williams,Syracuse,6-6,190,http://www.espn.com/nba/player/_/id/2596108/michael-carter-williams,PG,7
+258,3113587,Cristiano Felicio, ,6-9,266,http://www.espn.com/nba/player/_/id/3113587/cristiano-felicio,PF,6
+259,3986,Taj Gibson,USC,6-9,236,http://www.espn.com/nba/player/_/id/3986/taj-gibson,PF,22
+260,2531047,Jerian Grant,Notre Dame,6-4,198,http://www.espn.com/nba/player/_/id/2531047/jerian-grant,PG,2
+261,3447,Robin Lopez,Stanford,7-0,255,http://www.espn.com/nba/player/_/id/3447/robin-lopez,C,8
+262,2528588,Doug McDermott,Creighton,6-8,219,http://www.espn.com/nba/player/_/id/2528588/doug-mcdermott,SF,11
+263,6459,Nikola Mirotic, ,6-10,238,http://www.espn.com/nba/player/_/id/6459/nikola-mirotic,PF,44
+264,3064482,Bobby Portis,Arkansas,6-11,246,http://www.espn.com/nba/player/_/id/3064482/bobby-portis,PF,5
+265,3026,Rajon Rondo,Kentucky,6-1,186,http://www.espn.com/nba/player/_/id/3026/rajon-rondo,PG,9
+266,2999549,Denzel Valentine,Michigan State,6-6,212,http://www.espn.com/nba/player/_/id/2999549/denzel-valentine,SG,45
+267,1987,Dwyane Wade,Marquette,6-4,220,http://www.espn.com/nba/player/_/id/1987/dwyane-wade,SG,3
+268,3893023,Paul Zipser, ,6-8,210,http://www.espn.com/nba/player/_/id/3893023/paul-zipser,SF,16
+269,1135,Chris Andersen,Blinn College,6-10,245,http://www.espn.com/nba/player/_/id/1135/chris-andersen,PF,00
+270,3062892,Kay Felder, ,5-9,176,http://www.espn.com/nba/player/_/id/3062892/kay-felder,PG,20
+271,2754,Channing Frye,Arizona,6-11,255,http://www.espn.com/nba/player/_/id/2754/channing-frye,PF,8
+272,6442,Kyrie Irving,Duke,6-3,193,http://www.espn.com/nba/player/_/id/6442/kyrie-irving,PG,2
+273,1966,LeBron James, ,6-8,250,http://www.espn.com/nba/player/_/id/1966/lebron-james,SF,23
+274,1006,Richard Jefferson,Arizona,6-7,233,http://www.espn.com/nba/player/_/id/1006/richard-jefferson,SF,24
+275,2009,James Jones,Miami (FL),6-8,218,http://www.espn.com/nba/player/_/id/2009/james-jones,SG,1
+276,2011,Kyle Korver,Creighton,6-7,212,http://www.espn.com/nba/player/_/id/2011/kyle-korver,SG,26
+277,6453,DeAndre Liggins,Kentucky,6-6,209,http://www.espn.com/nba/player/_/id/6453/deandre-liggins,SG,14
+278,3449,Kevin Love,UCLA,6-10,251,http://www.espn.com/nba/player/_/id/3449/kevin-love,PF,0
+279,2531797,Jordan McRae,Tennessee,6-5,179,http://www.espn.com/nba/player/_/id/2531797/jordan-mcrae,SG,12
+280,6468,Iman Shumpert,Georgia Tech,6-5,220,http://www.espn.com/nba/player/_/id/6468/iman-shumpert,SG,4
+281,2444,J.R. Smith, ,6-6,225,http://www.espn.com/nba/player/_/id/2444/j.r.-smith,SG,5
+282,6474,Tristan Thompson,Texas,6-9,238,http://www.espn.com/nba/player/_/id/6474/tristan-thompson,C,13
+283,2968439,Aron Baynes,Washington State,6-10,260,http://www.espn.com/nba/player/_/id/2968439/aron-baynes,C,12
+284,2528779,Reggie Bullock,North Carolina,6-7,205,http://www.espn.com/nba/player/_/id/2528779/reggie-bullock,SF,25
+285,2581018,Kentavious Caldwell-Pope,Georgia,6-5,205,http://www.espn.com/nba/player/_/id/2581018/kentavious-caldwell-pope,SG,5
+286,6585,Andre Drummond,Connecticut,6-11,279,http://www.espn.com/nba/player/_/id/6585/andre-drummond,C,0
+287,3906522,Henry Ellenson,Marquette,6-11,245,http://www.espn.com/nba/player/_/id/3906522/henry-ellenson,PF,8
+288,2566747,Michael Gbinije,Syracuse,6-7,200,http://www.espn.com/nba/player/_/id/2566747/michael-gbinije,SG,9
+289,6440,Tobias Harris,Tennessee,6-9,235,http://www.espn.com/nba/player/_/id/6440/tobias-harris,SF,34
+290,2578259,Darrun Hilliard,Villanova,6-6,205,http://www.espn.com/nba/player/_/id/2578259/darrun-hilliard,SG,6
+291,6443,Reggie Jackson,Boston College,6-3,208,http://www.espn.com/nba/player/_/id/6443/reggie-jackson,PG,1
+292,3134881,Stanley Johnson,Arizona,6-7,245,http://www.espn.com/nba/player/_/id/3134881/stanley-johnson,SF,7
+293,6452,Jon Leuer,Wisconsin,6-10,228,http://www.espn.com/nba/player/_/id/6452/jon-leuer,PF,30
+294,4376,Boban Marjanovic, ,7-3,290,http://www.espn.com/nba/player/_/id/4376/boban-marjanovic,C,51
+295,6462,Marcus Morris,Kansas,6-9,235,http://www.espn.com/nba/player/_/id/6462/marcus-morris,PF,13
+296,4305,Ish Smith,Wake Forest,6-0,175,http://www.espn.com/nba/player/_/id/4305/ish-smith,PG,14
+297,2448,Beno Udrih, ,6-3,205,http://www.espn.com/nba/player/_/id/2448/beno-udrih,PG,19
+298,6424,Lavoy Allen,Temple,6-9,260,http://www.espn.com/nba/player/_/id/6424/lavoy-allen,PF,5
+299,3192,Aaron Brooks,Oregon,6-0,161,http://www.espn.com/nba/player/_/id/3192/aaron-brooks,PG,00
+300,2596110,Rakeem Christmas,Syracuse,6-9,250,http://www.espn.com/nba/player/_/id/2596110/rakeem-christmas,PF,25
+301,2751,Monta Ellis, ,6-3,185,http://www.espn.com/nba/player/_/id/2751/monta-ellis,SG,11
+302,4251,Paul George,Fresno State,6-9,220,http://www.espn.com/nba/player/_/id/4251/paul-george,SF,13
+303,2389,Al Jefferson, ,6-10,289,http://www.espn.com/nba/player/_/id/2389/al-jefferson,C,7
+304,2778,C.J. Miles, ,6-6,225,http://www.espn.com/nba/player/_/id/2778/c.j.-miles,SF,0
+305,2990969,Georges Niang,Iowa State,6-8,230,http://www.espn.com/nba/player/_/id/2990969/georges-niang,SF,32
+306,2991039,Glenn Robinson III,Michigan,6-6,222,http://www.espn.com/nba/player/_/id/2991039/glenn-robinson-iii,SG,40
+307,4289,Kevin Seraphin, ,6-10,278,http://www.espn.com/nba/player/_/id/4289/kevin-seraphin,C,1
+308,3235,Rodney Stuckey,Eastern Washington,6-5,205,http://www.espn.com/nba/player/_/id/3235/rodney-stuckey,PG,2
+309,4015,Jeff Teague,Wake Forest,6-2,186,http://www.espn.com/nba/player/_/id/4015/jeff-teague,PG,44
+310,3133628,Myles Turner,Texas,6-11,243,http://www.espn.com/nba/player/_/id/3133628/myles-turner,C,33
+311,2528386,Joe Young,Oregon,6-2,180,http://www.espn.com/nba/player/_/id/2528386/joe-young,PG,3
+312,3244,Thaddeus Young,Georgia Tech,6-8,221,http://www.espn.com/nba/player/_/id/3244/thaddeus-young,PF,21
+313,3032977,Giannis Antetokounmpo, ,6-11,222,http://www.espn.com/nba/player/_/id/3032977/giannis-antetokounmpo,SF,34
+314,3418,Michael Beasley,Kansas State,6-10,235,http://www.espn.com/nba/player/_/id/3418/michael-beasley,SF,9
+315,2566769,Malcolm Brogdon,Virginia,6-5,215,http://www.espn.com/nba/player/_/id/2566769/malcolm-brogdon,SG,13
+316,2489716,Matthew Dellavedova,Saint Mary's,6-4,198,http://www.espn.com/nba/player/_/id/2489716/matthew-dellavedova,PG,8
+317,3211,Spencer Hawes,Washington,7-1,245,http://www.espn.com/nba/player/_/id/3211/spencer-hawes,PF,00
+318,6592,John Henson,North Carolina,6-11,229,http://www.espn.com/nba/player/_/id/6592/john-henson,C,31
+319,3436,Roy Hibbert,Georgetown,7-2,270,http://www.espn.com/nba/player/_/id/3436/roy-hibbert,C,55
+320,4017843,Thon Maker, ,7-1,223,http://www.espn.com/nba/player/_/id/4017843/thon-maker,PF,7
+321,6609,Khris Middleton,Texas A&M,6-8,234,http://www.espn.com/nba/player/_/id/6609/khris-middleton,SG,22
+322,4260,Greg Monroe,Georgetown,6-11,265,http://www.espn.com/nba/player/_/id/4260/greg-monroe,C,15
+323,3056600,Jabari Parker,Duke,6-8,250,http://www.espn.com/nba/player/_/id/3056600/jabari-parker,PF,12
+324,2528353,Tony Snell,New Mexico,6-7,217,http://www.espn.com/nba/player/_/id/2528353/tony-snell,SG,21
+325,4385,Mirza Teletovic, ,6-9,245,http://www.espn.com/nba/player/_/id/4385/mirza-teletovic,PF,35
+326,841,Jason Terry,Arizona,6-2,185,http://www.espn.com/nba/player/_/id/841/jason-terry,SG,3
+327,3137733,Rashad Vaughn,UNLV,6-6,202,http://www.espn.com/nba/player/_/id/3137733/rashad-vaughn,SG,20
+328,2982340,Justin Anderson,Virginia,6-6,228,http://www.espn.com/nba/player/_/id/2982340/justin-anderson,SG,1
+329,3055,J.J. Barea,Northeastern,6-0,185,http://www.espn.com/nba/player/_/id/3055/j.j.-barea,PG,5
+330,6578,Harrison Barnes,North Carolina,6-8,225,http://www.espn.com/nba/player/_/id/6578/harrison-barnes,SF,40
+331,2747,Andrew Bogut,Utah,7-0,260,http://www.espn.com/nba/player/_/id/2747/andrew-bogut,C,6
+332,3929314,Nicolas Brussino, ,6-8,215,http://www.espn.com/nba/player/_/id/3929314/nicolas-brussino,SF,9
+333,2326307,Seth Curry,Duke,6-2,185,http://www.espn.com/nba/player/_/id/2326307/seth-curry,SG,30
+334,2991018,Yogi Ferrell,Indiana,6-0,180,http://www.espn.com/nba/player/_/id/2991018/yogi-ferrell,PG,11
+335,2578185,Dorian Finney-Smith,Florida,6-8,220,http://www.espn.com/nba/player/_/id/2578185/dorian-finney-smith,SF,10
+336,2991178,A.J. Hammons,Purdue,7-0,260,http://www.espn.com/nba/player/_/id/2991178/a.j.-hammons,C,20
+337,2382,Devin Harris,Wisconsin,6-3,185,http://www.espn.com/nba/player/_/id/2382/devin-harris,PG,34
+338,4032,Wesley Matthews,Marquette,6-5,220,http://www.espn.com/nba/player/_/id/4032/wesley-matthews,SG,23
+339,2968458,Salah Mejri, ,7-2,245,http://www.espn.com/nba/player/_/id/2968458/salah-mejri,C,50
+340,609,Dirk Nowitzki, ,7-0,245,http://www.espn.com/nba/player/_/id/609/dirk-nowitzki,PF,41
+341,2531367,Dwight Powell,Stanford,6-11,240,http://www.espn.com/nba/player/_/id/2531367/dwight-powell,PF,7
+342,2798,Deron Williams,Illinois,6-3,200,http://www.espn.com/nba/player/_/id/2798/deron-williams,PG,8
+343,3412,Ryan Anderson,California,6-10,240,http://www.espn.com/nba/player/_/id/3412/ryan-anderson,PF,3
+344,2426,Trevor Ariza,UCLA,6-8,215,http://www.espn.com/nba/player/_/id/2426/trevor-ariza,SF,1
+345,3964,Patrick Beverley,Arkansas,6-1,185,http://www.espn.com/nba/player/_/id/3964/patrick-beverley,PG,2
+346,3191,Corey Brewer,Florida,6-9,186,http://www.espn.com/nba/player/_/id/3191/corey-brewer,SF,33
+347,3472,Bobby Brown,Cal State Fullerton,6-2,175,http://www.espn.com/nba/player/_/id/3472/bobby-brown,PG,8
+348,3102529,Clint Capela, ,6-10,240,http://www.espn.com/nba/player/_/id/3102529/clint-capela,C,15
+349,2991184,Sam Dekker,Wisconsin,6-9,230,http://www.espn.com/nba/player/_/id/2991184/sam-dekker,SF,7
+350,3059281,Tyler Ennis,Syracuse,6-3,194,http://www.espn.com/nba/player/_/id/3059281/tyler-ennis,PG,6
+351,3431,Eric Gordon,Indiana,6-4,215,http://www.espn.com/nba/player/_/id/3431/eric-gordon,SG,10
+352,3992,James Harden,Arizona State,6-5,220,http://www.espn.com/nba/player/_/id/3992/james-harden,SG,13
+353,2991055,Montrezl Harrell,Louisville,6-8,240,http://www.espn.com/nba/player/_/id/2991055/montrezl-harrell,PF,5
+354,1713,Nene Hilario, ,6-11,250,http://www.espn.com/nba/player/_/id/1713/nene-hilario,C,42
+355,2566741,K.J. McDaniels,Clemson,6-6,205,http://www.espn.com/nba/player/_/id/2566741/k.j.-mcdaniels,SG,32
+356,3147366,Chinanu Onuaku,Louisville,6-10,245,http://www.espn.com/nba/player/_/id/3147366/chinanu-onuaku,PF,21
+357,2581029,Kyle Wiltjer,Gonzaga,6-10,240,http://www.espn.com/nba/player/_/id/2581029/kyle-wiltjer,F,30
+358,2367,Tony Allen,Oklahoma State,6-4,213,http://www.espn.com/nba/player/_/id/2367/tony-allen,SG,9
+359,3136696,Wade Baldwin IV,Vanderbilt,6-4,202,http://www.espn.com/nba/player/_/id/3136696/wade-baldwin-iv,PG,4
+360,136,Vince Carter,North Carolina,6-6,220,http://www.espn.com/nba/player/_/id/136/vince-carter,SG,15
+361,3195,Mike Conley,Ohio State,6-1,175,http://www.espn.com/nba/player/_/id/3195/mike-conley,PG,11
+362,2489530,Troy Daniels,Virginia Commonwealth,6-4,205,http://www.espn.com/nba/player/_/id/2489530/troy-daniels,SG,30
+363,3937101,Deyonta Davis,Michigan State,6-10,240,http://www.espn.com/nba/player/_/id/3937101/deyonta-davis,PF,23
+364,3979,Toney Douglas,Florida State,6-2,195,http://www.espn.com/nba/player/_/id/3979/toney-douglas,PG,16
+365,2579321,James Ennis,Long Beach State,6-7,210,http://www.espn.com/nba/player/_/id/2579321/james-ennis,SF,8
+366,3206,Marc Gasol, ,7-1,255,http://www.espn.com/nba/player/_/id/3206/marc-gasol,C,33
+367,2327577,JaMychal Green,Alabama,6-9,227,http://www.espn.com/nba/player/_/id/2327577/jamychal-green,PF,0
+368,3064511,Andrew Harrison,Kentucky,6-6,213,http://www.espn.com/nba/player/_/id/3064511/andrew-harrison,PG,5
+369,3064517,Jarell Martin,LSU,6-10,239,http://www.espn.com/nba/player/_/id/3064517/jarell-martin,PF,1
+370,6466,Chandler Parsons,Florida,6-10,230,http://www.espn.com/nba/player/_/id/6466/chandler-parsons,SF,25
+371,1017,Zach Randolph,Michigan State,6-9,260,http://www.espn.com/nba/player/_/id/1017/zach-randolph,PF,50
+372,3078286,Troy Williams,Indiana,6-7,210,http://www.espn.com/nba/player/_/id/3078286/troy-williams,SF,10
+373,3242,Brandan Wright,North Carolina,6-10,210,http://www.espn.com/nba/player/_/id/3242/brandan-wright,PF,34
+374,3410,Alexis Ajinca, ,7-2,248,http://www.espn.com/nba/player/_/id/3410/alexis-ajinca,C,42
+375,3414,Omer Asik, ,7-0,255,http://www.espn.com/nba/player/_/id/3414/omer-asik,C,3
+376,3974,Dante Cunningham,Villanova,6-8,230,http://www.espn.com/nba/player/_/id/3974/dante-cunningham,PF,33
+377,6583,Anthony Davis,Kentucky,6-11,253,http://www.espn.com/nba/player/_/id/6583/anthony-davis,PF,23
+378,3919335,Cheick Diallo,Kansas,6-9,220,http://www.espn.com/nba/player/_/id/3919335/cheick-diallo,PF,13
+379,3983,Tyreke Evans,Memphis,6-6,220,http://www.espn.com/nba/player/_/id/3983/tyreke-evans,SG,1
+380,2488945,Tim Frazier,Penn State,6-1,170,http://www.espn.com/nba/player/_/id/2488945/tim-frazier,PG,2
+381,2530572,Langston Galloway,Saint Joseph's,6-2,200,http://www.espn.com/nba/player/_/id/2530572/langston-galloway,SG,10
+382,2990984,Buddy Hield,Oklahoma,6-4,214,http://www.espn.com/nba/player/_/id/2990984/buddy-hield,SG,24
+383,2488958,Solomon Hill,Arizona,6-7,225,http://www.espn.com/nba/player/_/id/2488958/solomon-hill,SF,44
+384,3995,Jrue Holiday,UCLA,6-4,205,http://www.espn.com/nba/player/_/id/3995/jrue-holiday,PG,11
+385,6597,Terrence Jones,Kentucky,6-9,255,http://www.espn.com/nba/player/_/id/6597/terrence-jones,PF,9
+386,6460,E'Twaun Moore,Purdue,6-4,191,http://www.espn.com/nba/player/_/id/6460/e'twaun-moore,SG,55
+387,6464,Donatas Motiejunas, ,7-0,222,http://www.espn.com/nba/player/_/id/6464/donatas-motiejunas,PF,12
+388,4253,Quincy Pondexter,Washington,6-7,225,http://www.espn.com/nba/player/_/id/4253/quincy-pondexter,SG,20
+389,2983,LaMarcus Aldridge,Texas,6-11,260,http://www.espn.com/nba/player/_/id/2983/lamarcus-aldridge,PF,12
+390,2993874,Kyle Anderson,UCLA,6-9,230,http://www.espn.com/nba/player/_/id/2993874/kyle-anderson,SG,1
+391,3247,Joel Anthony,UNLV,6-9,245,http://www.espn.com/nba/player/_/id/3247/joel-anthony,C,30
+392,6426,Davis Bertans, ,6-10,210,http://www.espn.com/nba/player/_/id/6426/davis-bertans,SF,42
+393,2580913,Dewayne Dedmon,USC,7-0,245,http://www.espn.com/nba/player/_/id/2580913/dewayne-dedmon,C,3
+394,2994526,Bryn Forbes,Michigan State,6-3,190,http://www.espn.com/nba/player/_/id/2994526/bryn-forbes,SG,11
+395,996,Pau Gasol, ,7-0,250,http://www.espn.com/nba/player/_/id/996/pau-gasol,C,16
+396,272,Manu Ginobili, ,6-6,205,http://www.espn.com/nba/player/_/id/272/manu-ginobili,SG,20
+397,3988,Danny Green,North Carolina,6-6,215,http://www.espn.com/nba/player/_/id/3988/danny-green,SG,14
+398,2772,David Lee,Florida,6-9,245,http://www.espn.com/nba/player/_/id/2772/david-lee,PF,10
+399,6450,Kawhi Leonard,San Diego State,6-7,230,http://www.espn.com/nba/player/_/id/6450/kawhi-leonard,SF,2
+400,4004,Patty Mills,Saint Mary's,6-0,185,http://www.espn.com/nba/player/_/id/4004/patty-mills,PG,8
+401,3907497,Dejounte Murray,Washington,6-5,170,http://www.espn.com/nba/player/_/id/3907497/dejounte-murray,PG,5
+402,1015,Tony Parker, ,6-2,185,http://www.espn.com/nba/player/_/id/1015/tony-parker,PG,9
+403,2579466,Jonathon Simmons,Houston,6-6,195,http://www.espn.com/nba/player/_/id/2579466/jonathon-simmons,SG,17
+404,6637,Kent Bazemore,Old Dominion,6-5,201,http://www.espn.com/nba/player/_/id/6637/kent-bazemore,SF,24
+405,3062667,DeAndre Bembry,Saint Joseph's,6-6,210,http://www.espn.com/nba/player/_/id/3062667/deandre-bembry,SF,95
+406,2282205,Malcolm Delaney,Virginia Tech,6-3,190,http://www.espn.com/nba/player/_/id/2282205/malcolm-delaney,PG,5
+407,1708,Mike Dunleavy,Duke,6-9,230,http://www.espn.com/nba/player/_/id/1708/mike-dunleavy,SG,34
+408,2528210,Tim Hardaway Jr.,Michigan,6-6,205,http://www.espn.com/nba/player/_/id/2528210/tim-hardaway-jr.,SG,10
+409,2384,Dwight Howard, ,6-11,265,http://www.espn.com/nba/player/_/id/2384/dwight-howard,C,8
+410,2433,Kris Humphries,Minnesota,6-9,235,http://www.espn.com/nba/player/_/id/2433/kris-humphries,PF,43
+411,3015,Paul Millsap,Louisiana Tech,6-8,246,http://www.espn.com/nba/player/_/id/3015/paul-millsap,PF,4
+412,2490089,Mike Muscala,Bucknell,6-11,240,http://www.espn.com/nba/player/_/id/2490089/mike-muscala,PF,31
+413,4300,Gary Neal,Towson,6-4,210,http://www.espn.com/nba/player/_/id/4300/gary-neal,PG,14
+414,2488721,Lamar Patterson,Pittsburgh,6-5,225,http://www.espn.com/nba/player/_/id/2488721/lamar-patterson,SG,13
+415,2990962,Taurean Prince,Baylor,6-8,220,http://www.espn.com/nba/player/_/id/2990962/taurean-prince,SF,12
+416,3032979,Dennis Schroder, ,6-1,172,http://www.espn.com/nba/player/_/id/3032979/dennis-schroder,PG,17
+417,6622,Mike Scott,Virginia,6-8,237,http://www.espn.com/nba/player/_/id/6622/mike-scott,PF,32
+418,3028,Thabo Sefolosha, ,6-7,220,http://www.espn.com/nba/player/_/id/3028/thabo-sefolosha,SF,25
+419,3233,Tiago Splitter, ,6-11,245,http://www.espn.com/nba/player/_/id/3233/tiago-splitter,C,11
+420,3416,Nicolas Batum, ,6-8,200,http://www.espn.com/nba/player/_/id/3416/nicolas-batum,SG,5
+421,3190,Marco Belinelli, ,6-5,210,http://www.espn.com/nba/player/_/id/3190/marco-belinelli,SG,21
+422,2595231,Treveon Graham,Virginia Commonwealth,6-6,226,http://www.espn.com/nba/player/_/id/2595231/treveon-graham,SG,12
+423,2579294,Frank Kaminsky III,Wisconsin,7-0,240,http://www.espn.com/nba/player/_/id/2579294/frank-kaminsky-iii,C,44
+424,6601,Michael Kidd-Gilchrist,Kentucky,6-7,232,http://www.espn.com/nba/player/_/id/6601/michael-kidd-gilchrist,SF,14
+425,6603,Jeremy Lamb,Connecticut,6-5,185,http://www.espn.com/nba/player/_/id/6603/jeremy-lamb,SG,3
+426,2528447,Ray McCallum,Detroit,6-3,190,http://www.espn.com/nba/player/_/id/2528447/ray-mccallum,PG,30
+427,6616,Miles Plumlee,Duke,6-11,249,http://www.espn.com/nba/player/_/id/6616/miles-plumlee,C,18
+428,6641,Brian Roberts,Dayton,6-1,173,http://www.espn.com/nba/player/_/id/6641/brian-roberts,PG,22
+429,3231,Ramon Sessions,Nevada,6-3,190,http://www.espn.com/nba/player/_/id/3231/ramon-sessions,PG,7
+430,2982337,Mike Tobey,Virginia,7-0,260,http://www.espn.com/nba/player/_/id/2982337/mike-tobey,C,10
+431,6479,Kemba Walker,Connecticut,6-1,184,http://www.espn.com/nba/player/_/id/6479/kemba-walker,PG,15
+432,2797,Marvin Williams,North Carolina,6-9,237,http://www.espn.com/nba/player/_/id/2797/marvin-williams,PF,2
+433,3058254,Christian Wood,UNLV,6-11,220,http://www.espn.com/nba/player/_/id/3058254/christian-wood,PF,35
+434,2579258,Cody Zeller,Indiana,7-0,240,http://www.espn.com/nba/player/_/id/2579258/cody-zeller,C,40
+435,4250,Luke Babbitt,Nevada,6-9,225,http://www.espn.com/nba/player/_/id/4250/luke-babbitt,SF,5
+436,1977,Chris Bosh,Georgia Tech,6-11,235,http://www.espn.com/nba/player/_/id/1977/chris-bosh,PF,1
+437,3423,Goran Dragic, ,6-3,190,http://www.espn.com/nba/player/_/id/3423/goran-dragic,PG,7
+438,3981,Wayne Ellington,North Carolina,6-4,200,http://www.espn.com/nba/player/_/id/3981/wayne-ellington,SG,2
+439,2184,Udonis Haslem,Florida,6-8,235,http://www.espn.com/nba/player/_/id/2184/udonis-haslem,PF,40
+440,3999,James Johnson,Wake Forest,6-9,250,http://www.espn.com/nba/player/_/id/3999/james-johnson,PF,16
+441,2530276,Tyler Johnson,Fresno State,6-4,186,http://www.espn.com/nba/player/_/id/2530276/tyler-johnson,SG,8
+442,2488826,Rodney McGruder,Kansas State,6-4,205,http://www.espn.com/nba/player/_/id/2488826/rodney-mcgruder,SG,17
+443,3220,Josh McRoberts,Duke,6-10,240,http://www.espn.com/nba/player/_/id/3220/josh-mcroberts,PF,4
+444,2326015,Willie Reed,Saint Louis,6-10,220,http://www.espn.com/nba/player/_/id/2326015/willie-reed,PF,35
+445,2581190,Josh Richardson,Tennessee,6-6,200,http://www.espn.com/nba/player/_/id/2581190/josh-richardson,SG,0
+446,6628,Dion Waiters,Syracuse,6-4,220,http://www.espn.com/nba/player/_/id/6628/dion-waiters,SG,11
+447,2528473,Okaro White,Florida State,6-8,204,http://www.espn.com/nba/player/_/id/2528473/okaro-white,PF,15
+448,4262,Hassan Whiteside,Marshall,7-0,265,http://www.espn.com/nba/player/_/id/4262/hassan-whiteside,C,21
+449,6480,Derrick Williams,Arizona,6-8,240,http://www.espn.com/nba/player/_/id/6480/derrick-williams,PF,22
+450,3135047,Justise Winslow,Duke,6-7,225,http://www.espn.com/nba/player/_/id/3135047/justise-winslow,SF,20
+451,3415,D.J. Augustin,Texas,6-0,183,http://www.espn.com/nba/player/_/id/3415/d.j.-augustin,PG,14
+452,6427,Bismack Biyombo, ,6-9,255,http://www.espn.com/nba/player/_/id/6427/bismack-biyombo,C,11
+453,6588,Evan Fournier, ,6-7,205,http://www.espn.com/nba/player/_/id/6588/evan-fournier,SG,10
+454,3064290,Aaron Gordon,Arizona,6-9,220,http://www.espn.com/nba/player/_/id/3064290/aaron-gordon,PF,00
+455,3209,Jeff Green,Georgetown,6-9,235,http://www.espn.com/nba/player/_/id/3209/jeff-green,SF,34
+456,2995706,Mario Hezonja, ,6-8,218,http://www.espn.com/nba/player/_/id/2995706/mario-hezonja,SG,8
+457,3439,Serge Ibaka, ,6-10,235,http://www.espn.com/nba/player/_/id/3439/serge-ibaka,PF,7
+458,4003,Jodie Meeks,Kentucky,6-4,210,http://www.espn.com/nba/player/_/id/4003/jodie-meeks,SG,20
+459,2583639,Elfrid Payton,Louisiana-Lafayette,6-4,185,http://www.espn.com/nba/player/_/id/2583639/elfrid-payton,PG,4
+460,2309097,Damjan Rudez, ,6-10,228,http://www.espn.com/nba/player/_/id/2309097/damjan-rudez,SF,3
+461,6478,Nikola Vucevic,USC,7-0,260,http://www.espn.com/nba/player/_/id/6478/nikola-vucevic,C,9
+462,3277,C.J. Watson,Tennessee,6-2,175,http://www.espn.com/nba/player/_/id/3277/c.j.-watson,PG,32
+463,2488999,CJ Wilcox,Washington,6-5,195,http://www.espn.com/nba/player/_/id/2488999/cj-wilcox,SG,23
+464,3936102,Stephen Zimmerman,UNLV,7-0,240,http://www.espn.com/nba/player/_/id/3936102/stephen-zimmerman,C,33
+465,6580,Bradley Beal,Florida,6-5,207,http://www.espn.com/nba/player/_/id/6580/bradley-beal,SG,3
+466,2579260,Trey Burke,Michigan,6-1,191,http://www.espn.com/nba/player/_/id/2579260/trey-burke,PG,33
+467,2758,Marcin Gortat, ,6-11,240,http://www.espn.com/nba/player/_/id/2758/marcin-gortat,C,13
+468,2991155,Danuel House Jr.,Texas A&M,6-7,215,http://www.espn.com/nba/player/_/id/2991155/danuel-house-jr.,PF,4
+469,2774,Ian Mahinmi, ,6-11,262,http://www.espn.com/nba/player/_/id/2774/ian-mahinmi,C,28
+470,2594885,Sheldon McClellan,Miami (FL),6-6,200,http://www.espn.com/nba/player/_/id/2594885/sheldon-mcclellan,SG,9
+471,6461,Markieff Morris,Kansas,6-10,245,http://www.espn.com/nba/player/_/id/6461/markieff-morris,PF,5
+472,6614,Andrew Nicholson,St. Bonaventure,6-9,250,http://www.espn.com/nba/player/_/id/6614/andrew-nicholson,PF,44
+473,2991050,Daniel Ochefu,Villanova,6-11,245,http://www.espn.com/nba/player/_/id/2991050/daniel-ochefu,PF,32
+474,3133603,Kelly Oubre Jr.,Kansas,6-7,205,http://www.espn.com/nba/player/_/id/3133603/kelly-oubre-jr.,SF,12
+475,2594922,Otto Porter Jr.,Georgetown,6-8,198,http://www.espn.com/nba/player/_/id/2594922/otto-porter-jr.,SF,22
+476,6621,Tomas Satoransky, ,6-7,210,http://www.espn.com/nba/player/_/id/6621/tomas-satoransky,SG,31
+477,3232,Jason Smith,Colorado State,7-0,240,http://www.espn.com/nba/player/_/id/3232/jason-smith,PF,14
+478,4017,Marcus Thornton,LSU,6-4,205,http://www.espn.com/nba/player/_/id/4017/marcus-thornton,SG,15
+479,4237,John Wall,Kentucky,6-4,210,http://www.espn.com/nba/player/_/id/4237/john-wall,PG,2
+480,3413,Darrell Arthur,Kansas,6-9,235,http://www.espn.com/nba/player/_/id/3413/darrell-arthur,PF,00
+481,6579,Will Barton,Memphis,6-6,175,http://www.espn.com/nba/player/_/id/6579/will-barton,SG,5
+482,3907822,Malik Beasley,Florida State,6-5,196,http://www.espn.com/nba/player/_/id/3907822/malik-beasley,SG,25
+483,3194,Wilson Chandler,DePaul,6-8,225,http://www.espn.com/nba/player/_/id/3194/wilson-chandler,SF,21
+484,6433,Kenneth Faried,Morehead State,6-8,228,http://www.espn.com/nba/player/_/id/6433/kenneth-faried,PF,35
+485,3428,Danilo Gallinari, ,6-10,225,http://www.espn.com/nba/player/_/id/3428/danilo-gallinari,SF,8
+486,2999547,Gary Harris,Michigan State,6-4,210,http://www.espn.com/nba/player/_/id/2999547/gary-harris,SG,14
+487,4017839,Juancho Hernangomez, ,6-9,230,http://www.espn.com/nba/player/_/id/4017839/juancho-hernangomez,PF,41
+488,3112335,Nikola Jokic, ,6-10,250,http://www.espn.com/nba/player/_/id/3112335/nikola-jokic,PF,15
+489,558,Mike Miller,Florida,6-8,218,http://www.espn.com/nba/player/_/id/558/mike-miller,SG,3
+490,3892818,Emmanuel Mudiay, ,6-5,200,http://www.espn.com/nba/player/_/id/3892818/emmanuel-mudiay,PG,0
+491,3936299,Jamal Murray,Kentucky,6-4,207,http://www.espn.com/nba/player/_/id/3936299/jamal-murray,SG,27
+492,2439,Jameer Nelson,Saint Joseph's,6-0,190,http://www.espn.com/nba/player/_/id/2439/jameer-nelson,PG,1
+493,3102530,Jusuf Nurkic, ,7-0,280,http://www.espn.com/nba/player/_/id/3102530/jusuf-nurkic,C,23
+494,2581084,Johnny O'Bryant III,LSU,6-9,257,http://www.espn.com/nba/player/_/id/2581084/johnny-o'bryant-iii,PF,9
+495,4267,Cole Aldrich,Kansas,6-11,250,http://www.espn.com/nba/player/_/id/4267/cole-aldrich,C,45
+496,4269,Nemanja Bjelica, ,6-10,225,http://www.espn.com/nba/player/_/id/4269/nemanja-bjelica,PF,88
+497,2534781,Gorgui Dieng,Louisville,6-11,240,http://www.espn.com/nba/player/_/id/2534781/gorgui-dieng,PF,5
+498,2991139,Kris Dunn,Providence,6-4,205,http://www.espn.com/nba/player/_/id/2991139/kris-dunn,PG,3
+499,3994,Jordan Hill,Arizona,6-10,240,http://www.espn.com/nba/player/_/id/3994/jordan-hill,PF,27
+500,3135046,Tyus Jones,Duke,6-2,195,http://www.espn.com/nba/player/_/id/3135046/tyus-jones,PG,1
+501,3064440,Zach LaVine,UCLA,6-5,185,http://www.espn.com/nba/player/_/id/3064440/zach-lavine,PG,8
+502,2993875,Shabazz Muhammad,UCLA,6-6,223,http://www.espn.com/nba/player/_/id/2993875/shabazz-muhammad,SF,15
+503,2531100,Adreian Payne,Michigan State,6-10,237,http://www.espn.com/nba/player/_/id/2531100/adreian-payne,PF,33
+504,3453,Nikola Pekovic, ,6-11,307,http://www.espn.com/nba/player/_/id/3453/nikola-pekovic,C,14
+505,4011,Ricky Rubio, ,6-4,190,http://www.espn.com/nba/player/_/id/4011/ricky-rubio,PG,9
+506,3457,Brandon Rush,Kansas,6-6,225,http://www.espn.com/nba/player/_/id/3457/brandon-rush,SG,4
+507,3136195,Karl-Anthony Towns,Kentucky,7-0,244,http://www.espn.com/nba/player/_/id/3136195/karl-anthony-towns,C,32
+508,3059319,Andrew Wiggins,Kansas,6-8,199,http://www.espn.com/nba/player/_/id/3059319/andrew-wiggins,SF,22
+509,2995702,Alex Abrines, ,6-6,190,http://www.espn.com/nba/player/_/id/2995702/alex-abrines,SG,8
+510,2991235,Steven Adams,Pittsburgh,7-0,255,http://www.espn.com/nba/player/_/id/2991235/steven-adams,C,12
+511,2983526,Semaj Christon,Xavier,6-3,190,http://www.espn.com/nba/player/_/id/2983526/semaj-christon,PG,6
+512,1978,Nick Collison,Kansas,6-10,255,http://www.espn.com/nba/player/_/id/1978/nick-collison,PF,4
+513,2991070,Jerami Grant,Syracuse,6-9,210,http://www.espn.com/nba/player/_/id/2991070/jerami-grant,SF,9
+514,2531364,Josh Huestis,Stanford,6-7,230,http://www.espn.com/nba/player/_/id/2531364/josh-huestis,SF,34
+515,6447,Enes Kanter,Kentucky,6-11,245,http://www.espn.com/nba/player/_/id/6447/enes-kanter,C,11
+516,2959753,Joffrey Lauvergne, ,6-11,220,http://www.espn.com/nba/player/_/id/2959753/joffrey-lauvergne,C,77
+517,3474,Anthony Morrow,Georgia Tech,6-5,210,http://www.espn.com/nba/player/_/id/3474/anthony-morrow,SG,2
+518,2527963,Victor Oladipo,Indiana,6-4,210,http://www.espn.com/nba/player/_/id/2527963/victor-oladipo,SG,5
+519,3064230,Cameron Payne,Murray State,6-3,185,http://www.espn.com/nba/player/_/id/3064230/cameron-payne,PG,22
+520,2530596,Andre Roberson,Colorado,6-7,210,http://www.espn.com/nba/player/_/id/2530596/andre-roberson,SF,21
+521,3155942,Domantas Sabonis,Gonzaga,6-11,240,http://www.espn.com/nba/player/_/id/3155942/domantas-sabonis,PF,3
+522,6469,Kyle Singler,Duke,6-8,228,http://www.espn.com/nba/player/_/id/6469/kyle-singler,SF,15
+523,3468,Russell Westbrook,UCLA,6-3,200,http://www.espn.com/nba/player/_/id/3468/russell-westbrook,PG,0
+524,4248,Al-Farouq Aminu,Wake Forest,6-9,220,http://www.espn.com/nba/player/_/id/4248/al-farouq-aminu,SF,8
+525,2578239,Pat Connaughton,Notre Dame,6-5,210,http://www.espn.com/nba/player/_/id/2578239/pat-connaughton,SG,5
+526,2531210,Allen Crabbe,California,6-6,215,http://www.espn.com/nba/player/_/id/2531210/allen-crabbe,SG,23
+527,4259,Ed Davis,North Carolina,6-10,245,http://www.espn.com/nba/player/_/id/4259/ed-davis,PF,17
+528,6587,Festus Ezeli,Vanderbilt,6-11,265,http://www.espn.com/nba/player/_/id/6587/festus-ezeli,C,31
+529,6591,Maurice Harkless,St. John's,6-9,220,http://www.espn.com/nba/player/_/id/6591/maurice-harkless,SF,4
+530,2982268,Jake Layman,Maryland,6-9,210,http://www.espn.com/nba/player/_/id/2982268/jake-layman,SF,10
+531,6605,Meyers Leonard,Illinois,7-1,255,http://www.espn.com/nba/player/_/id/6605/meyers-leonard,PF,11
+532,6606,Damian Lillard,Weber State,6-3,195,http://www.espn.com/nba/player/_/id/6606/damian-lillard,PG,0
+533,2490149,C.J. McCollum,Lehigh,6-3,190,http://www.espn.com/nba/player/_/id/2490149/c.j.-mccollum,SG,3
+534,2530780,Shabazz Napier,Connecticut,6-1,175,http://www.espn.com/nba/player/_/id/2530780/shabazz-napier,PG,6
+535,2488653,Mason Plumlee,Duke,6-11,255,http://www.espn.com/nba/player/_/id/2488653/mason-plumlee,C,24
+536,4064730,Tim Quarterman,LSU,6-6,190,http://www.espn.com/nba/player/_/id/4064730/tim-quarterman,SG,55
+537,4239,Evan Turner,Ohio State,6-7,220,http://www.espn.com/nba/player/_/id/4239/evan-turner,SG,1
+538,3078284,Noah Vonleh,Indiana,6-9,245,http://www.espn.com/nba/player/_/id/3078284/noah-vonleh,PF,21
+539,2983551,Joel Bolomboy,Weber State,6-9,235,http://www.espn.com/nba/player/_/id/2983551/joel-bolomboy,PF,21
+540,6429,Alec Burks,Colorado,6-6,214,http://www.espn.com/nba/player/_/id/6429/alec-burks,SG,10
+541,2167,Boris Diaw, ,6-8,250,http://www.espn.com/nba/player/_/id/2167/boris-diaw,C,33
+542,3102528,Dante Exum, ,6-6,190,http://www.espn.com/nba/player/_/id/3102528/dante-exum,PG,11
+543,4257,Derrick Favors,Georgia Tech,6-10,265,http://www.espn.com/nba/player/_/id/4257/derrick-favors,PF,15
+544,3032976,Rudy Gobert, ,7-1,245,http://www.espn.com/nba/player/_/id/3032976/rudy-gobert,C,27
+545,4249,Gordon Hayward,Butler,6-8,226,http://www.espn.com/nba/player/_/id/4249/gordon-hayward,SF,20
+546,3438,George Hill,IUPUI,6-3,188,http://www.espn.com/nba/player/_/id/3438/george-hill,PG,3
+547,2581177,Rodney Hood,Duke,6-8,206,http://www.espn.com/nba/player/_/id/2581177/rodney-hood,SG,5
+548,2968436,Joe Ingles, ,6-8,226,http://www.espn.com/nba/player/_/id/2968436/joe-ingles,SF,2
+549,1007,Joe Johnson,Arkansas,6-7,240,http://www.espn.com/nba/player/_/id/1007/joe-johnson,SF,6
+550,3136196,Trey Lyles,Kentucky,6-10,234,http://www.espn.com/nba/player/_/id/3136196/trey-lyles,PF,41
+551,6454,Shelvin Mack,Butler,6-3,203,http://www.espn.com/nba/player/_/id/6454/shelvin-mack,PG,8
+552,2968361,Raul Neto, ,6-1,179,http://www.espn.com/nba/player/_/id/2968361/raul-neto,PG,25
+553,2333797,Jeff Withey,Kansas,7-0,231,http://www.espn.com/nba/player/_/id/2333797/jeff-withey,C,24

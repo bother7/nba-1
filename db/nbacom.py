@@ -1,9 +1,12 @@
 from __future__ import print_function
 
 import logging
+import psycopg2
+
 
 from nba.db.pgsql import NBAPostgres
 from nba.pipelines.nbacom import *
+
 
 class NBAComPg(NBAPostgres):
     '''
@@ -29,7 +32,8 @@ class NBAComPg(NBAPostgres):
         else:
             self.table_names = {'pgl': 'player_gamelogs', 'tgl': 'team_gamelogs',
                                 'pl': 'players', 'ps': 'playerstats_daily', 'ts': 'teamstats_daily',
-                                'tod': 'team_opponent_dashboard'}
+                                'tod': 'team_opponent_dashboard', 'pbs': 'player_boxscores_combined',
+                                'tbs': 'team_boxscores_combined'}
 
 
     def missing_pgl(self):
@@ -67,24 +71,30 @@ class NBAComPg(NBAPostgres):
         return self.insert_dicts(games, table_name)
 
 
-    def insert_player_boxscores(self, player_boxscores, player_table_name):
+    def insert_player_boxscores(self, bs):
+        '''
+        Takes list of player boxscores, reformats and inserts into player boxes table
 
-        omit = ['COMMENT', 'FG3_PCT', 'FG_PCT', 'FT_PCT', 'TEAM_CITY', 'TEAM_NAME']
-        cleaned_players = []
+        Args:
+            bs: list of player boxes
 
-        for player in player_boxscores:
-            clean_player = {k.lower(): v for k, v in player.iteritems() if k not in omit}
-            if clean_player.has_key('to'):
-                clean_player['tov'] = clean_player['to']
-                clean_player.pop('to', None)
-            clean_player.pop('team_abbreviation', None)
-            cleaned_players.append(clean_player)
-
-        if cleaned_players:
-            self.insert_dicts(cleaned_players, player_table_name)
-            return cleaned_players
-        else:
-            logging.error('no boxscores to insert')
+        Returns:
+            list of player boxes
+        '''
+        boxes = player_boxscores_table(bs)
+        for box in boxes:
+            with self.conn.cursor() as curs:
+                placeholders = ', '.join(['%s'] * len(box))
+                columns = ', '.join(box.keys())
+                sql = 'INSERT INTO %s ( %s ) VALUES ( %s ) ON CONFLICT DO NOTHING;' % \
+                      (self.table_names['pbs'], columns, placeholders)
+                try:
+                    curs.execute(sql, box.values())
+                    self.conn.commit()
+                except psycopg2.Error as e:
+                    logging.exception(e)
+                    self.conn.rollback()
+        return boxes
 
 
     def insert_player_gamelogs(self, gl):
@@ -97,6 +107,27 @@ class NBAComPg(NBAPostgres):
         toins = player_gamelogs_table(gl)
         if toins:
             self.insert_dicts(toins, self.table_names.get('pgl'))
+
+
+    def insert_team_boxscores(self, bs):
+        '''
+        Takes list of team boxscores, reformats and inserts into team boxes table
+
+        Args:
+            bs: list of team boxscores
+        '''
+        with self.conn.cursor() as curs:
+            for box in team_boxscores_table(bs):
+                placeholders = ', '.join(['%s'] * len(box))
+                columns = ', '.join(box.keys())
+                sql = 'INSERT INTO %s ( %s ) VALUES ( %s ) ON CONFLICT DO NOTHING;' % \
+                      (self.table_names['tbs'], columns, placeholders)
+                try:
+                    curs.execute(sql, box.values())
+                    self.conn.commit()
+                except Exception as e:
+                    logging.exception(e)
+                    self.conn.rollback()
 
 
     def insert_players(self, players):
@@ -177,6 +208,17 @@ class NBAComPg(NBAPostgres):
         to_ins = teamstats_table(stats, as_of)
         if to_ins:
             self.insert_dicts(to_ins, self.table_names.get('ts'))
+
+
+    def refresh_materialized(self):
+        '''
+        Calls postgres function to refresh all materialized views
+        '''
+        refreshq = """SELECT RefreshAllMaterializedViews('*');"""
+        try:
+            self.execute(refreshq)
+        except psycopg2.Error as e:
+            logging.exception('could not refresh materialized views: {}'.format(e))
 
 
     def update_players(self, players, table_name=None):

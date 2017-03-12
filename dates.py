@@ -120,7 +120,7 @@ def strtodate(d):
     return datetime.datetime.strptime(d, format_type(d))
 
 
-def today(fmt=None):
+def today(fmt='nba'):
     '''
     Datestring for today's date
 
@@ -130,12 +130,13 @@ def today(fmt=None):
     Returns:
         datestr
     '''
+    fmt = site_format(fmt)
     if not fmt:
-        fmt = site_format('nba')
+        raise ValueError('invalid date format')
     return datetime.datetime.strftime(datetime.datetime.today(), fmt)
 
 
-def yesterday(fmt=None):
+def yesterday(fmt='nba'):
     '''
     Datestring for yesterday's date
 
@@ -145,6 +146,7 @@ def yesterday(fmt=None):
     Returns:
         datestr
     '''
+    fmt = site_format(fmt)
     if not fmt:
-        fmt = site_format('nba')
+        raise ValueError('invalid date format')
     return datetime.datetime.strftime(datetime.datetime.today() - datetime.timedelta(1), fmt)

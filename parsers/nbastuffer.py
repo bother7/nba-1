@@ -406,8 +406,8 @@ class NBAStufferParser(object):
         # team1_odds, team2_odds are in -8 195 format (depending on whether total or spread
         # type will be "total" or "spread"
         team1_odds, team2_odds = self._get_closing(team1, team2, rowidx)
-        logging.info('team1 odds: {}'.format(team1_odds))
-        logging.info('team2 odds: {}'.format(team2_odds))
+        logging.debug('team1 odds: {}'.format(team1_odds))
+        logging.debug('team2 odds: {}'.format(team2_odds))
         team1_type = self._is_total_or_spread(team1_odds, team2_odds)
 
         game_ou = None

@@ -1,17 +1,16 @@
 # pipelines.py
 # functions to transform nbacom list of dict
 # for insertion into database, use in optimizer, etc.
-
-
 from __future__ import print_function
 from future.utils import iteritems
 import logging
 
 from nba.dates import convert_format, datetostr, strtodate
 from nba.dfs import dk_points, fd_points
-from nba.utility import isfloat, isint
+
 
 logging.getLogger(__name__).addHandler(logging.NullHandler())
+
 
 
 def gamedetail(gds):
@@ -174,7 +173,7 @@ def player_boxscores_table(pbs):
     omit = ['COMMENT', 'FG3_PCT', 'FG_PCT', 'FT_PCT', 'TEAM_CITY', 'TEAM_NAME']
     cleaned_players = []
     for player in pbs:
-        clean_player = {k.lower(): v for k, v in player.iteritems() if k not in omit}
+        clean_player = {k.lower(): v for k, v in player.items() if k not in omit}
         if clean_player.has_key('to'):
             clean_player['tov'] = clean_player['to']
             clean_player.pop('to', None)
@@ -183,15 +182,81 @@ def player_boxscores_table(pbs):
     return cleaned_players
 
 
+def team_boxscores_table(tbs):
+    '''
+    Cleans merged list of team boxscores
+
+    Arguments:
+        tbs: list of team boxscore dictionaries
+
+    Returns:
+        list of team boxscore dictionaries
+    '''
+    omit = ['COMMENT', 'FG3_PCT', 'FG_PCT', 'FT_PCT', 'TEAM_CITY', 'TEAM_NAME']
+    cl = []
+    for box in tbs:
+        clean = {k.lower(): v for k, v in box.items() if k not in omit}
+        if clean.get('to', None):
+            clean['tov'] = clean['to']
+            clean.pop('to', None)
+        clean.pop('team_abbreviation', None)
+        clean.pop('min', None)
+        cl.append(clean)
+    return cl
+
+
+def team_gamelogs_table(tgl):
+    '''
+    Cleans merged list of team gamelogs base + advanced
+
+    Arguments:
+        tgl: list of dictionaries
+
+    Returns:
+        cleaned_items(list)
+    '''
+    omit = ['matchup', 'season_id', 'team_name', 'video_available', 'wl']
+    cleaned_items = []
+    for gl in tgl:
+        cleaned_item = {k.lower(): v for k,v in gl.items() if k.lower() not in omit}
+        if cleaned_item.get('team_abbreviation'):
+            cleaned_item['team_code'] = cleaned_item['team_abbreviation']
+            cleaned_item.pop('team_abbreviation', None)
+        if cleaned_item.get('min'):
+            cleaned_item['minutes'] = cleaned_item['min']
+            cleaned_item.pop('min', None)
+        cleaned_items.append(cleaned_item)
+    return cleaned_items
+
+
+def team_opponent_dashboards_table(dash, as_of):
+    '''
+    Args:
+        dash:
+        as_of:
+
+    Returns:
+
+    '''
+    topp = []
+    omit = ['CFID', 'CFPARAMS', 'COMMENT', 'TEAM_NAME']
+    for team in dash:
+        fixed_team = {k.lower(): v for k, v in team.items() if k not in omit}
+        fixed_team.pop('team_name', None)
+        fixed_team['as_of'] = convert_format(as_of, 'nba')
+        topp.append(fixed_team)
+    return topp
+
+
 def player_gamelogs_table(gl):
     '''
     Prepares players for insertion into nbadb players table
 
     Args:
-        players: list of dict
+        gl: list of dict
+
     Returns:
         List of dict formatted for insertion into database
-
     '''
     fixed = []
     omit = ['GAME_DATE', 'VIDEO_AVAILABLE', 'TEAM_NAME', 'MATCHUP', 'WL', 'SEASON_ID']
@@ -238,49 +303,6 @@ def playerstats_table(ps, as_of):
         clean_player['as_of'] = as_of
         cleaned_players.append(clean_player)
     return cleaned_players
-
-
-def team_gamelogs_table(tgl):
-    '''
-    Cleans merged list of team gamelogs base + advanced
-
-    Arguments:
-        tgl: list of dictionaries
-
-    Returns:
-        cleaned_items(list)
-    '''
-    omit = ['matchup', 'season_id', 'team_name', 'video_available', 'wl']
-    cleaned_items = []
-    for gl in tgl:
-        cleaned_item = {k.lower(): v for k,v in gl.items() if k.lower() not in omit}
-        if cleaned_item.get('team_abbreviation'):
-            cleaned_item['team_code'] = cleaned_item['team_abbreviation']
-            cleaned_item.pop('team_abbreviation', None)
-        if cleaned_item.get('min'):
-            cleaned_item['minutes'] = cleaned_item['min']
-            cleaned_item.pop('min', None)
-        cleaned_items.append(cleaned_item)
-    return cleaned_items
-
-
-def team_opponent_dashboards_table(dash, as_of):
-    '''
-    Args:
-        dash:
-        as_of:
-
-    Returns:
-
-    '''
-    topp = []
-    omit = ['CFID', 'CFPARAMS', 'COMMENT', 'TEAM_NAME']
-    for team in dash:
-        fixed_team = {k.lower(): v for k, v in team.items() if k not in omit}
-        fixed_team.pop('team_name', None)
-        fixed_team['as_of'] = convert_format(as_of, 'nba')
-        topp.append(fixed_team)
-    return topp
 
 
 def teamstats_table(ts, as_of):

@@ -64,12 +64,13 @@ class BasketballScraper(object):
             self.delay = None
 
 
-    def get(self, url, payload=None):
+    def get(self, url, payload=None, encoding='utf-8'):
         '''
 
         Args:
             url:
             payload:
+            encoding:
 
         Returns:
 
@@ -82,23 +83,23 @@ class BasketballScraper(object):
         r.raise_for_status()
         if self.delay:
             time.sleep(self.delay)
-        return r.content
+        return r.content.decode(encoding)
 
 
     def get_json(self, url, payload=None):
         '''
-
+        Gets JSON resource and (default) parses into python data structure
         Args:
             url:
-            payload:
+            payload: query string parameters
 
         Returns:
-
+            parsed JSON or JSON string
         '''
         if payload:
             r = self.s.get(url, params={k:payload[k] for k in sorted(payload)})
         else:
-            r = self.s.get(url)
+            r = self.s.get(url, params=None)
         self.urls.append(r.url)
         r.raise_for_status()
         if self.delay:
