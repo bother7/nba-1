@@ -7,6 +7,7 @@ import logging
 
 from nba.dates import convert_format, datetostr, strtodate
 from nba.dfs import dk_points, fd_points
+from pydfs_lineup_optimizer import Player
 
 
 logging.getLogger(__name__).addHandler(logging.NullHandler())
@@ -41,6 +42,23 @@ def gamedetail(gds):
         linescores.append(h)
 
     return linescores
+
+
+def nba_to_pydfs(players):
+    '''
+    Takes results, make ready to create Player objects for pydfs_lineup_optimizer
+
+    Args:
+        players (list): day's worth of stats
+
+    Returns:
+        players (list): list of players, fixed for use in pydfs_lineup_optimizer
+    '''
+    return [Player(p['nbacom_player_id'], p['first_name'], p['last_name'],
+            p.get('dfs_position').split('/'),
+            p.get('team_code'),
+            float(p.get('salary', 100000)),
+            float(p.get('dk_points',0))) for p in players]
 
 
 def players_v2015_table(players):
@@ -259,7 +277,7 @@ def player_gamelogs_table(gl):
         List of dict formatted for insertion into database
     '''
     fixed = []
-    omit = ['GAME_DATE', 'VIDEO_AVAILABLE', 'TEAM_NAME', 'MATCHUP', 'WL', 'SEASON_ID']
+    omit = ['VIDEO_AVAILABLE', 'TEAM_NAME', 'MATCHUP', 'WL', 'SEASON_ID']
 
     for l in gl:
         cl = {k.lower().strip(): v for k, v in l.items() if k.upper() not in omit}

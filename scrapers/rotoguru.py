@@ -1,6 +1,7 @@
 from datetime import datetime
 import logging
 
+from nba.dates import *
 from nba.scrapers.scraper import BasketballScraper
 
 
@@ -23,9 +24,9 @@ class RotoGuruNBAScraper(BasketballScraper):
             cache_name:
         '''
         logging.getLogger(__name__).addHandler(logging.NullHandler())
-        # see http://stackoverflow.com/questions/8134444
         BasketballScraper.__init__(self, headers, cookies, cache_name)
         
+
     def data_day(self, day, extra_params=None):
         '''
         TODO: needs a better name
@@ -73,17 +74,18 @@ class RotoGuruNBAScraper(BasketballScraper):
 
         return content
 
-    def salaries_day(self, sday, site):
+
+    def salaries_day(self, sday, site, scsv='0'):
 
         # default
         content = None
 
         # need to use datetime object if pass string
         if isinstance(sday, basestring):
-            sday = datetime.strptime(sday, '%Y%m%d')
+            sday = strtodate(sday)
 
         # will add query string later
-        base_url = 'http://rotoguru1.com/cgi-bin/hyday.pl?'
+        url = 'http://rotoguru1.com/cgi-bin/hyday.pl?'
 
         # if caller does not pass params, these are what are used in query string
         params = {
@@ -91,15 +93,16 @@ class RotoGuruNBAScraper(BasketballScraper):
             'mon': sday.month,
             'day': sday.day,
             'year': sday.year,
-            'scsv': '1'
+            'scsv': scsv
         }
 
-        content = self.get(url=base_url, payload=params)
+        content = self.get(url=url, payload=params, encoding='ISO-8859-1')
 
         if not content:
             logging.error('salaries_day: could not get {0}'.format(url))
             
         return content
+
 
 if __name__ == "__main__":   
     pass

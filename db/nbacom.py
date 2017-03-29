@@ -5,6 +5,7 @@ import psycopg2
 
 
 from nba.db.pgsql import NBAPostgres
+from nba.db.queries import *
 from nba.pipelines.nbacom import *
 
 
@@ -34,28 +35,6 @@ class NBAComPg(NBAPostgres):
                                 'pl': 'players', 'ps': 'playerstats_daily', 'ts': 'teamstats_daily',
                                 'tod': 'team_opponent_dashboard', 'pbs': 'player_boxscores_combined',
                                 'tbs': 'team_boxscores_combined'}
-
-
-    def missing_pgl(self):
-        '''
-        Queries nbadb for game_ids of current-season games that don't appear in player_gamelogs
-
-        Returns:
-            List of game_ids(int)
-        '''
-        q = """SELECT * FROM missing_playergl"""
-        return self.select_list(q)
-
-
-    def missing_tgl(self):
-        '''
-        Queries nbadb for game_ids of current-season games that don't appear in team_gamelogs
-
-        Returns:
-            List of game_ids(int)
-        '''
-        q = """SELECT * FROM missing_teamgl"""
-        return self.select_list(q)
 
 
     def insert_games(self, games, table_name):
@@ -210,11 +189,31 @@ class NBAComPg(NBAPostgres):
             self.insert_dicts(to_ins, self.table_names.get('ts'))
 
 
+    def missing_pgl(self):
+        '''
+        Queries nbadb for game_ids of current-season games that don't appear in player_gamelogs
+
+        Returns:
+            List of game_ids(int)
+        '''
+        return self.select_list(missing_player_gamelogs())
+
+
+    def missing_tgl(self):
+        '''
+        Queries nbadb for game_ids of current-season games that don't appear in team_gamelogs
+
+        Returns:
+            List of game_ids(int)
+        '''
+        return self.select_list(missing_team_gamelogs())
+
+
     def refresh_materialized(self):
         '''
         Calls postgres function to refresh all materialized views
         '''
-        refreshq = """SELECT RefreshAllMaterializedViews('*');"""
+        refreshq = """SELECT RefreshAllMaterializedViews('*', true);"""
         try:
             self.execute(refreshq)
         except psycopg2.Error as e:

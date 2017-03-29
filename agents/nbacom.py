@@ -1,11 +1,13 @@
 import datetime as dt
 import logging
 
+from nba.db.queries import *
 from nba.parsers.nbacom import NBAComParser
 from nba.scrapers.nbacom import NBAComScraper
 from nba.seasons import season_start
-from nba.dates import convert_format, date_list, datetostr, yesterday
+from nba.dates import date_list, datetostr
 from nba.utility import merge
+
 
 class NBAComAgent(object):
     '''
@@ -19,6 +21,7 @@ class NBAComAgent(object):
             cookies: cookie jar
             db: NBAComPg instance
         '''
+        logging.getLogger(__name__).addHandler(logging.NullHandler())
         self.scraper = NBAComScraper(cache_name=cache_name, cookies=cookies)
         self.parser = NBAComParser()
         if db:
@@ -39,6 +42,7 @@ class NBAComAgent(object):
             a = NBAComAgent()
             playerboxes = a.combined_player_boxscores('0020161001')
         '''
+
         traditional_players, traditional_teams, traditional_starter_bench = self.parser.boxscore_traditional(self.scraper.boxscore_traditional(gid))
         adv_players, adv_team = self.parser.boxscore_advanced(self.scraper.boxscore_advanced(gid))
         misc_players, misc_team = self.parser.boxscore_misc(self.scraper.boxscore_misc(gid))
@@ -50,61 +54,6 @@ class NBAComAgent(object):
                                        {t['PLAYER_ID']: t for t in misc_players}, {t['PLAYER_ID']: t for t in scoring_players},
                                        {t['PLAYER_ID']: t for t in usage_players}])
         return players.values()
-
-
-    def player_boxscores_combined(self):
-        '''
-        Fetches player boxscores combined
-
-        Arguments:
-            season: str in YYYY-YY format (2015-16)
-
-        Returns:
-             players (list): player boxscores
-        '''
-        pboxes = []
-        q = "select '00' || game_id::text from missing_player_boxscores"
-        gids = self.db.select_list(q)
-        if not gids:
-            logging.error('no missing gameids found')
-            return None
-        logging.info('there are {} missing game boxscores'.format(len(gids)))
-        for gid in gids:
-            logging.info('getting {}'.format(gid))
-            box = self._combined_player_boxscores(gid)
-            if not box:
-                logging.error('no box for {}'.format(gid))
-                continue
-            if self.insert_db:
-                self.db.insert_player_boxscores(box)
-                pboxes.append(box)
-        return [item for sublist in pboxes for item in sublist]
-
-
-    def team_boxscores_combined(self):
-        '''
-        Fetches team boxscores combined
-
-        Returns:
-             tboxes: list of boxscores
-        '''
-        tboxes = []
-        q = "select '00' || game_id::text from missing_team_boxscores"
-        gids = self.db.select_list(q)
-        if not gids:
-            logging.error('no missing gameids found')
-            return None
-        logging.info('there are {} missing game boxscores'.format(len(gids)))
-        for gid in gids:
-            logging.info('getting {}'.format(gid))
-            box = self.combined_team_boxscores(gid)
-            if not box:
-                logging.error('no box for {}'.format(gid))
-                continue
-            if self.insert_db:
-                self.db.insert_team_boxscores(box)
-                tboxes.append(box)
-        return [item for sublist in tboxes for item in sublist]
 
 
     def combined_team_boxscores(self, gid):
@@ -129,14 +78,43 @@ class NBAComAgent(object):
         return list(teams.values())
 
 
+    def linescores(self):
+        '''
+        Updates gamesmeta table with game_information
+        '''
+        #q = """SELECT '00' || game_id, to_char(game_date, 'YYYYmmdd') FROM gamesmeta
+        #    WHERE season = (select max(season) from seasons) AND game_date < now()::date AND  q1 IS NULL
+        #    ORDER BY game_date DESC;"""
+        #q = """SELECT '00' || game_id as gid, to_char(game_date, 'YYYYmmdd') as gd FROM cs_games
+        #    WHERE game_date < (CURRENT_TIMESTAMP AT TIME ZONE 'CST')::date AND
+        #    game_id NOT IN (SELECT DISTINCT game_id FROM boxv2015)
+        #    ORDER BY game_date DESC;"""
+        q = """SELECT '00' || game_id as gid, to_char(game_date, 'YYYYmmdd') as gd FROM games
+            WHERE game_date < localdate() AND
+            season > 2015 AND game_id NOT IN (SELECT DISTINCT game_id FROM boxv2015)
+            ORDER BY game_date DESC;"""
+
+        for g in self.db.select_dict(q):
+            try:
+                content = self.scraper.boxscore_v2015(g['gid'], g['gd'])
+                v, h = self.parser.boxscore_v2015(content)
+                self.db.insert_dicts([v, h], 'boxv2015')
+                logging.info('finished {} - {}'.format(g['gd'], g['gid']))
+            except Exception as e:
+                logging.error('could not get {}'.format(g))
+                logging.exception(e)
+
+
     def new_players(self, season):
         '''
         Updates players table with missing players
 
         Arguments:
             season (str): in YYYY-YY format
+
         Returns:
             list of players to add to stats.players
+
         Examples:
             a = NBAComAgent(cache_name='newplayers', cookies=httplib.CookieJar(), db=NBAComPg(...))
             np = a.new_players(season='2015-16')
@@ -156,6 +134,62 @@ class NBAComAgent(object):
             return None
 
 
+    def player_boxscores_combined(self):
+        '''
+        Fetches player boxscores combined
+
+        Arguments:
+            season: str in YYYY-YY format (2015-16)
+
+        Returns:
+             players (list): player boxscores
+        '''
+        pboxes = []
+        gids = self.db.select_list(missing_player_boxscores())
+        if not gids:
+            logging.error('no missing gameids found')
+            return None
+        logging.info('there are {} missing game boxscores'.format(len(gids)))
+        for gid in gids:
+            logging.info('getting {}'.format(gid))
+            box = self._combined_player_boxscores(gid)
+            if not box:
+                logging.error('no box for {}'.format(gid))
+                continue
+            if self.insert_db:
+                self.db.insert_player_boxscores(box)
+                pboxes.append(box)
+        return [item for sublist in pboxes for item in sublist]
+
+
+    def player_boxscores_combined(self):
+        '''
+        Fetches player boxscores combined
+
+        Arguments:
+            season: str in YYYY-YY format (2015-16)
+
+        Returns:
+             players (list): player boxscores
+        '''
+        pboxes = []
+        gids = self.db.select_list(missing_player_boxscores())
+        if not gids:
+            logging.error('no missing gameids found')
+            return None
+        logging.info('there are {} missing game boxscores'.format(len(gids)))
+        for gid in gids:
+            logging.info('getting {}'.format(gid))
+            box = self._combined_player_boxscores(gid)
+            if not box:
+                logging.error('no box for {}'.format(gid))
+                continue
+            if self.insert_db:
+                self.db.insert_player_boxscores(box)
+                pboxes.append(box)
+        return [item for sublist in pboxes for item in sublist]
+
+
     def player_gamelogs(self, season, date_from=None, date_to=None):
         '''
         Fetches player_gamelogs and updates player_gamelogs table
@@ -167,7 +201,6 @@ class NBAComAgent(object):
 
         Returns:
              players (list): player dictionary of stats + dfs points
-
         '''
         pgl = self.parser.season_gamelogs(self.scraper.season_gamelogs(season, 'P'), 'P')
         if self.insert_db:
@@ -202,7 +235,7 @@ class NBAComAgent(object):
         elif all_missing:
             pstats = {}
             start = datetostr(d=season_start(season), site='nba')
-            for day in self.db.select_list('SELECT game_date FROM missing_playerstats'):
+            for day in self.db.select_list(missing_playerstats()):
                 daystr = datetostr(day, 'nba')
                 ps_base = self.parser.playerstats(self.scraper.playerstats(season, DateFrom=start, DateTo=daystr))
                 ps_advanced = self.parser.playerstats(self.scraper.playerstats(season, DateFrom=start, DateTo=daystr, MeasureType='Advanced'))
@@ -240,6 +273,31 @@ class NBAComAgent(object):
         if self.insert_db:
             self.db.insert_scoreboards(scoreboards)
         return scoreboards
+
+
+    def team_boxscores_combined(self):
+        '''
+        Fetches team boxscores combined
+
+        Returns:
+             tboxes: list of boxscores
+        '''
+        tboxes = []
+        gids = self.db.select_list(missing_team_boxscores())
+        if not gids:
+            logging.error('no missing gameids found')
+            return None
+        logging.info('there are {} missing game boxscores'.format(len(gids)))
+        for gid in gids:
+            logging.info('getting {}'.format(gid))
+            box = self.combined_team_boxscores(gid)
+            if not box:
+                logging.error('no box for {}'.format(gid))
+                continue
+            if self.insert_db:
+                self.db.insert_team_boxscores(box)
+                tboxes.append(box)
+        return [item for sublist in tboxes for item in sublist]
 
 
     def team_gamelogs(self, season, date_from=None, date_to=None):
@@ -297,7 +355,7 @@ class NBAComAgent(object):
         elif all_missing:
             tstats = {}
             start = datetostr(d=season_start(season), site='nba')
-            for day in self.db.select_list('SELECT game_date FROM missing_teamstats'):
+            for day in self.db.select_list(missing_teamstats()):
                 daystr = datetostr(day, 'nba')
                 ts_base = self.parser.teamstats(self.scraper.teamstats(season, DateFrom=start, DateTo=daystr))
                 ts_advanced = self.parser.teamstats(self.scraper.teamstats(season, DateFrom=start, DateTo=daystr, MeasureType='Advanced'))
@@ -340,7 +398,7 @@ class NBAComAgent(object):
         elif all_missing:
             topps = {}
             start = datetostr(d=season_start(season), site='nba')
-            for day in self.db.select_list('SELECT * FROM missing_team_opponent_dashboard'):
+            for day in self.db.select_list(missing_team_opponent_dashboard()):
                 daystr = datetostr(day, 'nba')
                 content = self.scraper.team_opponent_dashboard(season, DateFrom=start, DateTo=daystr)
                 topp = self.parser.team_opponent_dashboard(content)

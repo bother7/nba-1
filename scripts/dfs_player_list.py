@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # generates list of players from today's games
+# TODO: this script is incomplete
 
 import logging
 import os
@@ -11,6 +12,7 @@ from nba.agents.nbacom import NBAComAgent
 from nba.db.nbacom import NBAComPg
 from nba.db.fantasylabs import FantasyLabsNBAPg
 from nba.dates import today
+from nba.db.queries import today_team_url_codes
 
 
 def main():
@@ -37,7 +39,7 @@ def main():
             ORDER BY game_date DESC LIMIT 1"""
     incomplete = []
     roster_url = 'http://data.nba.com/data/10s/prod/v1/2016/teams/{}/roster.json'
-    for urlcode in nbapg.select_list('SELECT * FROM today_team_url_codes'):
+    for urlcode in nbapg.select_list(today_team_url_codes()):
         print(urlcode)
         try:
             roster = a.scraper.get_json(roster_url.format(urlcode))

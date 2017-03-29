@@ -42,5 +42,6 @@ class DonBestNBAScraper(BasketballScraper):
 
         return self.get(base_url.format(d))
 
+
 if __name__ == "__main__":
     pass

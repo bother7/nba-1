@@ -63,7 +63,11 @@ class DonBestNBAParser():
             order: either 'st', 'ts', None
         '''
         spread, total, order = (None, None, None)
-        if x1 == 'PK':
+        if x1 == '-' or x2 == '-':
+            spread = None
+            total = None
+            order = 'st'
+        elif x1 == 'PK':
             spread = 0
             total = float(x2)
             order = 'st'
@@ -104,16 +108,22 @@ class DonBestNBAParser():
             # there is no consistent order, odds or game total could be first
             ot = tds[1].find('div').decode_contents(formatter="html")
             x1, x2 = ot.split('<br/>')
+            if x1 == 'PK':
+                x1 == 0
+            elif x2 == 'PK':
+                x2 = 0
             os, ot, order = self._odds_total(x1, x2)
 
             # team names are wrapped up in span element
             result['away'], result['home'] = [span.text for span in tds[2].find_all('span')]
 
             # spread always going to be set for the home team
-            if order == 'st':
+            if os and order == 'st':
                 result['opening_spread'] = 0 - os
-            else:
+            elif os and order == 'ts':
                 result['opening_spread'] = os
+            else:
+                continue
 
             result['opening_game_ou'] = ot
 

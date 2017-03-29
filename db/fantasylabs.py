@@ -36,8 +36,8 @@ class FantasyLabsNBAPg(NBAPostgres):
         cursor = self.conn.cursor()
         try:
             for model in models:
-                cursor.execute("""INSERT INTO models (game_date, data, model_name) VALUES (%s, %s);""",
-                               (model['game_date'], json.dumps(model['model'], model['model_name'])))
+                cursor.execute("""INSERT INTO models (game_date, model_name, data) VALUES (%s, %s, %s) ON CONFLICT ("game_date") DO UPDATE SET "data" = EXCLUDED.data;""",
+                               (model['game_date'], model['model_name'], json.dumps(model['data'])))
             self.conn.commit()
         except Exception as e:
             logging.exception('update failed: {0}'.format(e))

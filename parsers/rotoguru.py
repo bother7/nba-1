@@ -1,6 +1,9 @@
-from datetime import datetime
 import logging
 import re
+
+from bs4 import BeautifulSoup
+
+from nba.dates import convert_format
 
 
 class RotoGuruNBAParser:
@@ -20,6 +23,7 @@ class RotoGuruNBAParser:
 
     def __init__(self):
         logging.getLogger(__name__).addHandler(logging.NullHandler())
+
 
     def _pre_ssv(self, content):
         '''
@@ -44,6 +48,7 @@ class RotoGuruNBAParser:
         else:
             return None           
 
+
     def _salaries_headers(self, row=None):
         '''
         Provides headers for salaries method
@@ -64,6 +69,7 @@ class RotoGuruNBAParser:
         
         else:
             return ['game_date', 'rotoguru_gid', 'site_position', 'site_player_name', 'starter', 'points', 'salary', 'team_abbreviation', 'venue', 'opponent_team', 'team_score', 'opponent_score', 'min', 'stat_line']
+
 
     def players(self, content, site):
         '''
@@ -123,46 +129,55 @@ class RotoGuruNBAParser:
         if not starter or player['starter'] == '':
             player['starter'] = 0
         '''             
-        
-    def salaries(self, content, site):
+
+
+    def salaries(self, content, game_date, site, ssv='0'):
         '''
         Returns list of dictionaries with player salary information
 
         Arguments:
             content (str): HTML string
+            game_date (str): likely YYYYmmdd
             site (str): name of site ('dk', 'fd', 'yh', etc.)
 
         Returns:
             salaries (list): list of dictionaries representing player & his salary on a given date on a given site
-
-        Usage:
-            salaries = p.salaries(content, 'dk')
-            
         '''
-
         sals = []
-        rows = self._pre_ssv(content)
-        headers = self._salaries_headers()
-        wanted = ['game_date', 'site_position', 'site_player_name', 'salary']
-            
-        for row in rows[1:]:
-            cells = row.split(';')
-            sal = {k:v for k,v in dict(list(zip(headers, cells))).items() if k in wanted}
-            sal['site'] = site
-
-            # fix gamedate to YYYY-MM-DD
-            d = sal.get('game_date', None)
-
-            if d:
-                sal['game_date'] = datetime.strftime(datetime.strptime(d,'%Y%m%d'),'%Y-%m-%d')               
-
-            # salary has non-numeric characters
-            if sal.get('salary', None):
-                sal['salary'] = re.sub("[^0-9]", "", sal['salary'])
-
-            sals.append(sal)
-
+        if ssv == '1':
+            rows = self._pre_ssv(content)
+            headers = self._salaries_headers()
+            wanted = ['game_date', 'site_position', 'site_player_name', 'salary']
+            for row in rows[1:]:
+                cells = row.split(';')
+                sal = {k:v for k,v in dict(list(zip(headers, cells))).items() if k in wanted}
+                sal['site'] = site
+                if sal.get('salary', None):
+                    sal['salary'] = re.sub("[^0-9]", "", sal['salary'])
+                sals.append(sal)
+        else:
+            soup = BeautifulSoup(content, 'lxml')
+            t = soup.find('table', {'cellspacing': 5})
+            headers = ['dfs_site', 'season', 'game_date', 'source', 'source_player_id', 'source_player_name', 'team_code',
+               'dfs_position', 'salary']
+            for tr in t.find_all('tr'):
+                try:
+                    tds = tr.find_all('td')
+                    a = tr.find('a')
+                    if a and a.get('href', '') and '?' in a.get('href'):
+                        source_player_id = int(a.get('href', '').split('?')[1].replace('x', ''))
+                        dfs_position = tds[0].text
+                        source_player_name = a.text.replace('^', '').replace('*', '')
+                        salary = int(tds[3].text.replace('$', '').replace(',', ''))
+                        team_code = tds[4].text.strip().upper()
+                        vals = ['dk', 2017, convert_format(game_date, 'nba'), 'rotoguru', source_player_id,
+                                    source_player_name, team_code,
+                                    dfs_position, salary]
+                        sals.append(dict(zip(headers, vals)))
+                except Exception as e:
+                    logging.exception(e)
         return sals
-        
-if __name__ == '__main__':  
+
+
+if __name__ == '__main__':
     pass

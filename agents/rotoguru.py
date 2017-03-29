@@ -1,82 +1,80 @@
-from collections import defaultdict
 import logging
 
-from nba.agents.agent import NBAAgent
+from nba.scrapers.rotoguru import RotoGuruNBAScraper
+from nba.parsers.rotoguru import RotoGuruNBAParser
+from nba.seasons import season_gamedays
 
 
-class RotoguruNBAAgent(NBAAgent):
+class RotoGuruNBAAgent(object):
     '''
     Performs script-like tasks using rotoguru scraper and parser
     Intended to replace standalone scripts so can use common API and tools
 
     Examples:
         a = RotoguruNBAAgent()
-
     '''
 
-    def __init__(self, **kwargs):
-        logging.getLogger(__name__).addHandler(logging.NullHandler())
-
-        # see http://stackoverflow.com/questions/8134444
-        NBAAgent.__init__(self, **kwargs)
-
-    def rg_salaries(self, salary_pages, players_fname, site):
+    def __init__(self, db=None, cache_name=None, cookies=None):
         '''
-        Parses list of rotoguru pages into list of salary dictionaries
-
         Arguments:
-            salary_pages (dict): keyed by gamedate, value is HTML
-            players_fname (str): is full path of csv file with players
-            site (str): name of site - dk, fd, yh . . .
+            cache_name: str for scraper cache_name
+            cookies: cookie jar
+            db: NBAPg instance
+        '''
+        logging.getLogger(__name__).addHandler(logging.NullHandler())
+        self.scraper = RotoGuruNBAScraper(cache_name=cache_name, cookies=cookies)
+        self.parser = RotoGuruNBAParser()
+        if db:
+            self.db = db
+            self.insert_db = True
+        else:
+            self.insert_db=False
+
+
+    def salaries(self, game_day=None, all_missing=False, site='dk'):
+        '''
+        Gets rotoguru salary pages
+        Args:
+            game_day:
+            all_missing:
+            site:
 
         Returns:
-            salaries (list): list of salary dictionaries
-            players (dict): keys are player name, values are player id
-            unmatched (defaultdict): keys are playername, values is counter
-
-        Usage:
-            salaries = NBAComAgent.rotoguru_dfs_salaries(salary_pages, '~/players.csv', 'dk')
-            NBAComAgent.nbadb.insert_dicts(salaries, 'salaries')
-
+            sals
         '''
+        sals = []
+        if game_day:
+            content = self.scraper.salaries_day(sday=game_day, site=site)
+            sal = self.parser.salaries(content=content, game_date=game_day, site=site)
+            if self.insert_db:
+                self.db.insert_dicts(sal, 'dfs_salaries')
+            return sal
 
-        salaries = []
-        players = {}
-        unmatched = defaultdict(int)
+        elif all_missing:
+            q = """
+                select distinct to_char(game_date, 'YYYYmmdd') as game_date from games
+                where season = 2017 and
+                game_date NOT IN (select distinct game_date from dfs_salaries where source = 'rotoguru') and
+                game_date < localdate()
+            """
+            if self.insert_db:
+                for d in self.db.select_list(q):
+                    content = self.scraper.salaries_day(sday=d, site=site)
+                    sal = self.parser.salaries(content=content, game_date=d, site=site)
+                    sals.append(sal)
+                    self.db.insert_dicts(sal, 'dfs_salaries')
+                    logging.info('finished salaries for {}'.format(d))
+            else:
+                for d in season_gamedays(2017, 'db'):
+                    content = self.scraper.salaries_day(sday=d, site=site)
+                    sal = self.parser.salaries(content=content, game_date=d, site=site)
+                    sals.append(sal)
+                    logging.info('finished salaries for {}'.format(d))
+            return [item for sublist in sals for item in sublist]
 
-        players = self._players_from_csv(players_fname)
+        else:
+            raise ValueError('must have value for game_day or all_missing parameters')
 
-        for key in sorted(salary_pages.keys()):
-            daypage = salary_pages.get(key)
-
-            for sal in p.salaries(daypage, site):
-
-                # players is key of nbacom_name and value of nbacom_id
-                # need to match up rotoguru names with these
-                pid = players.get(sal.get('site_player_name'), None)
-
-                # if no match, try conversion dictionary
-                if not pid:
-                    nba_name = self.nbap.rg_to_nbadotcom(sal.get('site_player_name', None))
-                    pid = players.get(nba_name, None)
-
-                # if still no match, warn and don't add to database
-                if not pid:
-                    logging.warning('no player_id for {0}'.format(sal.get('site_player_name')))
-                    unmatched[sal.get('site_player_name')] += 1
-                    continue
-
-                else:
-                    sal['nbacom_player_id'] = pid
-
-                # if no salary, warn and don't add to database
-                if not sal.get('salary', None):
-                    logging.warning('no salary for {0}'.format(sal.get('site_player_name')))
-                    continue
-
-                salaries.append(sal)
-
-        return salaries, players, unmatched
 
 if __name__ == '__main__':
     pass

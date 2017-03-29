@@ -8,6 +8,7 @@ import logging
 
 logging.getLogger(__name__).addHandler(logging.NullHandler())
 
+
 _city_to_code = {
     'Atlanta': 'ATL',
     'Boston': 'BOS',
@@ -75,8 +76,10 @@ _long_to_code = {
     'San Antonio Spurs': 'SAS',
     'Seattle Sonics': 'SEA',
     'Seattle Supersonics': 'SEA',
+    'Seattle SuperSonics': 'SEA',
     'Toronto Raptors': 'TOR',
     'Utah Jazz': 'UTA',
+    'Vancouver Grizzlies': 'VAN',
     'Washington Wizards': 'WAS'
 }
 

@@ -3,6 +3,7 @@ ESPNNBAScraper
 '''
 
 import logging
+
 from nba.scrapers.scraper import BasketballScraper
 
 
@@ -67,6 +68,10 @@ class ESPNNBAScraper(BasketballScraper):
             return [self.get(self.projection_urls[idx]) for idx in subset]
         else:
             return [self.get(url) for url in self.projection_urls]
+
+    def linescores(self, d):
+        url = 'http://www.espn.com/nba/scoreboard/_/date/{}'
+        return self.get(url.format(d))
 
 
 if __name__ == "__main__":

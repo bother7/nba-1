@@ -1,11 +1,14 @@
 '''
 names.py
 '''
-
+import logging
 import re
 
 from fuzzywuzzy import fuzz, process
 from nameparser import HumanName
+
+
+logging.getLogger(__name__).addHandler(logging.NullHandler())
 
 
 def first_last(name):

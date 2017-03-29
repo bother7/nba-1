@@ -7,12 +7,16 @@ import logging
 import os
 import sys
 
+import browsercookie
 from configparser import ConfigParser
 
+from nba.agents.fantasylabs import FantasyLabsNBAAgent
 from nba.agents.nbacom import NBAComAgent
+from nba.agents.donbest import DonBestNBAAgent
+from nba.agents.rotoguru import RotoGuruNBAAgent
 from nba.db.nbacom import NBAComPg
 from nba.db.fantasylabs import FantasyLabsNBAPg
-from nba.dates import today
+from nba.dates import today, yesterday
 from nba.parsers.rotogrinders import RotoGrindersNBAParser
 from nba.scrapers.rotogrinders import RotoGrindersNBAScraper
 from nba.db.rotogrinders import RotoGrindersNBAPg
@@ -31,25 +35,36 @@ def main():
     flpg = FantasyLabsNBAPg(username=config['nbadb']['username'],
                     password=config['nbadb']['password'],
                     database=config['nbadb']['database'])
-
+    fla = FantasyLabsNBAAgent(db=flpg, cache_name='flabs-nba', cookies=browsercookie.firefox())
+    rgurua = RotoGuruNBAAgent(db=nbapg, cache_name='rg-nba')
     cn = 'nba-agent-{}'.format(today())
     a = NBAComAgent(cache_name=cn, cookies=None, db=nbapg)
     a.scraper.delay = 1
     season = '2016-17'
 
+    '''
     # ensures players table is up-to-date before inserting gamelogs, etc.
     players = a.new_players(season[0:4])
     logging.info('finished update nba.com players')
+    '''
 
     # gets all missing (days) salaries from current seasons
-    from nba.agents.fantasylabs import FantasyLabsNBAAgent
-    fla = FantasyLabsNBAAgent(db=flpg, cache_name='flabs-nba')
     fla.salaries(all_missing=True)
+    rgurua.salaries(all_missing=True)
     logging.info('finished dfs salaries')
 
+    '''
     # ensures that player_xref table includes all players from salaries
     fla.update_player_xref()
     logging.info('finished update player_xref')
+
+    # gets model from fantasylabs
+    td = today('fl')
+    mn = 'phan'
+    flpg.insert_models([{
+        'game_date': today('fl'),
+        'data': fla.scraper.model(model_day=td, model_name=mn),
+        'model_name': mn}])
 
     # gets ownership data from fantasylabs
     fla.ownership(all_missing=True)
@@ -93,10 +108,19 @@ def main():
     a.team_opponent_dashboards(season, all_missing=True)
     logging.info('finished team_opponent_dashboards')
 
+    # v2015 boxscores - linescores, refs, etc.
+    a.linescores()
+    logging.info('finished linescores')
+
+    # odds and lines
+    dba = DonBestNBAAgent(db=nbapg)
+    dba.odds(all_missing=True)
+    logging.info('finished odds and lines')
+
     # refresh all materialized views
     nbapg.refresh_materialized()
     logging.info('refreshed materialized queries')
-
+    '''
 
 if __name__ == '__main__':
     main()

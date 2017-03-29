@@ -43,6 +43,43 @@ class NBAComParser(object):
         return fixed_linescores
 
 
+    def boxscore_v2015(self, content):
+        '''
+        Boxscore from a single game
+
+        Arguments:
+            content: dict
+
+        Returns:
+            ls: list of dict
+        '''
+        bgd = content['basicGameData']
+        game_date = bgd['startDateEastern']
+        season = int(bgd['seasonYear']) + 1
+        game_id = int(bgd['gameId'][2:])
+        off = [o['firstNameLastName'].strip() for o in bgd['officials']['formatted']]
+        t = bgd['vTeam']
+        v = {'game_date': game_date,
+             'season': season,
+             'game_id': game_id,
+             'team_code': t['triCode'],
+             'team_id': int(t['teamId']),
+             's': int(t['score']),
+             'qs': [int(q['score']) for q in t['linescore']],
+             'off': off
+             }
+        t = bgd['hTeam']
+        h = {'game_date': game_date,
+             'season': season,
+             'game_id': game_id,
+             'team_code': t['triCode'],
+             'team_id': int(t['teamId']),
+             's': int(t['score']),
+             'qs': [int(q['score']) for q in t['linescore']],
+             'off': off
+             }
+        return (v, h)
+
     def boxscore_traditional(self, content, game_date=None):
         '''
         Represents single nba.com boxscore (traditional)

@@ -3,10 +3,12 @@
 ESPNNBAParser
 '''
 
+import json
 import logging
 import re
 
 from bs4 import BeautifulSoup
+from nba.teams import long_to_code
 
 
 class ESPNNBAParser():
@@ -36,6 +38,29 @@ class ESPNNBAParser():
         years = content.get('years')
         return (comps, ps, years)
 
+    def linescores(self, content, d):
+        ls = []
+        patt = re.compile(r'scoreboardData\s+=\s+({"leagues":.*?});window\.espn\.scoreboardSettings',
+                          re.MULTILINE | re.DOTALL)
+        match = re.search(patt, content)
+        if match:
+            var = json.loads(match.group(1))
+            if var:
+                try:
+                    for e in var['events']:
+                        gid = e['id']
+                        for c in e['competitions'][0]['competitors']:
+                            tm = c['team']['displayName']
+                            tmtype = c['homeAway']
+                            s = c['score']
+                            tmls = [item['value'] for item in c['linescores']]
+                            ls.append({'espn_game_id': gid, 'game_date': d,
+                                       'team_code': long_to_code(tm), 'team_name': tm, 'home_away': tmtype,
+                                       'score': s, 'quarters': tmls})
+                except:
+                    pass
+
+        return ls
 
     def players(self, content):
         '''

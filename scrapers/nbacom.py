@@ -23,8 +23,21 @@ class NBAComScraper(BasketballScraper):
             as_string: return as raw string rather than json parsed into python data structure
         '''
         logging.getLogger(__name__).addHandler(logging.NullHandler())
-        BasketballScraper.__init__(self, headers=headers, cookies=cookies,
-                                   cache_name=cache_name, expire_hours=expire_hours, as_string=as_string)
+        BasketballScraper.__init__(self, headers=headers, cookies=cookies, cache_name=cache_name, expire_hours=expire_hours, as_string=as_string)
+
+
+    def boxscore_v2015(self, game_id, game_date):
+        '''
+        Boxscore from a single game
+
+        Arguments:
+            game_id: numeric identifier of game
+
+        Returns:
+            content: python data structure of json documnt
+        '''
+        url = 'http://data.nba.com/data/10s/prod/v1/{}/{}_boxscore.json'
+        return self.get_json(url.format(game_date, game_id))
 
 
     def boxscore_traditional(self, game_id):

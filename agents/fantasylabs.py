@@ -9,6 +9,7 @@ from nba.parsers.fantasylabs import FantasyLabsNBAParser
 from nba.scrapers.fantasylabs import FantasyLabsNBAScraper
 from nba.dates import convert_format, datetostr, date_list
 from nba.names import match_player
+from nba.db.queries import *
 
 
 class FantasyLabsNBAAgent(object):
@@ -54,12 +55,12 @@ class FantasyLabsNBAAgent(object):
             model = a.one_model(model_day='03_01_2016')
         '''
         model = self.scraper.model(model_day=model_day, model_name=model_name)
-        players = self.parser.model(content=model, site='dk', gamedate=model_day)
+        players = self.parser.model(content=model, site='dk')
 
         # need to run through pipeline
-        if self.insert_db:
-            self.db.insert_salaries(players)
-        return players
+        #if self.insert_db:
+        #    self.db.insert_salaries(players)
+        #return players
 
 
     def many_models(self, model_name='default', range_start=None, range_end=None, all_missing=False):
@@ -82,7 +83,7 @@ class FantasyLabsNBAAgent(object):
         '''
         models = []
         if all_missing:
-            for d in self.db.select_list('SELECT game_date FROM missing_models'):
+            for d in self.db.select_list(missing_models()):
                 daystr = datetostr(d, 'fl')
                 models.append({
                     'game_date': daystr,
@@ -118,7 +119,7 @@ class FantasyLabsNBAAgent(object):
             return own
         elif all_missing:
             owns = {}
-            for day in self.db.select_list('SELECT game_date FROM missing_ownership'):
+            for day in self.db.select_list(missing_ownership()):
                 daystr = datetostr(day, 'fl')
                 own = self.scraper.ownership(daystr)
                 self.db.insert_ownership(own, convert_format(daystr, 'std'))
@@ -142,7 +143,7 @@ class FantasyLabsNBAAgent(object):
             return sals
         elif all_missing:
             salaries = {}
-            for day in self.db.select_list('SELECT game_date FROM missing_salaries'):
+            for day in self.db.select_list(missing_salaries()):
                 daystr = datetostr(day, 'fl')
                 sals = self.parser.dk_salaries(self.scraper.model(daystr), daystr)
                 salaries[datetostr(day, 'nba')] = sals
@@ -178,47 +179,45 @@ class FantasyLabsNBAAgent(object):
         '''
         Adds missing players to player_xref table and updates dfs_salaries afterwards
         '''
-        # now update dfs_salaries nbacom_player_id from player_xref
-        updateq = """UPDATE dfs_salaries SET nbacom_player_id = sq.nbacom_player_id
-                     FROM (SELECT nbacom_player_id, source, source_player_id from player_xref) AS sq
-                     WHERE dfs_salaries.nbacom_player_id IS NULL
-                     AND dfs_salaries.source_player_id = sq.source_player_id
-                     AND dfs_salaries.source = sq.source;"""
-        self.db.update(updateq)
+        self.db.update(update_dfs_salaries_ids())
+        missing = self.db.select_dict(missing_salaries_ids(source='fantasylabs'))
 
-        nbapq = """SELECT nbacom_player_id as id, display_first_last as n FROM players"""
-        nbadict = {}
-        nbacount = defaultdict(int)
-        for p in self.db.select_dict(nbapq):
-            nbadict[p['id']] = p['n']
-            nbacount[p['n']] += 1
+        if missing:
+            nbapq = """SELECT nbacom_player_id as id, display_first_last as n FROM players"""
+            nbadict = {}
+            nbacount = defaultdict(int)
+            for p in self.db.select_dict(nbapq):
+                nbadict[p['id']] = p['n']
+                nbacount[p['n']] += 1
 
-        # loop through missing players
-        # filter out players with duplicate names - need to manually resolve those
-        # then look for direct match where name is not duplicated
-        # then try to match using names
-        missingq = """SELECT * FROM missing_salaries_ids"""
-        insq = """INSERT INTO player_xref (nbacom_player_id, source, source_player_id, source_player_name) VALUES ({}, 'fantasylabs', {}, '{}');"""
+            # loop through missing players
+            # filter out players with duplicate names - need to manually resolve those
+            # then look for direct match where name is not duplicated
+            # then try to match using names
+            insq = """INSERT INTO player_xref (nbacom_player_id, source, source_player_id, source_player_name)
+                      VALUES ({}, 'fantasylabs', {}, '{}');"""
 
-        for p in self.db.select_dict(missingq):
-            if nbacount[p['n']] > 1:
-                logging.error('need to manually resolve {}'.format(p))
-                continue
-            match = [k for k,v in listitems(nbadict) if v == p['n']]
-            if match:
-                self.db.update(insq.format(match[0], p['id'], p['n']))
-                logging.debug('added to xref: {}'.format(p))
-                continue
-            match = [k for k,v in listitems(nbadict) if v == match_player(p['n'], list(nbadict.values()), threshold=.8)]
-            if match:
-                self.db.update(insq.format(match[0], p['id'], p['n']))
-                logging.debug('added to xref: {}'.format(p))
-            else:
-                logging.error('need to manually resolve {}'.format(p))
+            for p in missing:
+                if nbacount[p['n']] > 1:
+                    logging.error('need to manually resolve {}'.format(p))
+                    continue
+                match = [k for k,v in listitems(nbadict) if v == p['n']]
+                if match:
+                    self.db.update(insq.format(match[0], p['id'], p['n']))
+                    logging.debug('added to xref: {}'.format(p))
+                    continue
+                match = [k for k,v in listitems(nbadict) if v == match_player(p['n'], list(nbadict.values()), threshold=.8)]
+                if match:
+                    self.db.update(insq.format(match[0], p['id'], p['n']))
+                    logging.debug('added to xref: {}'.format(p))
+                else:
+                    logging.error('need to manually resolve {}'.format(p))
 
-        # now update dfs_salaries nbacom_player_id from player_xref
-        self.db.update(updateq)
+            # now update dfs_salaries nbacom_player_id from player_xref
+            self.db.update(update_dfs_salaries_ids())
 
+        else:
+            logging.info('no missing ids in dfs_salaries')
 
 if __name__ == '__main__':
     pass
