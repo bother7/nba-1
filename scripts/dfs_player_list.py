@@ -20,7 +20,7 @@ def main():
     logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 
     config = ConfigParser()
-    configfn = os.path.join(os.path.expanduser('~'), '.nbadb')
+    configfn = os.path.join(os.path.expanduser('~'), '.pgcred')
     config.read(configfn)
     nbapg = NBAComPg(username=config['nbadb']['username'],
                     password=config['nbadb']['password'],

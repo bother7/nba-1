@@ -42,27 +42,33 @@ class RotoGuruNBAAgent(object):
         Returns:
             sals
         '''
-        sals = []
         if game_day:
             content = self.scraper.salaries_day(sday=game_day, site=site)
             sal = self.parser.salaries(content=content, game_date=game_day, site=site)
-            if self.insert_db:
+            if sal and self.insert_db:
                 self.db.insert_dicts(sal, 'dfs_salaries')
             return sal
 
         elif all_missing:
-            q = """
-                select distinct to_char(game_date, 'YYYYmmdd') as game_date from games
-                where season = 2017 and
-                game_date NOT IN (select distinct game_date from dfs_salaries where source = 'rotoguru') and
-                game_date < localdate()
-            """
-            if self.insert_db:
+            sals = []
+            if self.db:
+                q = """
+                    select distinct to_char(game_date, 'YYYYmmdd') as game_date from games
+                    where season = current_season() and game_type = 'regular' AND
+                    game_date NOT IN (select distinct game_date from dfs_salaries where source = 'rotoguru') and
+                    game_date < localdate()
+                """
                 for d in self.db.select_list(q):
+                    logging.info('starting salaries for {}'.format(d))
                     content = self.scraper.salaries_day(sday=d, site=site)
                     sal = self.parser.salaries(content=content, game_date=d, site=site)
-                    sals.append(sal)
-                    self.db.insert_dicts(sal, 'dfs_salaries')
+                    if sal:
+                        sals.append(sal)
+                        if self.insert_db:
+                            self.db.insert_dicts(sal, 'dfs_salaries')
+                    else:
+                        logging.error('no salaries: {}'.format(d))
+                        logging.error(content)
                     logging.info('finished salaries for {}'.format(d))
             else:
                 for d in season_gamedays(2017, 'db'):

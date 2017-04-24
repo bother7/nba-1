@@ -138,7 +138,7 @@ class FantasyLabsNBAAgent(object):
         '''
         if day:
             sals = self.parser.dk_salaries(self.scraper.model(day), day)
-            if self.insert_db:
+            if self.insert_db and sals:
                 self.db.insert_salaries(sals, game_date=convert_format(day, 'std'))
             return sals
         elif all_missing:

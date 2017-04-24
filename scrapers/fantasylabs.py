@@ -92,12 +92,13 @@ class FantasyLabsNBAScraper(BasketballScraper):
             List of percentages
         '''
         # check if game_date in proper format
-        base_url = 'http://www.fantasylabs.com/api/contest-ownership/2/{}'
+        base_url = 'http://www.fantasylabs.com/api/contest-ownership/2/{}/4/'
         fmt = convert_format(game_date, 'fl')
         if not fmt:
             raise ValueError('Incorrect date format: {}'.format(game_date))
         else:
             return self.get_json(base_url.format(fmt))
+
 
 if __name__ == "__main__":
     pass

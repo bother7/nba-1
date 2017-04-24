@@ -19,7 +19,7 @@ def main():
     logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 
     config = ConfigParser()
-    configfn = os.path.join(os.path.expanduser('~'), '.nbadb')
+    configfn = os.path.join(os.path.expanduser('~'), '.pgcred')
     config.read(configfn)
 
     cn = 'fl-agent-{}'.format(today())

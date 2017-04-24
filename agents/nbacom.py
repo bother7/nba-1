@@ -239,10 +239,11 @@ class NBAComAgent(object):
                 daystr = datetostr(day, 'nba')
                 ps_base = self.parser.playerstats(self.scraper.playerstats(season, DateFrom=start, DateTo=daystr))
                 ps_advanced = self.parser.playerstats(self.scraper.playerstats(season, DateFrom=start, DateTo=daystr, MeasureType='Advanced'))
-                ps = [merge(dict(), [psb, psadv]) for psb, psadv in zip(ps_base, ps_advanced)]
+                ps = [merge(dict(), [psadv, psb]) for psb, psadv in zip(ps_base, ps_advanced)]
                 pstats[daystr] = ps
                 if self.insert_db:
                     self.db.insert_playerstats(ps, as_of=daystr)
+                    logging.info('completed {}'.format(daystr))
             return pstats
         else:
             raise ValueError('need to specify dates or set all_missing to true')

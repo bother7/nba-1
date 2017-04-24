@@ -4,6 +4,7 @@ import os
 
 from nba.dates import *
 
+
 package_directory = os.path.dirname(os.path.abspath(__file__))
 
 # see https://docs.python.org/2/library/collections.html#collections.OrderedDict
@@ -33,6 +34,7 @@ d = {
 
 _seasons = OrderedDict(sorted(list(d.items()), reverse=True))
 
+
 def in_what_season(day, fmt=None):
 
     if isinstance(day, str):
@@ -50,17 +52,49 @@ def in_what_season(day, fmt=None):
 
     return None
 
+
+def seas_year_to_season(s):
+    '''
+    Converts 2014 to 2013-14, 2015 to 2014-15, etc.
+
+    Args:
+        s: int
+
+    Returns:
+        sy: str
+    '''
+    return '{}-{}'.format(str(s - 1), str(s)[-2:])
+
+
+def season_to_seas_year(sy):
+    '''
+    Converts 2013-14 to 2014, 2014-15 to 2015, etc.
+
+    Args:
+        sy: str
+
+    Returns:
+        s: int
+    '''
+    try:
+        return int(sy[0:3]) + 1
+    except:
+        return None
+
+
 def season(key):
     '''
     Returns dictionary having keys start and end
     '''
     return _seasons.get(key)
 
+
 def season_dates(season):
     '''
     Returns list of datetime objects for entire season or in custom date range
     '''
     return list(reversed(date_list(season_end(season), season_start(season))))
+
 
 def season_gamedays(season, fmt):
     '''
@@ -72,31 +106,41 @@ def season_gamedays(season, fmt):
     Returns:
         list of datestrings in %Y-%m-%d format
     '''
+    if isinstance(season, basestring):
+        season = season_to_seas_year(season)
 
     with open(os.path.join(package_directory, 'data', 'game_dates.csv')) as f:
         rows = [{k: v for k, v in row.items()}
             for row in csv.DictReader(f, skipinitialspace=True) if int(row['season']) == season]
     return [convert_format(row.get('game_date'), fmt) for row in rows]
 
+
 def season_start(key):
     '''
     Returns value for start key
     '''
+    if isinstance(key, int):
+        key = seas_year_to_season(key)
     s = _seasons.get(key)
     return s.get('start')
+
 
 def season_end(key):
     '''
     Returns value for end key
     '''
+    if isinstance(key, int):
+        key = seas_year_to_season(key)
     s = _seasons.get(key)
     return s.get('end')
+
 
 def seasons(fn=None):
     '''
     Returns OrderedDict of all seasons
     '''
     return _seasons
-        
+
+
 if __name__ == '__main__':
     pass

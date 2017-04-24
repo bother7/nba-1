@@ -40,7 +40,7 @@ class DonBestNBAAgent(object):
         if day:
             day = convert_format(day, 'db')
             odds = self.parser.odds(self.scraper.odds(day), day)
-            if self.insert_db:
+            if odds and self.insert_db:
                 self.db.insert_dicts(game_odds(odds), 'odds')
             return odds
 
@@ -48,7 +48,7 @@ class DonBestNBAAgent(object):
             allodds = {}
             for day in self.db.select_list(missing_odds()):
                 odds = self.parser.odds(self.scraper.odds(day), day)
-                if self.insert_db:
+                if odds and self.insert_db:
                     self.db.insert_dicts(game_odds(odds), 'odds')
                 allodds[day] = odds
             return allodds

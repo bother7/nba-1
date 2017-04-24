@@ -4,7 +4,7 @@ import re
 from bs4 import BeautifulSoup
 
 from nba.dates import convert_format
-
+from nba.seasons import in_what_season
 
 class RotoGuruNBAParser:
     '''
@@ -156,6 +156,7 @@ class RotoGuruNBAParser:
                     sal['salary'] = re.sub("[^0-9]", "", sal['salary'])
                 sals.append(sal)
         else:
+            season = int(in_what_season(game_date)[0:4]) + 1
             soup = BeautifulSoup(content, 'lxml')
             t = soup.find('table', {'cellspacing': 5})
             headers = ['dfs_site', 'season', 'game_date', 'source', 'source_player_id', 'source_player_name', 'team_code',
@@ -170,7 +171,7 @@ class RotoGuruNBAParser:
                         source_player_name = a.text.replace('^', '').replace('*', '')
                         salary = int(tds[3].text.replace('$', '').replace(',', ''))
                         team_code = tds[4].text.strip().upper()
-                        vals = ['dk', 2017, convert_format(game_date, 'nba'), 'rotoguru', source_player_id,
+                        vals = ['dk', season, convert_format(game_date, 'nba'), 'rotoguru', source_player_id,
                                     source_player_name, team_code,
                                     dfs_position, salary]
                         sals.append(dict(zip(headers, vals)))

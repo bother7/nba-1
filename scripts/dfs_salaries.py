@@ -1,7 +1,7 @@
 '''
 dfs_salaries.py
-fetches dfs salaries from fantasylabs from days where database has no salaries
-inserts salaries from missing days into dfs_salaries table
+this shows how to parse the new NBA.com boxscores (data.nba.com)
+should be integrated into the NBA library 
 '''
 
 import logging
@@ -9,12 +9,7 @@ import os
 import sys
 import time
 
-#import browsercookie
 from configparser import ConfigParser
-
-#from nba.agents.fantasylabs import FantasyLabsNBAAgent
-#fla = FantasyLabsNBAAgent(db=flpg, cache_name='flabs-nba', cookies=browsercookie.firefox())
-#s = RotoGuruNBAScraper(cache_name='sals')
 
 from nba.scrapers.nbacom import NBAComScraper
 from nba.db.nbacom import NBAComPg
@@ -23,7 +18,7 @@ from nba.db.queries import missing_games_meta
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 
 config = ConfigParser()
-configfn = os.path.join(os.path.expanduser('~'), '.nbadb')
+configfn = os.path.join(os.path.expanduser('~'), '.pgcred')
 config.read(configfn)
 
 s = NBAComScraper(cache_name='games-meta')

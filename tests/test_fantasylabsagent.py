@@ -15,7 +15,7 @@ class FantasyLabsNBAAgent_test(unittest.TestCase):
     def setUp(self):
         self.today = dt.strftime(dt.today(), '%-m_%-d_%Y')
         self.config = ConfigParser()
-        configfn = os.path.join(os.path.expanduser('~'), '.nbadb')
+        configfn = os.path.join(os.path.expanduser('~'), '.pgcred')
         self.config.read(configfn)
         self.db = FantasyLabsNBAPg(username=self.config['nbadb']['username'],
                                 password=self.config['nbadb']['password'],

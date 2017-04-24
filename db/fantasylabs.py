@@ -72,7 +72,8 @@ class FantasyLabsNBAPg(NBAPostgres):
 
         for k,v in sals.items():
             vals = salaries_table(sals=v, game_date=k)
-            self.insert_dicts(vals, 'dfs_salaries')
+            if vals:
+                self.insert_dicts(vals, 'dfs_salaries')
 
 
     def insert_ownership(self, own, game_date):
