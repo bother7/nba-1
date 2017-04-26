@@ -120,6 +120,20 @@ def strtodate(d):
     return datetime.datetime.strptime(d, format_type(d))
 
 
+def subtract_datestr(d1, d2):
+    '''
+    Subtracts d2 from d1
+    Args:
+        d1: datestr
+        d2: datestr
+
+    Returns:
+        int
+    '''
+    delta = strtodate(d1) - strtodate(d2)
+    return delta.days
+
+
 def today(fmt='nba'):
     '''
     Datestring for today's date
