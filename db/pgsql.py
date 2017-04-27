@@ -49,6 +49,29 @@ class NBAPostgres(object):
                 self.conn.rollback()
 
 
+    def batch_update(self, statements):
+        '''
+        Generic routine to update table with multiple statements
+        Will rollback with any errors
+
+        Arguments:
+            statements(list): list of UPDATE statements
+
+        Returns:
+            None
+        '''
+
+        with self.conn.cursor() as cursor:
+            try:
+                for statement in statements:
+                    cursor.execute(statement)
+                self.conn.commit()
+
+            except Exception as e:
+                logging.exception('update failed: {0}'.format(e.message))
+                self.conn.rollback()
+
+
     def execute(self, sql):
         '''
         Generic routine to execute statement. Will rollback with any errors
