@@ -38,29 +38,21 @@ class WaybackScraper(BasketballScraper):
             d = today('db')
         else:
             d = convert_format(d, 'db')
-
         resp = self.get_json(self.wburl.format(url, d))
         if resp:
-            if not max_delta:
-                if resp['archived_snapshots']['closest']['available']:
-                    closest_url = resp['archived_snapshots']['closest']['url']
-                    return self.get(closest_url)
+            ts = resp['archived_snapshots']['closest']['timestamp'][:8]
+            if max_delta:
+                closest_url = resp['archived_snapshots']['closest']['url']
+                if subtract_datestr(d, ts) <= max_delta:
+                    content = self.get(resp['archived_snapshots']['closest']['url'])
+                else:
+                    logging.error('page is too old: {}'.format(ts))
             else:
-                if resp['archived_snapshots']['closest']['available']:
-                    ts = resp['archived_snapshots']['closest']['timestamp']
-                    ts = strtodate(ts[:8], 'db')
-                    closest_url = resp['archived_snapshots']['closest']['url']
-
-                    # need to match up the dates as best as possible
-                    delta = subtract_datestr(d, ts)
-                    if abs(delta.days) <= 5:
-                        content = self.get(resp['archived_snapshots']['closest']['url'])
-                    else:
-                        logging.error('page is too old: {}'.format(ts))
+                closest_url = resp['archived_snapshots']['closest']['url']
+                return self.get(closest_url)
         else:
             logging.error('url unavailable on wayback machine')
-
-        return content
+        return content, ts
 
 
 if __name__ == "__main__":

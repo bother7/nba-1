@@ -345,6 +345,18 @@ def optimal_lineups():
         ORDER BY rnk
     """
 
+def rotoworld_players():
+    '''
+    Query to get rotoworld players from depth_charts
+    Returns:
+        query string
+    '''
+    return """select source_player_id, source_player_name
+           from depth_charts 
+           where source='rotoworld'
+           """
+
+
 def today_team_url_codes():
     """
         Query to determine team_url_codes for all teams playing today

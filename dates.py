@@ -29,7 +29,7 @@ def convert_format(d, site):
         return None
 
 
-def date_list(d1, d2):
+def date_list(d1, d2, delta=None):
     '''
     Takes two datetime objects or datestrings and returns a list of datetime objects
 
@@ -54,8 +54,16 @@ def date_list(d1, d2):
             d2 = strtodate(d2)
         except:
             logging.error('{0} is not in %m_%d_%Y format'.format(d1))
-    season = d1 - d2
-    return [d1 - datetime.timedelta(days=x) for x in range(0, season.days+1)]
+
+    if delta:
+        dlist = []
+        while d2 <= d1:
+            dlist.append(d2)
+            d2 += + datetime.timedelta(days=delta)
+        return dlist
+    else:
+        season = d1 - d2
+        return [d1 - datetime.timedelta(days=x) for x in range(0, season.days+1)]
 
 
 def datetostr(d, site):
@@ -130,7 +138,10 @@ def subtract_datestr(d1, d2):
     Returns:
         int
     '''
-    delta = strtodate(d1) - strtodate(d2)
+    if isinstance(d1, basestring):
+        delta = strtodate(d1) - strtodate(d2)
+    else:
+        delta = d1 - d2
     return delta.days
 
 
