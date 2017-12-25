@@ -1,11 +1,12 @@
 import datetime as dt
 import logging
 
-from nba.db.queries import *
+from nba.dates import date_list, datetostr
 from nba.parsers.nbacom import NBAComParser
+from nba.pipelines.nbacom import players_v2015_table
+from nba.db.queries import *
 from nba.scrapers.nbacom import NBAComScraper
 from nba.seasons import season_start
-from nba.dates import date_list, datetostr
 from nba.utility import merge
 
 
@@ -16,7 +17,7 @@ class NBAComAgent(object):
 
     def __init__(self, db=None, cache_name=None, cookies=None):
         '''
-        Arguments:
+        Args:
             cache_name: str for scraper cache_name
             cookies: cookie jar
             db: NBAComPg instance
@@ -26,9 +27,6 @@ class NBAComAgent(object):
         self.parser = NBAComParser()
         if db:
             self.db = db
-            self.insert_db = True
-        else:
-            self.insert_db=False
 
 
     def _combined_player_boxscores(self, gid):
@@ -120,15 +118,14 @@ class NBAComAgent(object):
             np = a.new_players(season='2015-16')
         '''
         content = self.scraper.players_v2015(season)
-        players = self.parser.players_v2015(content)
-        currids = set([int(p.get('personId',0)) for p in players])
-        logging.debug(currids)
+        players = players_v2015_table(self.parser.players_v2015(content))
+        currids = set([int(p.get('nbacom_player_id', 0)) for p in players])
         allids = set(self.db.select_list('SELECT nbacom_player_id from players'))
         missing = currids - allids
         if missing:
-            np = [p for p in players if int(p['personId']) in missing]
-            if self.insert_db:
-                self.db.insert_players_v2015(np)
+            np = [p for p in players if int(p['nbacom_player_id']) in missing]
+            for p in players_v2015_table(np):
+                self._insert_dict(p, 'players')
             return np
         else:
             return None

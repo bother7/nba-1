@@ -21,13 +21,12 @@ class NBAComPg(NBAPostgres):
         nbap.insert_team_gamelogs(tgl, season=2017, nbacom_season_id=22016, table_name)
     '''
 
-
-    def __init__(self, username, password, database='nbadb', host='localhost', port=5432, table_names=None):
+    def __init__(self, user, password, database='nbadb', host='localhost', port=5432, table_names=None):
         '''
         TODO: add table_names as property
         '''
-        NBAPostgres.__init__(self, username, password, database)
         logging.getLogger(__name__).addHandler(logging.NullHandler())
+        NBAPostgres.__init__(self, user, password, database, host, port)
         if table_names:
             self.table_names = table_names
         else:
@@ -128,9 +127,8 @@ class NBAComPg(NBAPostgres):
         Args:
             players(list): of player dict
         '''
-        toins = players_v2015_table(players)
-        if toins:
-            self.insert_dicts(toins, self.table_names.get('pl'))
+        for p in players_v2015_table(players):
+            self._insert_dict(p, self.table_names.get('pl'))
 
 
     def insert_playerstats(self, ps, as_of):

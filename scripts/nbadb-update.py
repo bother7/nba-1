@@ -2,30 +2,17 @@
 # updates nbadb tables
 # can run on daily or periodic basis
 
-import json
 import logging
-import os
 import sys
 
-import browsercookie
-from configparser import ConfigParser
-
-from nba.agents.fantasylabs import FantasyLabsNBAAgent
 from nba.agents.nbacom import NBAComAgent
-from nba.agents.donbest import DonBestNBAAgent
-from nba.agents.rotoguru import RotoGuruNBAAgent
-from nba.db.nbacom import NBAComPg
-from nba.db.fantasylabs import FantasyLabsNBAPg
 from nba.dates import today, yesterday
-from nba.parsers.rotogrinders import RotoGrindersNBAParser
-from nba.scrapers.rotogrinders import RotoGrindersNBAScraper
-from nba.db.rotogrinders import RotoGrindersNBAPg
+from nba.pipelines.nbacom import players_v2015_table
+from nba.utility import getdb
 
 
-def main():
-
-    logging.basicConfig(stream=sys.stdout, level=logging.INFO)
-
+def extras():
+    '''
     config = ConfigParser()
     configfn = os.path.join(os.path.expanduser('~'), '.pgcred')
     config.read(configfn)
@@ -37,21 +24,57 @@ def main():
                     database=config['nbadb']['database'])
     fla = FantasyLabsNBAAgent(db=flpg, cache_name='flabs-nba', cookies=browsercookie.firefox())
     rgurua = RotoGuruNBAAgent(db=nbapg, cache_name='rg-nba')
+
+    from nba.parsers.rotogrinders import RotoGrindersNBAParser
+    from nba.scrapers.rotogrinders import RotoGrindersNBAScraper
+    from nba.db.rotogrinders import RotoGrindersNBAPg
+
+    from nba.agents.fantasylabs import FantasyLabsNBAAgent
+    from nba.agents.donbest import DonBestNBAAgent
+    from nba.agents.rotoguru import RotoGuruNBAAgent
+    from nba.db.nbacom import NBAComPg
+    from nba.db.fantasylabs import FantasyLabsNBAPg
+
+    '''
+    pass
+
+def run():
+    '''
+    Updates nba.com statistics
+
+    Args:
+        None
+        
+    Returns:
+        None
+    '''
+    logging.basicConfig(stream=sys.stdout, level=logging.INFO)
+    db = getdb('nbacom')
     cn = 'nba-agent-{}'.format(today())
-    a = NBAComAgent(cache_name=cn, cookies=None, db=nbapg)
+    a = NBAComAgent(cache_name=cn, db=db)
     a.scraper.delay = 1
-    season = '2016-17'
+    season = '2017-18'
 
     # ensures players table is up-to-date before inserting gamelogs, etc.
     logging.info('starting update nba.com players')
-    players = a.new_players(season[0:4])
+    content = a.scraper.players_v2015(season)
+    players = players_v2015_table(a.parser.players_v2015(content))
+    currids = set([int(p.get('nbacom_player_id', 0)) for p in players])
+    allids = set(a.db.select_list('SELECT nbacom_player_id from players'))
+    missing = currids - allids
+    if missing:
+        np = [p for p in players if int(p['nbacom_player_id']) in missing]
+        for p in players_v2015_table(np):
+            a.db._insert_dict(p, 'players')
+
     logging.info('finished update nba.com players')
 
+
     # gets all missing (days) salaries from current seasons
-    logging.info('starting dfs salaries')
-    fla.salaries(all_missing=True)
-    rgurua.salaries(all_missing=True)
-    logging.info('finished dfs salaries')
+    #logging.info('starting dfs salaries')
+    #fla.salaries(all_missing=True)
+    #rgurua.salaries(all_missing=True)
+    #logging.info('finished dfs salaries')
 
     # ensures that player_xref table includes all players from salaries
     #logging.info('starting update player_xref')
@@ -82,6 +105,7 @@ def main():
     #rdb.insert_odds(today(), json.loads(jsonstr))
     #logging.info('finished rotogrinders')
 
+    '''
     # player_gamelogs
     logging.info('starting nba.com player gamelogs')
     a.player_gamelogs(season)
@@ -134,7 +158,7 @@ def main():
     logging.info('start refresh materialized queries')
     nbapg.refresh_materialized()
     logging.info('refreshed materialized queries')
-
+    '''
 
 if __name__ == '__main__':
-    main()
+    run()
