@@ -42,14 +42,18 @@ class DonBestNBAParser():
 
 
     def _median(self, lst):
-        lst = sorted(lst)
-        if len(lst) < 1:
+        try:
+            lst = sorted(lst)
+            if len(lst) < 1:
+                return None
+            if len(lst) % 2 == 1:
+                idx = int(((len(lst) + 1) / 2) - 1)
+                logging.info(idx)
+                return lst[idx]
+            else:
+                return float(sum(lst[(len(lst) / 2) - 1:(len(lst) / 2) + 1])) / 2.0
+        except:
             return None
-        if len(lst) % 2 == 1:
-            return lst[((len(lst) + 1) / 2) - 1]
-        else:
-            return float(sum(lst[(len(lst) / 2) - 1:(len(lst) / 2) + 1])) / 2.0
-
 
     def _odds_total(self, x1, x2):
         '''
@@ -157,8 +161,18 @@ class DonBestNBAParser():
                         logging.debug('x1 is {} ({}) and x2 is {} ({})'.format(x1, type(x1), x2, type(x2)))
 
             # use median as consensus
-            result['consensus_spread'] = self._median(cs)
-            result['consensus_total'] = self._median(ct)
+            csm = self._median(cs)
+            if csm:
+                result['consensus_spread'] = csm
+            else:
+                result['consensus_spread'] = sum(cs) / float(len(cs))
+
+            ctm = self._median(ct)
+            if ctm:
+                result['consensus_total'] = ctm
+            else:
+                result['consensus_total'] = sum(ct) / float(len(ct))
+
             results.append(result)
 
         return results

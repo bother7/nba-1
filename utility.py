@@ -10,8 +10,7 @@ try:
 except ImportError:
     import pickle
 
-from nba.db.nbacom import NBAComPg
-from nba.db.pgsql import NBAPostgres
+from nba.db.nbapg import NBAPostgres
 
 
 def csv_to_dict(fn):
@@ -98,7 +97,7 @@ def file_to_ds(fname):
     else:
         raise ValueError('{0} is not a supported file extension'.format(ext))
 
-def getdb(dbtype, key='nbadb', configfn=None):
+def getdb(key='nbadb', configfn=None):
     '''
     Gets database instance
     
@@ -120,10 +119,9 @@ def getdb(dbtype, key='nbadb', configfn=None):
     else:
         config.read(configfn)
 
-    if dbtype == 'nbacom':
-        return NBAComPg(user=config[key]['username'], password=config[key]['password'], database=config[key]['db'])
-    else:
-        return NBAPostgres(user=config[key]['username'], password=config[key]['password'], database=config[key]['db'])
+    return NBAPostgres(user=config.get(key, 'username'), 
+                       password=config.get(key, 'password'), 
+                       database=config.get(key, 'db'))
 
 def isfloat(x):
     '''

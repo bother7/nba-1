@@ -4,11 +4,13 @@ import os
 
 from nba.dates import *
 
+# TODO: need to distinguish between season_year and season_code
 
 package_directory = os.path.dirname(os.path.abspath(__file__))
 
 # see https://docs.python.org/2/library/collections.html#collections.OrderedDict
 d = {
+    "2017-18": {"start": datetime.datetime.strptime("10-17-2017", "%m-%d-%Y"), "end": datetime.datetime.strptime("04-11-2018", "%m-%d-%Y")},
     "2016-17": {"start": datetime.datetime.strptime("10-25-2016", "%m-%d-%Y"), "end": datetime.datetime.strptime("04-12-2017", "%m-%d-%Y")},
     "2015-16": {"start": datetime.datetime.strptime("10-27-2015", "%m-%d-%Y"), "end": datetime.datetime.strptime("04-13-2016", "%m-%d-%Y")},
     "2014-15": {"start": datetime.datetime.strptime("10-28-2014", "%m-%d-%Y"), "end": datetime.datetime.strptime("04-15-2015", "%m-%d-%Y")},

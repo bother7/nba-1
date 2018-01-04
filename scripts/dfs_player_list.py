@@ -9,7 +9,7 @@ import sys
 from configparser import ConfigParser
 
 from nba.agents.nbacom import NBAComAgent
-from nba.db.nbacom import NBAComPg
+from nba.db.nbapg import NBAPostgres
 from nba.db.fantasylabs import FantasyLabsNBAPg
 from nba.dates import today
 from nba.db.queries import today_team_url_codes
@@ -22,7 +22,7 @@ def main():
     config = ConfigParser()
     configfn = os.path.join(os.path.expanduser('~'), '.pgcred')
     config.read(configfn)
-    nbapg = NBAComPg(username=config['nbadb']['username'],
+    nbapg = NBAPostgres(username=config['nbadb']['username'],
                     password=config['nbadb']['password'],
                     database=config['nbadb']['database'])
     flpg = FantasyLabsNBAPg(username=config['nbadb']['username'],

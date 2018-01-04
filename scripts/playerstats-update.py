@@ -11,7 +11,7 @@ import sys
 from configparser import ConfigParser
 
 from nba.agents.nbacom import NBAComAgent
-from nba.db.nbacom import NBAComPg
+from nba.db.nbapg import NBAPostgres
 from nba.seasons import *
 from nba.utility import merge
 
@@ -22,7 +22,7 @@ def main():
     config = ConfigParser()
     configfn = os.path.join(os.path.expanduser('~'), '.pgcred')
     config.read(configfn)
-    nbapg = NBAComPg(username=config['nbadb']['username'],
+    nbapg = NBAPostgres(username=config['nbadb']['username'],
                     password=config['nbadb']['password'],
                     database=config['nbadb']['database'])
     a = NBAComAgent(cache_name='playerstats-daily', cookies=None, db=nbapg)

@@ -5,6 +5,7 @@
 import logging
 import sys
 
+from nba.agents.donbest import DonBestNBAAgent
 from nba.agents.nbacom import NBAComAgent
 from nba.dates import today, yesterday
 from nba.pipelines.nbacom import players_v2015_table
@@ -16,7 +17,7 @@ def extras():
     config = ConfigParser()
     configfn = os.path.join(os.path.expanduser('~'), '.pgcred')
     config.read(configfn)
-    nbapg = NBAComPg(username=config['nbadb']['username'],
+    nbapg = NBAPostgres(username=config['nbadb']['username'],
                     password=config['nbadb']['password'],
                     database=config['nbadb']['database'])
     flpg = FantasyLabsNBAPg(username=config['nbadb']['username'],
@@ -32,7 +33,7 @@ def extras():
     from nba.agents.fantasylabs import FantasyLabsNBAAgent
     from nba.agents.donbest import DonBestNBAAgent
     from nba.agents.rotoguru import RotoGuruNBAAgent
-    from nba.db.nbacom import NBAComPg
+    from nba.db.nbapg import NBAPostgres
     from nba.db.fantasylabs import FantasyLabsNBAPg
 
     '''
@@ -49,15 +50,16 @@ def run():
         None
     '''
     logging.basicConfig(stream=sys.stdout, level=logging.INFO)
-    db = getdb('nbacom')
+    db = getdb()
     cn = 'nba-agent-{}'.format(today())
     a = NBAComAgent(cache_name=cn, db=db)
     a.scraper.delay = 1
-    season = '2017-18'
+    season_year = 2018
+    season_code = '2017-18'
 
     # ensures players table is up-to-date before inserting gamelogs, etc.
     logging.info('starting update nba.com players')
-    content = a.scraper.players_v2015(season)
+    content = a.scraper.players_v2015(season_code[0:4])
     players = players_v2015_table(a.parser.players_v2015(content))
     currids = set([int(p.get('nbacom_player_id', 0)) for p in players])
     allids = set(a.db.select_list('SELECT nbacom_player_id from players'))
@@ -68,7 +70,6 @@ def run():
             a.db._insert_dict(p, 'players')
 
     logging.info('finished update nba.com players')
-
 
     # gets all missing (days) salaries from current seasons
     #logging.info('starting dfs salaries')
@@ -105,16 +106,16 @@ def run():
     #rdb.insert_odds(today(), json.loads(jsonstr))
     #logging.info('finished rotogrinders')
 
-    '''
     # player_gamelogs
     logging.info('starting nba.com player gamelogs')
-    a.player_gamelogs(season)
+    a.player_gamelogs(season_code)
     logging.info('finished nba.com player gamelogs')
 
     # playerstats_daily
     logging.info('starting playerstats daily')
-    ps = a.playerstats(season, all_missing=True)
+    ps = a.playerstats(season_code, all_missing=True)
     logging.info('finished playerstats daily')
+
 
     # player_boxscores_combined
     logging.info('starting player_boxscores_combined')
@@ -123,12 +124,12 @@ def run():
 
     # update team_gamelogs
     logging.info('starting team gamelogs')
-    a.team_gamelogs(season)
+    a.team_gamelogs(season_code)
     logging.info('finished team gamelogs')
 
     # teamstats_daily
     logging.info('starting teamstats daily')
-    a.teamstats(season, all_missing=True)
+    a.teamstats(season_code, all_missing=True)
     logging.info('finished teamstats daily')
 
     # team_boxscores_combined
@@ -138,7 +139,7 @@ def run():
 
     # team_opponent_dashboards
     logging.info('start team_opponent_dashboards')
-    a.team_opponent_dashboards(season, all_missing=True)
+    a.team_opponent_dashboards(season_code, all_missing=True)
     logging.info('finished team_opponent_dashboards')
 
     # v2015 boxscores - linescores, refs, etc.
@@ -146,19 +147,16 @@ def run():
     a.linescores()
     logging.info('finished linescores')
 
-
     # odds and lines
     logging.info('start odds and lines')
-    dba = DonBestNBAAgent(db=nbapg)
-    odds = dba.odds(all_missing=True)
-    logging.debug(odds)
+    dba = DonBestNBAAgent(db=db)
+    dba.odds(all_missing=True)
     logging.info('finished odds and lines')
 
     # refresh all materialized views
     logging.info('start refresh materialized queries')
-    nbapg.refresh_materialized()
+    a.refresh_materialized()
     logging.info('refreshed materialized queries')
-    '''
 
 if __name__ == '__main__':
     run()

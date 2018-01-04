@@ -8,7 +8,7 @@ import sys
 from configparser import ConfigParser
 
 from nba.dates import datetostr, date_list
-from nba.db.nbacom import NBAComPg
+from nba.db.nbapg import NBAPostgres
 from nba.pipelines.nbacom import *
 from nba.pipelines.rotoguru import *
 from nba.seasons import season_dates
@@ -24,7 +24,7 @@ def fl():
     configfn = os.path.join(os.path.expanduser('~'), '.pgcred')
     config.read(configfn)
 
-    nbapg = NBAComPg(username=config['nbadb']['username'],
+    nbapg = NBAPostgres(username=config['nbadb']['username'],
                     password=config['nbadb']['password'],
                     database=config['nbadb']['database'])
 
@@ -64,7 +64,7 @@ def rg():
     config = ConfigParser()
     configfn = os.path.join(os.path.expanduser('~'), '.pgcred')
     config.read(configfn)
-    nbapg = NBAComPg(username=config['nbadb']['username'],
+    nbapg = NBAPostgres(username=config['nbadb']['username'],
                     password=config['nbadb']['password'],
                     database=config['nbadb']['database'])
 

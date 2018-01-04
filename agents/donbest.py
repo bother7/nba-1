@@ -38,25 +38,29 @@ class DonBestNBAAgent(object):
             players(list): of player ownership dict
         '''
         if day:
-            day = convert_format(day, 'db')
-            odds = self.parser.odds(self.scraper.odds(day), day)
-            if odds and self.insert_db:
+            try:
+                day = convert_format(day, 'db')
+                odds = self.parser.odds(self.scraper.odds(day), day)
                 self.db.insert_dicts(game_odds(odds), 'odds')
-            return odds
+                return odds
+            except:
+                logging.exception('could not get odds for {}'.format(day))
 
         elif all_missing:
             allodds = {}
             for day in self.db.select_list(missing_odds()):
-                odds = self.parser.odds(self.scraper.odds(day), day)
-                if odds and self.insert_db:
+                try:
+                    odds = self.parser.odds(self.scraper.odds(day), day)
                     self.db.insert_dicts(game_odds(odds), 'odds')
-                allodds[day] = odds
+                    allodds[day] = odds
+                except:
+                    logging.exception('could not get odds for {}'.format(day))
             return allodds
+
         else:
             raise ValueError('must provide day or set all_missing to True')
 
-        if self.insert_db:
-            self.db.execute(update_odds())
+        self.db.execute(update_odds())
 
 if __name__ == '__main__':
     pass

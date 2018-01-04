@@ -15,10 +15,11 @@ class NBAPostgres(object):
         '''
         Arguments:
             user (str): postgres username
-            database (str): postgres database name
-            host (str):
-            port (int):
-            database (str):
+            password (str): postgres password
+            database (str): database name
+            host (str): server address
+            port (int): server port
+            chunk_size (int): preferred chunk size for large db inserts
         '''
         logging.getLogger(__name__).addHandler(logging.NullHandler())
         self.conn = psycopg2.connect(user=user, password=password, host=host, port=port, dbname=database)
@@ -96,12 +97,12 @@ class NBAPostgres(object):
 
     def insert_dicts(self, dicts_to_insert, table_name):
         '''
-        Generic routine to insert dictionary into mysql table
+        Generic routine to insert list of dicts into table
         Will rollback with any errors
 
         Arguments:
-            dicts_to_insert(list): list of dictionaries to insert, keys match columns
-            table_name(str): name of database table
+            dicts_to_insert (list): list of dictionaries to insert, keys match columns
+            table_name (str): name of database table
 
         Returns:
             None
@@ -119,9 +120,8 @@ class NBAPostgres(object):
                     t = tuple([d[f] for f in fields])
                     records.append(t)
                 records_list_template = ','.join(['%s'] * len(records))
-                insert_query = 'insert into {0} ({1}) values {2} ON CONFLICT DO NOTHING'.format(table_name,
-                                                                                                ','.join(fields),
-                                                                                                records_list_template)
+                insert_query = 'insert into {0} ({1}) values {2} ON CONFLICT DO NOTHING'.format(
+                                table_name, ','.join(fields), records_list_template)
                 try:
                     cursor.execute(cursor.mogrify(insert_query, records))
                     self.conn.commit()
@@ -131,20 +131,18 @@ class NBAPostgres(object):
 
     def safe_insert_dicts(self, dicts_to_insert, table_name):
         '''
-        Generic routine to insert dictionary into mysql table
+        Generic routine to insert dictionaries into table
         Will rollback with any errors
 
         Arguments:
-            dicts_to_insert(list): list of dictionaries to insert, keys match columns
-            table_name(str): name of database table
+            dicts_to_insert (list): list of dictionaries to insert, keys match columns
+            table_name (str): name of database table
 
         Returns:
             None
+            
         '''
-
-        if not dicts_to_insert:
-            return None
-
+        success = 0
         with self.conn.cursor() as cursor:
             try:
                 for dict_to_insert in dicts_to_insert:
@@ -152,13 +150,15 @@ class NBAPostgres(object):
                     columns = ', '.join(dict_to_insert.keys())
                     sql = 'INSERT INTO %s ( %s ) VALUES ( %s ) ON CONFLICT DO NOTHING' % (
                     table_name, columns, placeholders)
-                    cursor.execute(sql, dict_to_insert.values())
+                    cursor.execute(sql, list(dict_to_insert.values()))
                 self.conn.commit()
+                success = 1
             except Exception as e:
                 logging.exception('insert_dicts failed: {0}'.format(e))
                 self.conn.rollback()
             finally:
                 cursor.close()
+                return success
 
     def postgres_backup_db(self, dbname, dirname=None):
         '''

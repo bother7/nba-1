@@ -28,6 +28,22 @@ def convert_format(d, site):
     else:
         return None
 
+def date_before(d1, d2, fmt='%Y-%m-%d'):
+    '''
+    Determines if first date is before the second date
+    
+    Args:
+        d1: 
+        d2: 
+        fmt: 
+
+    Returns:
+        bool: True is date is earlier, false if not
+        
+    '''
+    dt1 = datetime.datetime.strftime(d1, fmt)
+    dt2 = datetime.datetime.strftime(d2, fmt)
+
 
 def date_list(d1, d2, delta=None):
     '''
@@ -138,9 +154,9 @@ def subtract_datestr(d1, d2):
     Returns:
         int
     '''
-    if isinstance(d1, basestring):
+    try:
         delta = strtodate(d1) - strtodate(d2)
-    else:
+    except:
         delta = d1 - d2
     return delta.days
 

@@ -12,7 +12,7 @@ import time
 from configparser import ConfigParser
 
 from nba.scrapers.nbacom import NBAComScraper
-from nba.db.nbacom import NBAComPg
+from nba.db.nbapg import NBAPostgres
 from nba.db.queries import missing_games_meta
 
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
@@ -22,7 +22,7 @@ configfn = os.path.join(os.path.expanduser('~'), '.pgcred')
 config.read(configfn)
 
 s = NBAComScraper(cache_name='games-meta')
-nbapg = NBAComPg(username=config['nbadb']['username'],
+nbapg = NBAPostgres(username=config['nbadb']['username'],
                         password=config['nbadb']['password'],
                         database=config['nbadb']['database'])
 

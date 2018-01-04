@@ -1,5 +1,7 @@
+from csv import reader
 import logging
 import re
+
 
 class DraftKingsNBAParser():
     '''
@@ -119,7 +121,6 @@ class DraftKingsNBAParser():
         Returns:
             entries(list): List of contest entry dictionaries
         '''
-        
         entries = []
 
         if isinstance(fh, list):
@@ -149,6 +150,58 @@ class DraftKingsNBAParser():
             fh.close()
                
         return entries
+
+    def slate_entries(self, fn):
+        '''
+        Parses contest download file from dk.com to get all entries
+
+        Args:
+            fn (str): filename 
+
+        Returns:
+            list: List of dict
+            
+        '''
+        results = []
+        with open(fn, 'r') as infile:
+            # strange format in the file
+            #
+            for idx, row in enumerate(reader(infile)):
+                if not row[0]:
+                    break
+
+                if idx == 0:
+                    headers = row[0:12]
+                else:
+                    results.append(dict(zip(headers, row[0:12])))
+        return results
+
+    def slate_players(self, fn):
+        '''
+        Parses slate contest file from dk.com to get all players on slate
+
+        Args:
+            fn (str): filename 
+
+        Returns:
+            list: List of dict
+            
+        '''
+        results = []
+        with open(fn, 'r') as infile:
+            # strange format in the file
+            # data does not start until row 8 (index 7)
+            for idx, row in enumerate(reader(infile)):
+                if idx < 7:
+                    continue
+                elif not row[0]:
+                    break
+                elif idx == 7:
+                    headers = row[11:18]
+                else:
+                    results.append(dict(zip(headers, row)))
+        return results
+
 
 if __name__ == '__main__':
     pass

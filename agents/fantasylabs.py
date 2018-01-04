@@ -219,5 +219,73 @@ class FantasyLabsNBAAgent(object):
         else:
             logging.info('no missing ids in dfs_salaries')
 
+    def insert_models(self, models):
+        '''
+        Adds model JSON to table
+
+        Args:
+            models: dict of game_date, model, model_name
+        '''
+        cursor = self.conn.cursor()
+        try:
+            for model in models:
+                cursor.execute("""INSERT INTO models (game_date, model_name, data) VALUES (%s, %s, %s) ON CONFLICT ("game_date") DO UPDATE SET "data" = EXCLUDED.data;""",
+                               (model['game_date'], model['model_name'], json.dumps(model['data'])))
+            self.conn.commit()
+        except Exception as e:
+            logging.exception('update failed: {0}'.format(e))
+            self.conn.rollback()
+        finally:
+            cursor.close()
+
+
+    def insert_salaries(self, sals, game_date):
+        '''
+        Insert list of player salaries into dfs.salaries table
+
+        Args:
+            players (list): list of player dictionaries with salaries
+        '''
+        q = "SELECT DISTINCT source_player_id, nbacom_player_id FROM dfs_salaries WHERE source = 'fantasylabs'"
+        allp = {sal.get('source_player_id'): sal.get('nbacom_player_id') for
+            sal in self.select_dict(q)}
+        self.insert_dicts(salaries_table(sals, game_date), 'dfs_salaries')
+
+
+    def insert_salaries_dict(self, sals):
+        '''
+        Insert list of player salaries into dfs.salaries table
+
+        Args:
+            players (list): list of player dictionaries with salaries
+        '''
+        q = "SELECT DISTINCT source_player_id, nbacom_player_id FROM dfs_salaries WHERE source = 'fantasylabs'"
+        allp = {sal.get('source_player_id'): sal.get('nbacom_player_id') for
+            sal in self.select_dict(q)}
+
+        for k,v in sals.items():
+            vals = salaries_table(sals=v, game_date=k)
+            if vals:
+                self.insert_dicts(vals, 'dfs_salaries')
+
+
+    def insert_ownership(self, own, game_date):
+        '''
+        Insert player ownership JSON into table
+
+        Args:
+            own: json string
+        '''
+        cursor = self.conn.cursor()
+        try:
+            cursor.execute("""INSERT INTO ownership (game_date, data) VALUES (%s, %s);""", (game_date, json.dumps(own)))
+            self.conn.commit()
+        except Exception as e:
+            logging.exception('update failed: {0}'.format(e))
+            self.conn.rollback()
+        finally:
+            cursor.close()
+
+
 if __name__ == '__main__':
     pass

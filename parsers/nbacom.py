@@ -22,7 +22,6 @@ class NBAComParser(object):
     def __init__(self):
         logging.getLogger(__name__).addHandler(logging.NullHandler())
 
-
     def _fix_linescores(self, linescores):
         '''
         Preprocessing for insertion into database
@@ -41,7 +40,6 @@ class NBAComParser(object):
                     fixed_linescore['team_losses'] = losses
             fixed_linescores.append(fixed_linescore)
         return fixed_linescores
-
 
     def boxscore_v2015(self, content):
         '''
@@ -83,7 +81,7 @@ class NBAComParser(object):
     def boxscore_traditional(self, content, game_date=None):
         '''
         Represents single nba.com boxscore (traditional)
-        Arguments:
+       Arguments:
             content(dict): parsed json
             game_date(str): string representing date of game for boxscore
         Returns:
@@ -131,7 +129,6 @@ class NBAComParser(object):
             starter_bench.append(sb)
         return players, teams, starter_bench
 
-
     def boxscore_advanced(self, content):
         '''
         Represents single nba.com boxscore (advanced)
@@ -171,7 +168,6 @@ class NBAComParser(object):
 
         return players, teams
 
-
     def boxscore_misc(self, content):
         '''
         Represents single nba.com boxscore (misc)
@@ -208,7 +204,6 @@ class NBAComParser(object):
 
         return players, teams
 
-
     def boxscore_scoring(self, content):
         '''
         Represents single nba.com boxscore (scoring)
@@ -244,7 +239,6 @@ class NBAComParser(object):
 
         return players, teams
 
-
     def boxscore_usage(self, content):
         '''
         Represents single nba.com boxscore (usage)
@@ -270,7 +264,6 @@ class NBAComParser(object):
             players.append(player)
 
         return players
-
 
     def gameinfo(self, content):
         '''
@@ -320,7 +313,6 @@ class NBAComParser(object):
 
         return results
 
-
     def merge_boxscores(self, base_boxscore, advanced_boxscore):
         '''
         Base and player advanced boxscores from same game
@@ -349,7 +341,6 @@ class NBAComParser(object):
         z.update(advdict)
         return z
 
-
     def one_player_gamelogs(self, content):
         '''
         Parses gamelogs for one player
@@ -369,7 +360,6 @@ class NBAComParser(object):
             player_gl.append(game_log)
 
         return player_gl
-
 
     def one_team_gamelogs(self,content):
         '''
@@ -392,7 +382,6 @@ class NBAComParser(object):
 
         return team_gl
 
-
     def player_info(self,content):
         '''
         Dictionary about individual player, includes name, id, etc.
@@ -413,7 +402,6 @@ class NBAComParser(object):
         else:
             raise ValueError('player_info failed: no headers or rowset')
 
-
     def players (self,content):
         '''
         v2 API - parses list of players
@@ -425,7 +413,6 @@ class NBAComParser(object):
         '''
         result_set = content['resultSets'][0]
         return [dict(list(zip(result_set['headers'], row_set))) for row_set in result_set['rowSet']]
-
 
     def players_v2015 (self, content):
         '''
@@ -442,7 +429,6 @@ class NBAComParser(object):
         except:
             logging.error('could not parse v2015 players')
             return None
-
 
     def playerstats(self,content):
         '''
@@ -463,7 +449,6 @@ class NBAComParser(object):
                 p['SEC_PLAYED'], p['MIN_PLAYED'] = modf(p['MIN'])
             ps.append(p)
         return ps
-
 
     def scoreboard(self,content,game_date=None):
         '''
@@ -506,7 +491,6 @@ class NBAComParser(object):
         sb = {'date': game_date, 'game_headers': list(game_headers.values()), 'game_linescores': self._fix_linescores(game_linescores), 'standings': standings}
         return sb
 
-
     def season_gamelogs(self,content,player_or_team):
 
         gamelogs =[]
@@ -537,7 +521,6 @@ class NBAComParser(object):
                 gamelogs.append(player_game)
 
         return gamelogs
-
 
     def team_dashboard(self, content):
         '''
@@ -581,7 +564,6 @@ class NBAComParser(object):
 
         return dashboard
 
-
     def team_opponent_dashboard(self, content):
         '''
         Returns list of dictionaries, stats of opponents vs. each team
@@ -600,7 +582,6 @@ class NBAComParser(object):
 
         return teams
 
-
     def teams(self, content):
         '''
         Returns list of string - "1610612737","ATL"
@@ -611,7 +592,6 @@ class NBAComParser(object):
         pattern = re.compile(r'("(\d{10})","(\w{3})"),conf')
 
         return {match[2]: match[1] for match in re.findall(pattern, content)}
-
 
     def teamstats(self,content,stat_date=None):
 
@@ -628,6 +608,7 @@ class NBAComParser(object):
             ts.append(t)
 
         return ts
+
 
 if __name__ == "__main__":
     pass

@@ -190,7 +190,6 @@ def missing_player_gamelogs():
         ORDER BY games.game_id;
     """
 
-
 def missing_playerstats():
     """
     Query to determine gamedays in current season where no data for playerstats table
@@ -205,7 +204,6 @@ def missing_playerstats():
          AND NOT (games.game_date IN ( SELECT DISTINCT playerstats_daily.as_of FROM playerstats_daily))
          ORDER BY games.game_date DESC;
     """
-
 
 def missing_salaries():
     """

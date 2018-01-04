@@ -27,7 +27,7 @@ RotoGuruNBAParser
 # Db
 
 NBAPostgres
-NBAComPg
+NBAPostgres
 FantasyLabsNBAPg
 
 # Agents

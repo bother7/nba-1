@@ -25,20 +25,20 @@ class NBAComScraper(BasketballScraper):
         logging.getLogger(__name__).addHandler(logging.NullHandler())
         BasketballScraper.__init__(self, headers=headers, cookies=cookies, cache_name=cache_name, expire_hours=expire_hours, as_string=as_string)
 
-
     def boxscore_v2015(self, game_id, game_date):
         '''
         Boxscore from a single game
 
         Arguments:
             game_id: numeric identifier of game
+            game_date: in YYYYmmdd format
 
         Returns:
-            content: python data structure of json documnt
+            content: python data structure of json document
+            
         '''
         url = 'http://data.nba.com/data/10s/prod/v1/{}/{}_boxscore.json'
         return self.get_json(url.format(game_date, game_id))
-
 
     def boxscore_traditional(self, game_id):
         '''
@@ -49,6 +49,7 @@ class NBAComScraper(BasketballScraper):
 
         Returns:
             content: python data structure of json documnt
+
         '''
         base_url = 'http://stats.nba.com/stats/boxscoretraditionalv2?'
         params = {
@@ -68,15 +69,16 @@ class NBAComScraper(BasketballScraper):
             logging.debug('got {}'.format(self.urls[-1]))
         return content
 
-
     def boxscore_advanced(self, game_id):
         '''
         Boxscore from a single game
 
         Arguments:
             game_id: numeric identifier of game (has to be 10-digit, may need two leading zeroes)
+        
         Returns:
             content: python data structure of json document
+            
         '''
         base_url = 'http://stats.nba.com/stats/boxscoreadvancedv2?'
         if len(str(game_id)) == 8:
@@ -97,7 +99,6 @@ class NBAComScraper(BasketballScraper):
             logging.debug('got {}'.format(self.urls[-1]))
         return content
 
-
     def boxscore_misc(self, game_id):
         '''
         Boxscore from a single game
@@ -107,6 +108,7 @@ class NBAComScraper(BasketballScraper):
 
         Returns:
             content: python data structure of json document
+
         '''
         base_url = 'http://stats.nba.com/stats/boxscoremiscv2?'
         if len(str(game_id)) == 8:
@@ -127,7 +129,6 @@ class NBAComScraper(BasketballScraper):
             logging.debug('got {}'.format(self.urls[-1]))
         return content
 
-
     def boxscore_scoring(self, game_id):
         '''
         Boxscore from a single game
@@ -137,6 +138,7 @@ class NBAComScraper(BasketballScraper):
 
         Returns:
             content: python data structure of json document
+
         '''
         base_url = 'http://stats.nba.com/stats/boxscorescoringv2?'
         if len(str(game_id)) == 8:
@@ -156,7 +158,6 @@ class NBAComScraper(BasketballScraper):
         else:
             logging.debug('got {}'.format(self.urls[-1]))
         return content
-
 
     def boxscore_usage(self, game_id):
         '''
@@ -188,16 +189,16 @@ class NBAComScraper(BasketballScraper):
             logging.debug('got {}'.format(self.urls[-1]))
         return content
 
-
     def combined_boxscore(self, gid):
         '''
-        Download boxscores for all of the game_ids provided
+        Combine 5 types of boxscores for game_id (traditional, advanced, misc, scoring, usage)
 
         Arguments:
-            gid(list): nba.com game_id
+            game_id: numeric identifier of game (has to be 10-digit, may need two leading zeroes)
 
         Returns:
             boxes(dict): keys are the type of boxscore, value is parsed json
+
         '''
         # traditional, advanced, misc, scoring, usage
         boxes = defaultdict(dict)
@@ -212,16 +213,16 @@ class NBAComScraper(BasketballScraper):
         boxes['usage'] = self.boxscore_usage(gid)
         return boxes
 
-
     def gamedetail(self, game_id):
         '''
         Details from individual game. Part of v2015 API, does not work before 2015 season.
 
         Args:
-            game_id:
+            game_id: numeric identifier of game (has to be 10-digit, may need two leading zeroes)
 
         Returns:
             Parsed json into dict
+  
         '''
         url = 'http://data.nba.com/data/v2015/json/mobile_teams/nba/2016/scores/gamedetail/{}_gamedetail.json'
         content = self.get_json(url=url.format(game_id))
@@ -230,7 +231,6 @@ class NBAComScraper(BasketballScraper):
         else:
             logging.debug('got {}'.format(self.urls[-1]))
         return content
-
 
     def games(self, season_year):
         '''
@@ -241,6 +241,7 @@ class NBAComScraper(BasketballScraper):
 
         Returns:
             Parsed json into dict
+            
         '''
         url = 'http://data.nba.com/data/10s/v2015/json/mobile_teams/nba/{}/league/00_full_schedule.json'
         content = self.get_json(url=url.format(season_year))
@@ -249,7 +250,6 @@ class NBAComScraper(BasketballScraper):
         else:
             logging.debug('got {}'.format(self.urls[-1]))
         return content
-
 
     def league_schedule(self, season_year):
         '''
@@ -260,6 +260,7 @@ class NBAComScraper(BasketballScraper):
 
         Returns:
             Parsed json into dict
+
         '''
         url = 'http://data.nba.com/data/10s/prod/v1/{}/schedule.json'
         content = self.get_json(url=url.format(season_year))
@@ -269,23 +270,23 @@ class NBAComScraper(BasketballScraper):
             logging.debug('got {}'.format(self.urls[-1]))
         return content
 
-
-    def one_player_gamelogs(self, player_id, season):
+    def one_player_gamelogs(self, player_id, season_code):
         '''
         All of the gamelogs for one player in a single season
 
         Args:
             player_id: int
-            season: str e.g. 2016-17
+            season_code: str e.g. 2016-17
 
         Returns:
             Parsed json as dict
+
         '''
         base_url = 'http://stats.nba.com/stats/playergamelog?'
         params = {
           'LeagueID': '00',
           'PlayerID': player_id,
-          'Season': season,
+          'Season': season_code,
           'SeasonType': 'Regular Season'
         }
 
@@ -296,26 +297,25 @@ class NBAComScraper(BasketballScraper):
             logging.debug('got {}'.format(self.urls[-1]))
         return content
 
-
-    def one_team_gamelogs(self, team_id, season):
+    def one_team_gamelogs(self, team_id, season_code):
         '''
         All of the gamelogs for one team in a single season
 
         Args:
             team_id: int
-            season: str e.g. 2016-17
+            season_code: str e.g. 2016-17
 
         Returns:
             Parsed json as dict
+
         '''
         base_url = 'http://stats.nba.com/stats/teamgamelog?'
         params = {
           'LeagueID': '00',
           'TeamID': team_id,
-          'Season': season,
+          'Season': season_code,
           'SeasonType': 'Regular Season'
         }
-
         content = self.get_json(base_url, payload=params)
         if not content:
             logging.error('could not get {}'.format(self.urls[-1]))
@@ -323,26 +323,25 @@ class NBAComScraper(BasketballScraper):
             logging.debug('got {}'.format(self.urls[-1]))
         return content
 
-
-    def player_info(self, player_id, season):
+    def player_info(self, player_id, season_code):
         '''
         Gets details about player, such as height, weight, college, draft slot
 
         Args:
             player_id: int nbacom_player_id
-            season: str e.g. 2015-16
+            season_code: str e.g. 2015-16
 
         Returns:
             playerinfo dict
+            
         '''
         base_url = 'http://stats.nba.com/stats/commonplayerinfo?'
         params = {
           'LeagueID': '00',
           'PlayerID': player_id,
-          'Season': season,
+          'Season': season_code,
           'SeasonType': 'Regular Season'
         }
-
         content = self.get_json(base_url, payload=params)
         if not content:
             logging.error('could not get {}'.format(self.urls[-1]))
@@ -350,27 +349,25 @@ class NBAComScraper(BasketballScraper):
             logging.debug('got {}'.format(self.urls[-1]))
         return content
 
-
-    def players(self, season, cs_only=0):
+    def players(self, season_code, cs_only=0):
         '''
         Gets players, either all of them or only those from the current season
 
         Args:
-            season: str e.g. 2015-16
+            season_code: str e.g. 2015-16
             cs_only: bool 1 or 0
 
         Returns:
             players: list of player dict
+            
         '''
         base_url = 'http://stats.nba.com/stats/commonallplayers?'
         params = {
           'IsOnlyCurrentSeason': cs_only,
           'LeagueID': '00',
-          'Season': season,
+          'Season': season_code,
         }
-
         return self.get_json(base_url, payload=params)
-
 
     def players_v2015(self, season_year):
         '''
@@ -381,6 +378,7 @@ class NBAComScraper(BasketballScraper):
 
         Returns:
             Parsed json into dict
+            
         '''
         url = 'http://data.nba.com/data/10s/prod/v1/{}/players.json'
         content = self.get_json(url=url.format(season_year))
@@ -390,16 +388,16 @@ class NBAComScraper(BasketballScraper):
             logging.debug('got {}'.format(self.urls[-1]))
         return content
 
-
-    def playerstats(self, season, **kwargs):
+    def playerstats(self, season_code, **kwargs):
         '''
         Document has one line of stats per player
 
         Arguments:
-            season(str): such as 2015-16
+            season_code (str): such as 2015-16
 
         Returns:
             content: parsed json response from nba.com
+
         '''
         base_url = 'http://stats.nba.com/stats/leaguedashplayerstats?'
 
@@ -427,7 +425,7 @@ class NBAComScraper(BasketballScraper):
           'PlayerPosition': '',
           'PlusMinus': 'N',
           'Rank': 'N',
-          'Season': season,
+          'Season': season_code,
           'SeasonSegment': '',
           'SeasonType': 'Regular Season',
           'StarterBench': '',
@@ -439,22 +437,21 @@ class NBAComScraper(BasketballScraper):
         for key, value in kwargs.items():
             if key in params:
                 params[key] = value
-
         content = self.get_json(base_url, payload=params)
         if not content:
             logging.error('could not get {}'.format(self.urls[-1]))
         return content
-
 
     def scoreboard(self, game_date):
         '''
         Scoreboard for single game_date
 
         Args:
-            game_date: str YYYY-mm-dd format
+            game_date (str): YYYY-mm-dd format
 
         Returns:
             parsed json
+
         '''
         base_url = 'http://stats.nba.com/stats/scoreboardV2?'
         params = {
@@ -462,7 +459,6 @@ class NBAComScraper(BasketballScraper):
           'LeagueID': '00',
           'GameDate': game_date,
         }
-
         content = self.get_json(base_url, payload=params)
         if not content:
             logging.error('could not get {}'.format(self.urls[-1]))
@@ -470,17 +466,17 @@ class NBAComScraper(BasketballScraper):
             logging.debug('got {}'.format(self.urls[-1]))
         return content
 
-
-    def season_gamelogs(self, season, player_or_team, **kwargs):
+    def season_gamelogs(self, season_code, player_or_team, **kwargs):
         '''
         Team or player gamelogs for entire season
 
         Args:
-            season: str e.g. 2015-16
+            season_code (str): e.g. 2015-16
             player_or_team: 'P' or 'T'
 
         Returns:
             content: json parsed into dict
+
         '''
         base_url = 'http://stats.nba.com/stats/leaguegamelog?'
         params = {
@@ -488,7 +484,7 @@ class NBAComScraper(BasketballScraper):
           'Direction': 'DESC',
           'LeagueID': '00',
           'PlayerOrTeam': player_or_team,
-          'Season': season,
+          'Season': season_code,
           'SeasonType': 'Regular Season',
           'Sorter': 'PTS'
         }
@@ -497,7 +493,6 @@ class NBAComScraper(BasketballScraper):
         for key, value in kwargs.items():
             if key in params:
                 params[key] = value
-
         content = self.get_json(base_url, payload=params)
         if not content:
             logging.error('could not get {}'.format(self.urls[-1]))
@@ -505,18 +500,18 @@ class NBAComScraper(BasketballScraper):
             logging.debug('got {}'.format(self.urls[-1]))
         return content
 
-
-    def team_dashboard(self, team_id, season, **kwargs):
+    def team_dashboard(self, team_id, season_code, **kwargs):
         '''
         Stats for single team in single season
 
         Args:
             team_id: int
-            season: str e.g. '2016-17'
+            season_code (str): e.g. 2016-17
             **kwargs:
 
         Returns:
             dict of team statistics
+            
         '''
         # measure_type allows you to choose between Base and Advanced
         # per_mode can be Totals or PerGame
@@ -540,7 +535,7 @@ class NBAComScraper(BasketballScraper):
           'Period': '0',
           'PlusMinus': 'N',
           'Rank': 'N',
-          'Season': season,
+          'Season': season_code,
           'SeasonSegment': '',
           'SeasonType': 'Regular Season',
           'ShotClockRange': '',
@@ -553,7 +548,6 @@ class NBAComScraper(BasketballScraper):
         for key, value in kwargs.items():
             if key in params:
                 params[key] = value
-
         content = self.get_json(base_url, payload=params)
         if not content:
             logging.error('could not get {}'.format(self.urls[-1]))
@@ -561,17 +555,17 @@ class NBAComScraper(BasketballScraper):
             logging.debug('got {}'.format(self.urls[-1]))
         return content
 
-
-    def team_opponent_dashboard(self, season, **kwargs):
+    def team_opponent_dashboard(self, season_code, **kwargs):
         '''
         Returns team_opponent stats for every team in league
 
         Args:
-            season: str e.g. '2016-17'
+            season_code (str): e.g. 2016-17
             **kwargs:
 
         Returns:
             dict of team opponent statistics
+            
         '''
         base_url = 'http://stats.nba.com/stats/leaguedashteamstats?'
         params = {
@@ -591,7 +585,7 @@ class NBAComScraper(BasketballScraper):
           'Period': '0',
           'PlusMinus': 'N',
           'Rank': 'N',
-          'Season': season,
+          'Season': season_code,
           'SeasonSegment': '',
           'SeasonType': 'Regular Season',
           'ShotClockRange': '',
@@ -604,7 +598,6 @@ class NBAComScraper(BasketballScraper):
         for key, value in kwargs.items():
             if key in params:
                 params[key] = value
-
         content = self.get_json(base_url, payload=params)
         if not content:
             logging.error('could not get {}'.format(self.urls[-1]))
@@ -612,13 +605,13 @@ class NBAComScraper(BasketballScraper):
             logging.debug('got {}'.format(self.urls[-1]))
         return content
 
-
     def teams(self):
         '''
         Gets javascript file with js variable containing team_ids and team names
 
         Returns:
             content is javascript code
+            
         '''
         #  nba.com stores team_id and team_code as a variable in a javascript file
         url = 'http://stats.nba.com/scripts/custom.min.js'
@@ -627,16 +620,16 @@ class NBAComScraper(BasketballScraper):
             logging.error('could not get {}'.format(self.urls[-1]))
         return content
 
-
     def teams_v2015(self, season_year):
         '''
         Gets team information - v2015 API
 
         Args:
-            season_year: int such as 2016 for 2016-17 season
+            season_year (int): e.g. 2016 for 2016-17 season
 
         Returns:
             dict
+            
         '''
         base_url = 'http://data.nba.com/data/10s/prod/v1/{}/teams.json'
         content = self.get_json(base_url.format(season_year))
@@ -646,17 +639,17 @@ class NBAComScraper(BasketballScraper):
             logging.debug('got {}'.format(self.urls[-1]))
         return content
 
-
-    def teamstats(self, season, **kwargs):
+    def teamstats(self, season_code, **kwargs):
         '''
         Stats for every team in single season
 
         Args:
-            season: str e.g. '2016-17'
+            season_code (str): e.g. '2016-17'
             **kwargs:
 
         Returns:
             dict of team statistics
+
         '''
         # measure_type allows you to choose between Base and Advanced
         # per_mode can be Totals or PerGame
@@ -683,7 +676,7 @@ class NBAComScraper(BasketballScraper):
           'PlayerPosition': '',
           'PlusMinus': 'N',
           'Rank': 'N',
-          'Season': season,
+          'Season': season_code,
           'SeasonSegment': '',
           'SeasonType': 'Regular Season',
           'ShotClockRange': '',
@@ -697,14 +690,12 @@ class NBAComScraper(BasketballScraper):
         for key, value in kwargs.items():
             if key in params:
                 params[key] = value
-
         content = self.get_json(base_url, payload=params)
         if not content:
             logging.error('could not get {}'.format(self.urls[-1]))
         else:
             logging.debug('got {}'.format(self.urls[-1]))
         return content
-
 
 if __name__ == "__main__":
     pass

@@ -29,18 +29,7 @@ class DonBestNBAScraper(BasketballScraper):
             list of dict
         '''
         base_url = 'http://www.donbest.com/nba/odds/{}.html'
-
-        if isinstance(day, basestring):
-            if len(day) == 8:
-                d = day
-            else:
-                d = convert_format(day, 'db')
-        elif isinstance(day, datetime.datetime):
-            d = datetostr(day, 'db')
-        else:
-            raise ValueError('Day in unknown format: {}'.format(day))
-
-        return self.get(base_url.format(d))
+        return self.get(base_url.format(day))
 
 
 if __name__ == "__main__":

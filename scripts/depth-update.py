@@ -12,7 +12,7 @@ import sys
 from configparser import ConfigParser
 
 from nba.dates import date_list, datetostr
-from nba.db.nbacom import NBAComPg
+from nba.db.nbapg import NBAPostgres
 from nba.parsers.realgm import RealgmNBAParser
 from nba.parsers.rotoworld import RotoworldNBAParser
 from nba.scrapers.wayback import WaybackScraper
@@ -67,7 +67,7 @@ def main():
     config = ConfigParser()
     configfn = os.path.join(os.path.expanduser('~'), '.pgcred')
     config.read(configfn)
-    db = NBAComPg(username=config['nbadb']['username'],
+    db = NBAPostgres(username=config['nbadb']['username'],
                     password=config['nbadb']['password'],
                     database=config['nbadb']['database'])
 
