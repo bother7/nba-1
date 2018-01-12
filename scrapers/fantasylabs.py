@@ -36,29 +36,23 @@ class FantasyLabsNBAScraper(BasketballScraper):
         BasketballScraper.__init__(self, headers=headers, cookies=cookies, cache_name=cache_name,
                                    expire_hours=expire_hours, as_string=as_string)
         self.model_urls = {
-                'default': 'http://www.fantasylabs.com/api/playermodel/2/{0}/?modelId=100605',
-                'bales': 'http://www.fantasylabs.com/api/playermodel/2/{0}/?modelId=193714',
-                'phan': 'http://www.fantasylabs.com/api/playermodel/2/{0}/?modelId=661266',
-                'tournament': 'http://www.fantasylabs.com/api/playermodel/2/{0}/?modelId=193722',
-                'cash': 'http://www.fantasylabs.com/api/playermodel/2/{0}/?modelId=884277'
+            'default': 'https://www.fantasylabs.com/api/playermodel/2/{}/?modelId=193718&projOnly=true',
         }
-
 
     def model(self, model_day, model_name='default'):
         '''
 
         Args:
-            model_day:
-            model_name:
+            model_day (str): in mm_dd_yyyy format
+            model_name (str): default, phan, etc.
 
         Returns:
-
+            dict
         '''
         url = self.model_urls.get(model_name)
         if not url:
-            raise ValueError('invalid model name - could not find url')
+            url = self.model_urls.get('default')
         return self.get_json(url=url.format(model_day))
-
 
     def models(self, start_date, end_date, model_name='phan'):
         '''

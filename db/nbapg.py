@@ -114,6 +114,7 @@ class NBAPostgres(object):
         # postgresql will convert list of tuples into postgres records
         with self.conn.cursor() as cursor:
             for chunk in self._chunks(dicts_to_insert, self.chunk_size):
+                # get the max # of fields in a dict
                 fields = tuple(sorted(chunk[0].keys()))
                 records = []
                 for d in dicts_to_insert:

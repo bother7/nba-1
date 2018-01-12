@@ -243,7 +243,10 @@ class NBAComScraper(BasketballScraper):
             Parsed json into dict
             
         '''
-        url = 'http://data.nba.com/data/10s/v2015/json/mobile_teams/nba/{}/league/00_full_schedule.json'
+        if season_year < 2017:
+            url = 'http://data.nba.com/data/10s/v2015/json/mobile_teams/nba/{}/league/00_full_schedule.json'
+        else:
+            url = 'https://data.nba.com/data/10s/v2015/json/mobile_teams/nba/{}/league/00_full_schedule_week.json'
         content = self.get_json(url=url.format(season_year))
         if not content:
             logging.error('could not get {}'.format(self.urls[-1]))
@@ -466,13 +469,15 @@ class NBAComScraper(BasketballScraper):
             logging.debug('got {}'.format(self.urls[-1]))
         return content
 
-    def season_gamelogs(self, season_code, player_or_team, **kwargs):
+    def season_gamelogs(self, season_code, player_or_team, date_from=None, date_to=None):
         '''
         Team or player gamelogs for entire season
 
         Args:
             season_code (str): e.g. 2015-16
-            player_or_team: 'P' or 'T'
+            player_or_team (str): 'P' or 'T'
+            date_from (str): '2017-10-31'
+            date_to (str); '2018-01-15'
 
         Returns:
             content: json parsed into dict
@@ -489,16 +494,12 @@ class NBAComScraper(BasketballScraper):
           'Sorter': 'PTS'
         }
 
-        # override defaults with **kwargs
-        for key, value in kwargs.items():
-            if key in params:
-                params[key] = value
-        content = self.get_json(base_url, payload=params)
-        if not content:
-            logging.error('could not get {}'.format(self.urls[-1]))
-        else:
-            logging.debug('got {}'.format(self.urls[-1]))
-        return content
+        if date_from:
+            params['DateFrom'] = date_from
+        if date_to:
+            params['DateTo'] = date_to
+
+        return self.get_json(base_url, payload=params)
 
     def team_dashboard(self, team_id, season_code, **kwargs):
         '''

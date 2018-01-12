@@ -82,18 +82,18 @@ def date_list(d1, d2, delta=None):
         return [d1 - datetime.timedelta(days=x) for x in range(0, season.days+1)]
 
 
-def datetostr(d, site):
+def datetostr(d, fmt):
     '''
     Converts datetime object to formats used by different sites
 
     Args:
         d: DateTime object
-        site: str, such as 'nba' or 'fl'
+        fmt: str, such as 'nba' or 'fl'
 
     Returns:
         datestr in specified format
     '''
-    return datetime.datetime.strftime(d, site_format(site))
+    return datetime.datetime.strftime(d, site_format(fmt))
 
 
 def format_type(datestr):

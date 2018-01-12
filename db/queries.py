@@ -86,7 +86,8 @@ def dkpoints():
         ORDER BY t1.dkmin DESC
     """
 
-def missing_games_meta():
+
+def missing_games_meta(tz='CST'):
     """
     Query to determine games in current season where no data for games_meta table
 
@@ -96,14 +97,29 @@ def missing_games_meta():
     return """
          SELECT '00' || games.game_id::text as game_id, TO_CHAR(game_date, 'YYYYmmdd') as game_date
          FROM cs_games games
-         WHERE games.game_date < now()::date
+         WHERE games.game_date < (now() AT TIME ZONE '{}')::date
          AND NOT (game_id IN (
            SELECT DISTINCT game_id FROM games_meta))
         ORDER BY games.game_id;
-    """
+    """.format(tz)
+
+def missing_linescores(tz='CST'):
+    '''
+    Query for missing linescores in boxv2015
+    
+    Args:
+        tz (str): default 'CST' 
+
+    Returns:
+        str: query
+    '''
+    return """SELECT '00' || game_id as gid, to_char(game_date, 'YYYYmmdd') as gd FROM game
+        WHERE game_date < (now() AT TIME ZONE '{}')::date 
+        AND season_year > 2015 AND game_id NOT IN (SELECT DISTINCT game_id FROM boxv2015)
+        ORDER BY game_date DESC;""".format(tz)
 
 
-def missing_models():
+def missing_models(tz='CST'):
     """
     Query to determine gamedays in current season where no data for models table
 
@@ -115,11 +131,11 @@ def missing_models():
         FROM
             cs_games games
         WHERE
-            games.game_date < now()::date
+            games.game_date < (now() AT TIME ZONE '{}')::date
             AND(NOT(games.game_date IN(SELECT DISTINCT game_date FROM models)))
         ORDER BY
             games.game_date DESC;
-    """
+    """.format(tz)
 
 
 def missing_odds():
@@ -138,7 +154,7 @@ def missing_odds():
     """
 
 
-def missing_ownership():
+def missing_ownership(tz='CST'):
     """
     Query to determine gamedays in current season where no data for ownership table
 
@@ -150,14 +166,14 @@ def missing_ownership():
         FROM
             cs_games games
         WHERE
-            games.game_date < now()::date
+            games.game_date < (now() AT TIME ZONE '{}')::date
             AND(NOT(games.game_date IN(SELECT DISTINCT ownership.game_date FROM ownership)))
         ORDER BY
             games.game_date DESC;
-    """
+    """.format(tz)
 
 
-def missing_player_boxscores():
+def missing_player_boxscores(tz='CST'):
     """
     Query to determine games in current season where no data for player_boxscores table
 
@@ -167,30 +183,34 @@ def missing_player_boxscores():
     return """
          SELECT '00' || games.game_id::text
          FROM cs_games games
-         WHERE games.game_date < now()::date
+         WHERE games.game_date < (now() AT TIME ZONE '{}')::date
          AND NOT (games.game_id IN (
            SELECT DISTINCT player_boxscores_combined.game_id FROM player_boxscores_combined))
         ORDER BY games.game_id;
-    """
+    """.format(tz)
 
 
-def missing_player_gamelogs():
+def missing_player_gamelogs(tz='CST'):
     """
     Query to determine games in current season where no data for player_gamelogs table
 
+    Args:
+        tz (str): default 'CST'
+
     Returns:
-        query string
+        str
+
     """
     return """
          SELECT '00' || games.game_id::text
          FROM cs_games games
-         WHERE games.game_date < now()::date
+         WHERE games.game_date < (now() AT TIME ZONE '{}')::date;
          AND NOT (game_id IN (
            SELECT DISTINCT game_id FROM cs_player_gamelogs))
         ORDER BY games.game_id;
-    """
+    """.format(tz)
 
-def missing_playerstats():
+def missing_playerstats(tz='CST'):
     """
     Query to determine gamedays in current season where no data for playerstats table
 
@@ -200,12 +220,12 @@ def missing_playerstats():
     return """
          SELECT DISTINCT games.game_date
          FROM cs_games games
-         WHERE games.game_date < now()::date
+         WHERE games.game_date < (now() AT TIME ZONE '{}')::date
          AND NOT (games.game_date IN ( SELECT DISTINCT playerstats_daily.as_of FROM playerstats_daily))
          ORDER BY games.game_date DESC;
-    """
+    """.format(tz)
 
-def missing_salaries():
+def missing_salaries(tz='CST'):
     """
     Query to determine gamedays in current season where no data for dfs_salaries table
 
@@ -217,12 +237,12 @@ def missing_salaries():
         FROM
             cs_games games
         WHERE
-            games.game_date <= now()::date
+            games.game_date <= (now() AT TIME ZONE '{}')::date
                        AND NOT(games.game_date IN
                 (SELECT DISTINCT dfs_salaries.game_date
                  FROM dfs_salaries))
         ORDER BY games.game_date DESC
-    """
+    """.format(tz)
 
 
 def missing_salaries_ids(source=None):
@@ -252,7 +272,7 @@ def missing_salaries_ids(source=None):
         """
 
 
-def missing_team_gamelogs():
+def missing_team_gamelogs(tz='CST'):
     """
     Query to determine games in current season where no data for team_gamelogs table
 
@@ -263,11 +283,11 @@ def missing_team_gamelogs():
         SELECT '00' || games.game_id::text
         FROM cs_games games
         WHERE NOT(games.game_id IN(SELECT DISTINCT game_id FROM team_gamelogs))
-        AND games.game_date < now()::date
-    """
+        AND games.game_date < (now() AT TIME ZONE '{}')::date
+    """.format(tz)
 
 
-def missing_teamstats():
+def missing_teamstats(tz='CST'):
     """
     Query to determine gamedays in current season where no data for teamstats table
 
@@ -278,12 +298,12 @@ def missing_teamstats():
         SELECT DISTINCT games.game_date
         FROM cs_games games
         WHERE NOT(games.game_date IN(SELECT DISTINCT as_of FROM teamstats_daily))
-        AND games.game_date < now()::date
+        AND games.game_date < (now() AT TIME ZONE '{}')::date
         ORDER BY games.game_date DESC;
-    """
+    """.format(tz)
 
 
-def missing_team_boxscores():
+def missing_team_boxscores(tz='CST'):
     """
     Query to determine games in current season where no data for team_boxscores table
 
@@ -293,14 +313,14 @@ def missing_team_boxscores():
     return """
         SELECT '00' || games.game_id::text
          FROM cs_games games
-         WHERE games.game_date < now()::date
+         WHERE games.game_date < (now() AT TIME ZONE '{}')::date
          AND NOT (games.game_id IN (
            SELECT DISTINCT team_boxscores_combined.game_id FROM team_boxscores_combined))
         ORDER BY games.game_id;
-    """
+    """.format(tz)
 
 
-def missing_team_opponent_dashboard():
+def missing_team_opponent_dashboard(tz='CST'):
     """
         Query to determine gamedays in current season where no data for team_opponent_dashboard table
 
@@ -310,12 +330,13 @@ def missing_team_opponent_dashboard():
     return """
         SELECT DISTINCT games.game_date
         FROM cs_games games
-        WHERE games.game_date < now()::date
+        WHERE games.game_date < (now() AT TIME ZONE '{}')::date
         AND NOT (games.game_date IN (
             SELECT DISTINCT team_opponent_dashboard.as_of
             FROM team_opponent_dashboard))
         ORDER BY games.game_date DESC;
-    """
+    """.format(tz)
+
 
 def optimal_lineups():
     """
@@ -343,6 +364,7 @@ def optimal_lineups():
         ORDER BY rnk
     """
 
+
 def rotoworld_players():
     '''
     Query to get rotoworld players from depth_charts
@@ -355,7 +377,7 @@ def rotoworld_players():
            """
 
 
-def today_team_url_codes():
+def today_team_url_codes(tz='CST'):
     """
         Query to determine team_url_codes for all teams playing today
 
@@ -367,8 +389,8 @@ def today_team_url_codes():
         FROM cteams
         WHERE (cteams.nbacom_team_id IN ( SELECT teamgames.team_id
                FROM teamgames
-              WHERE teamgames.game_date = now()::date));
-    """
+              WHERE teamgames.game_date = (now() AT TIME ZONE '{}')::date));
+    """.format(tz)
 
 
 def update_dfs_salaries_ids():

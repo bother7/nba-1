@@ -13,7 +13,7 @@ from configparser import ConfigParser
 from nba.agents.nbacom import NBAComAgent
 from nba.db.nbapg import NBAPostgres
 from nba.seasons import *
-from nba.utility import merge
+from nba.utility import merge_many
 
 def main():
 
@@ -37,7 +37,7 @@ def main():
             logging.info('starting {}'.format(daystr))
             ps_base = a.parser.playerstats(a.scraper.playerstats(season, DateFrom=start, DateTo=daystr))
             ps_advanced = a.parser.playerstats(a.scraper.playerstats(season, DateFrom=start, DateTo=daystr, MeasureType='Advanced'))
-            ps = [merge(dict(), [psadv, psb]) for psb, psadv in zip(ps_base, ps_advanced)]
+            ps = [merge_many(dict(), [psadv, psb]) for psb, psadv in zip(ps_base, ps_advanced)]
             for idx, p in enumerate(ps):
                 ps[idx]['AS_OF'] = daystr
                 ps[idx]['MIN'] = round(ps[idx]['MIN'], 3)

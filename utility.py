@@ -28,6 +28,7 @@ def csv_to_dict(fn):
         for row in csv.DictReader(infile, skipinitialspace=True, delimiter=','):
             yield {k: v for k, v in row.items()}
 
+
 def digits(s):
     '''
     Removes non-numeric characters from a string
@@ -41,7 +42,8 @@ def digits(s):
     '''
     return ''.join(ch for ch in s if ch.isdigit())
 
-def flatten(d):
+
+def flatten_dict(d):
     '''
     Flattens nested dict into single dict
 
@@ -55,10 +57,11 @@ def flatten(d):
     items = []
     for k, v in d.items():
         if isinstance(v, collections.MutableMapping):
-            items.extend(flatten(v).items())
+            items.extend(flatten_dict(v).items())
         else:
             items.append((k, v))
     return dict(items)
+
 
 def flatten_list(l):
     '''
@@ -76,6 +79,7 @@ def flatten_list(l):
     except:
         return l
 
+
 def file_to_ds(fname):
     '''
     Pass filename, it returns data structure. Decides based on file extension.
@@ -91,11 +95,12 @@ def file_to_ds(fname):
     if ext == '.csv':
         return csv_to_dict(fname)
     elif ext == '.json':
-        return json_to_dict(fname)
+        return load_json(fname)
     elif ext == 'pkl':
         return read_pickle(fname)
     else:
         raise ValueError('{0} is not a supported file extension'.format(ext))
+
 
 def getdb(key='nbadb', configfn=None):
     '''
@@ -123,6 +128,7 @@ def getdb(key='nbadb', configfn=None):
                        password=config.get(key, 'password'), 
                        database=config.get(key, 'db'))
 
+
 def isfloat(x):
     '''
     Tests if conversion to float succeeds
@@ -131,7 +137,7 @@ def isfloat(x):
         x: value to test
 
     Returns:
-        boolean: True if can convert to float, False if cannot.
+        bool: True if can convert to float, False if cannot.
         
     '''
     try:
@@ -140,6 +146,7 @@ def isfloat(x):
         return False
     else:
         return True
+
 
 def isint(x):
     '''
@@ -160,7 +167,31 @@ def isint(x):
     else:
         return a == b
 
-def json_to_dict(json_fname):
+
+def isstr(x):
+    '''
+    Tests if value is string-like
+
+    Args:
+        x: value to test
+
+    Returns:
+        boolean: True if string-like, False if not.
+
+    '''
+    try:
+        if isinstance(x, basestring):
+            return True
+        else:
+            return False
+    except:
+        if isinstance(x, str):
+            return True
+        else:
+            return False
+
+
+def load_json(json_fname):
     '''
     Takes json file and returns data structure
 
@@ -168,7 +199,7 @@ def json_to_dict(json_fname):
         json_fname (str): name of file to read/parse
 
     Returns:
-        dict: Parsed json into dict
+        dict: Parsed json into data structure
         
     '''
     if os.path.exists(json_fname):
@@ -176,6 +207,7 @@ def json_to_dict(json_fname):
             return json.load(infile)
     else:
         raise ValueError('{0} does not exist'.format(json_fname))
+
 
 def memoize(function):
     '''
@@ -199,7 +231,8 @@ def memoize(function):
             return rv
     return wrapper
 
-def merge(merge_dico, dico_list):
+
+def merge_many(merge_dico, dico_list):
     '''
     Merges multiple dictionaries into one
     
@@ -207,7 +240,7 @@ def merge(merge_dico, dico_list):
         See http://stackoverflow.com/questions/28838291/merging-multiple-dictionaries-in-python
 
     Args:
-        merge_dico (dict): dict to merge into
+        merge_dico (dict): dict to merge_many into
         dico_list (list): list of dict
 
     Returns:
@@ -218,10 +251,11 @@ def merge(merge_dico, dico_list):
         for key, value in dico.items():
             if type(value) == type(dict()):
                 merge_dico.setdefault(key, dict())
-                merge(merge_dico[key], [value])
+                merge_many(merge_dico[key], [value])
             else:
                 merge_dico[key] = value
     return merge_dico
+
 
 def merge_two(d1, d2):
     '''
@@ -238,6 +272,56 @@ def merge_two(d1, d2):
     context = d1.copy()
     context.update(d2)
     return context    
+
+
+def nbacom_idstr(gid):
+    '''
+    Converts game_id to nba.com format with leading zeroes
+    
+    Args:
+        gid (str, int): game_id in string or int format 
+
+    Returns:
+        str: game_id with leading zeroes
+
+    '''
+    # see if format
+    if str(gid)[0:2] == '00':
+        return str(gid)
+    elif isint(gid):
+        return '00{}'.format(gid)
+    elif isinstance(gid, str):
+        if gid[0:2] == '00':
+            return gid
+        else:
+            return '00{}'.format(gid)
+    else:
+        # python 2 compatibility
+        try:
+            if isinstance(gid, basestring):
+                return '00{}'.format(gid)
+        except:
+            logging.error('could not convert gid: {}'.format(gid))
+            return None
+
+
+def read_pickle(pkl_fname):
+    '''
+    Takes pickle file and returns data structure
+
+    Args:
+        pkl_fname (str): name of file to read/parse
+
+    Returns:
+        iterable: python datastructure
+
+    '''
+    if os.path.exists(pkl_fname):
+        with open(pkl_fname, 'rb') as infile:
+            return pickle.load(infile)
+    else:
+        raise ValueError('{0} does not exist'.format(pkl_fname))
+
 
 def save_csv(data, csv_fname, fieldnames, sep=';'):
     '''
@@ -261,22 +345,27 @@ def save_csv(data, csv_fname, fieldnames, sep=';'):
         logging.exception('could not save csv file')
 
 
-def read_pickle(pkl_fname):
+def save_file(data, fname):
     '''
-    Takes pickle file and returns data structure
+    Pass filename, it returns datastructure. Decides based on file extension.
 
     Args:
-        pkl_fname (str): name of file to read/parse
+        data (iterable): arbitrary datastructure
+        fname (str): filename to save
 
     Returns:
-        iterable: python datastructure
-        
+        None
+
     '''
-    if os.path.exists(pkl_fname):
-        with open(pkl_fname, 'rb') as infile:
-            return pickle.load(infile)
+    ext = os.path.splitext(fname)[1]
+    if ext == '.csv':
+        save_csv(data=data, csv_fname=fname, fieldnames=data[0])
+    elif ext == '.json':
+        save_json(data, fname)
+    elif ext == 'pkl':
+        save_pickle(data, fname)
     else:
-        raise ValueError('{0} does not exist'.format(pkl_fname))
+        raise ValueError('{0} is not a supported file extension'.format(ext))
 
 
 def save_json(data, json_fname):
@@ -316,27 +405,6 @@ def save_pickle(data, pkl_fname):
     except:
         logging.exception('{0} does not exist'.format(pkl_fname))
 
-
-def save_file(data, fname):
-    '''
-    Pass filename, it returns datastructure. Decides based on file extension.
-    
-    Args:
-        data (iterable): arbitrary datastructure
-        fname (str): filename to save
-    
-    Returns:
-        None
-    '''
-    ext = os.path.splitext(fname)[1]
-    if ext == '.csv':
-        save_csv(data=data, csv_fname=fname, fieldnames=data[0])
-    elif ext == '.json':
-        save_json(data, fname)
-    elif ext == 'pkl':
-        save_pickle(data, fname)
-    else:
-        raise ValueError('{0} is not a supported file extension'.format(ext))
 
 def url_quote(s):
     '''

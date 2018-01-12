@@ -1,6 +1,6 @@
 import logging
 
-from nba.utility import flatten
+from nba.utility import flatten_dict
 
 
 class FantasyLabsNBAParser(object):
@@ -67,7 +67,7 @@ class FantasyLabsNBAParser(object):
         Returns:
             list of players with ownership percentages
         '''
-        vals = [flatten(pl) for pl in content]
+        vals = [flatten_dict(pl) for pl in content]
         if game_date:
             for idx, _ in enumerate(vals):
                 vals[idx]['game_date'] = game_date

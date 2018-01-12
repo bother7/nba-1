@@ -135,27 +135,6 @@ def season_gamedays(season_year=None, season_code=None, fmt='nba'):
     pass
 
 
-def season(season_year=None, season_code=None):
-    '''
-    Returns dictionary of season
-
-    Args:
-        season_year (int): 2018, etc.
-        season_code (str): 2017-18, etc.
-
-    Returns:
-        dict
-    
-    '''
-
-    if season_year:
-        return seasons().get(season_year_to_season_code(season_year))
-    elif season_code:
-        return seasons().get(season_code)
-    else:
-        raise ValueError('must pass season_year or season_code')
-
-
 @cached(cache)
 def seasons():
     '''

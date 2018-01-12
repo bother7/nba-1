@@ -5,7 +5,7 @@ from __future__ import print_function
 from future.utils import iteritems
 import logging
 
-from nba.dates import convert_format, datetostr, strtodate
+from nba.dates import convert_format, datetostr, strtodate, today
 from nba.dfs import dk_points, fd_points
 from pydfs_lineup_optimizer import Player
 
@@ -203,7 +203,10 @@ def player_gamelogs_table(gl):
     fixed = []
     omit = ['VIDEO_AVAILABLE', 'TEAM_NAME', 'MATCHUP', 'WL', 'SEASON_ID']
 
+    # skip today - no reliable way of testing if game is over
     for l in gl:
+        if l.get('GAME_DATE') == today():
+            continue
         cl = {k.lower().strip(): v for k, v in l.items() if k.upper() not in omit}
         cl['dk_points'] = dk_points(cl)
         cl['fd_points'] = fd_points(cl)
@@ -279,7 +282,12 @@ def team_gamelogs_table(tgl):
     '''
     omit = ['matchup', 'season_id', 'team_name', 'video_available', 'wl']
     cleaned_items = []
+
+    # skip today - no reliable way of testing if game is over
     for gl in tgl:
+        if gl.get('GAME_DATE') == today():
+            logging.info('did not add {}'.format(gl))
+            continue
         cleaned_item = {k.lower(): v for k,v in gl.items() if k.lower() not in omit}
         if cleaned_item.get('team_abbreviation'):
             cleaned_item['team_code'] = cleaned_item['team_abbreviation']

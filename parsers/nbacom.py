@@ -1,10 +1,10 @@
 import datetime
 import logging
 from math import modf
+import numbers
 import re
 
-from nba.seasons import season_start
-from nba.utility import flatten, merge
+from nba.season import season_start
 
 
 class NBAComParser(object):
@@ -58,7 +58,7 @@ class NBAComParser(object):
         off = [o['firstNameLastName'].strip() for o in bgd['officials']['formatted']]
         t = bgd['vTeam']
         v = {'game_date': game_date,
-             'season': season,
+             'season_year': season,
              'game_id': game_id,
              'team_code': t['triCode'],
              'team_id': int(t['teamId']),
@@ -68,7 +68,7 @@ class NBAComParser(object):
              }
         t = bgd['hTeam']
         h = {'game_date': game_date,
-             'season': season,
+             'season_year': season,
              'game_id': game_id,
              'team_code': t['triCode'],
              'team_id': int(t['teamId']),
@@ -276,41 +276,40 @@ class NBAComParser(object):
         '''
         return content.get('g', None)
 
-
-    def games(self, content, season):
+    def games(self, content, season_code):
         '''
-
+        Gets all games for nba season
+        
         Args:
             content(dict): is parsed json
-            season(str): is in YYYY-YY format
+            season_code (str): is in YYYY-YY format
 
         Returns:
-            results(list): of game dict
+            list: of game dict
+
         '''
         results = []
-        start = season_start(season)
         for item in content.get('lscd'):
             mscd = item.get('mscd')
             for g in mscd.get('g'):
                 gd = g.get('gdte')
                 try:
-                    gd = datetime.datetime.strptime(gd, '%Y-%m-%d')
-                    # the json includes preseason games, filter them
-                    if start <= gd:
+                    # the json includes preseason games, filter them by week
+                    gweek = g.get('gweek')
+                    if isinstance(gweek, numbers.Real) and (gweek > 0):
                         results.append({
                             'game_id': g.get('gid'),
                             'gamecode': g.get('gcode'),
+                            'week': g.get('gweek'),
                             'visitor_team_id': g.get('v').get('tid'),
                             'visitor_team_code': g.get('v').get('ta'),
                             'home_team_id': g.get('h').get('tid'),
                             'home_team_code': g.get('h').get('ta'),
-                            'game_date': gd,
-                            'season': int(season[0:4])
+                            'game_date': datetime.datetime.strptime(gd, '%Y-%m-%d'),
+                            'season_year': int(season_code[0:4]) + 1
                         })
-
                 except (ValueError, TypeError) as e:
                     logging.exception(e)
-
         return results
 
     def merge_boxscores(self, base_boxscore, advanced_boxscore):
