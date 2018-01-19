@@ -54,14 +54,14 @@ class NBAComParser(object):
         bgd = content['basicGameData']
         game_date = bgd['startDateEastern']
         season = int(bgd['seasonYear']) + 1
-        game_id = int(bgd['gameId'][2:])
+        game_id = bgd['gameId']
         off = [o['firstNameLastName'].strip() for o in bgd['officials']['formatted']]
         t = bgd['vTeam']
         v = {'game_date': game_date,
              'season_year': season,
-             'game_id': game_id,
+             'nbacom_game_id': game_id,
              'team_code': t['triCode'],
-             'team_id': int(t['teamId']),
+             'nbacom_team_id': int(t['teamId']),
              's': int(t['score']),
              'qs': [int(q['score']) for q in t['linescore']],
              'off': off
@@ -69,9 +69,9 @@ class NBAComParser(object):
         t = bgd['hTeam']
         h = {'game_date': game_date,
              'season_year': season,
-             'game_id': game_id,
+             'nbacom_game_id': game_id,
              'team_code': t['triCode'],
-             'team_id': int(t['teamId']),
+             'nbacom_team_id': int(t['teamId']),
              's': int(t['score']),
              'qs': [int(q['score']) for q in t['linescore']],
              'off': off
@@ -421,10 +421,13 @@ class NBAComParser(object):
             content: python data structure from json
 
         Returns:
-            list of players
+            list: of players
+        
         '''
+        # exclude players that have never been on a team
+        # teams key is a list of teams player's been on in past / currently
         try:
-            return [p for p in content['league']['standard']]
+            return [p for p in content['league']['standard'] if p.get('teams')]
         except:
             logging.error('could not parse v2015 players')
             return None

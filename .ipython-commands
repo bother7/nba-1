@@ -1,0 +1,29 @@
+
+from nfl.db.nflpg import NFLPostgres; db = NFLPostgres(user='nfldb', password='cft0911', database='nfldb')
+from nba.db.nbapg import NBAPostgres; nbadb = NBAPostgres(user='nbadb', password='cft0911')
+import logging; logger = logging.getLogger(); logger.setLevel(logging.INFO)
+def season_dates(season_year=None, season_code=None, fmt='nba'):
+    '''
+    Creates list of datetime objects for entire season or in custom date range
+
+    Args:
+        season_year (int): 2018, etc.
+        season_code (str): 2017-18, etc.
+        
+    Returns:
+        list of datetime.datetime
+
+    '''
+    if season_year:
+        return list(reversed(date_list(season_end(season_year), season_start(season_year))))
+    elif_season_code:
+        return list(reversed(date_list(season_end(season_code), season_start(season_code))))
+    else:
+        raise ValueError('must pass season_year or season_code')
+exit()
+
+from nfl.db.nflpg import NFLPostgres; db = NFLPostgres(user='nfldb', password='cft0911', database='nfldb')
+from nba.db.nbapg import NBAPostgres; nbadb = NBAPostgres(user='nbadb', password='cft0911')
+import logging; logger = logging.getLogger(); logger.setLevel(logging.INFO)
+from nba.agents.nbacom import NBAComAgent
+exit()

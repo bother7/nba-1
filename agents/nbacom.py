@@ -32,7 +32,7 @@ class NBAComAgent(object):
             self.table_names = {'pgl': 'player_gamelogs', 'tgl': 'team_gamelogs', 'seas': 'season',
                                 'pl': 'player', 'ps': 'playerstats_daily', 'ts': 'teamstats_daily',
                                 'tod': 'team_opponent_dashboard', 'pbs': 'player_boxscores_combined',
-                                'tbs': 'team_boxscores_combined', 'box2': 'boxv2015', 'tm': 'team'}
+                                'tbs': 'team_boxscores_combined', 'box2': 'game_boxscores', 'tm': 'team'}
 
     def combined_boxscores(self, game_ids=None):
             '''
@@ -80,7 +80,7 @@ class NBAComAgent(object):
                 self.db.safe_insert_dicts(team_boxscores_table(teams_combined), self.table_names['tbs'])
             return (player_boxscores, team_boxscores)
 
-    def linescores(self):
+    def game_boxscores(self):
         '''
         Updates table with game_information
         
@@ -90,44 +90,16 @@ class NBAComAgent(object):
         Returns:
             None
         '''
-        for g in self.db.select_dict(missing_linescores()):
+        for g in self.db.select_dict(missing_game_boxscores()):
             try:
                 content = self.scraper.boxscore_v2015(g['gid'], g['gd'])
                 v, h = self.parser.boxscore_v2015(content)
-                self.db.insert_dicts([v, h], self.table_names['box2'])
+                self.db._insert_dict(v, self.table_names['box2'])
+                self.db._insert_dict(h, self.table_names['box2'])
                 logging.info('finished {} - {}'.format(g['gd'], g['gid']))
             except Exception as e:
                 logging.error('could not get {}'.format(g))
                 logging.exception(e)
-
-    def new_players(self, season_code):
-        '''
-        Updates player table with missing players
-
-        Arguments:
-            season_code (str): in YYYY-YY format
-
-        Returns:
-            list: players to add to player table
-
-        '''
-        content = self.scraper.players_v2015(season_code)
-        players = players_v2015_table(self.parser.players_v2015(content))
-
-        # use set difference to identify missing ids
-        # then list comprehension to filter players
-        currids = set([int(p.get('nbacom_player_id', 0)) for p in players])
-        allids = set(self.db.select_list('SELECT nbacom_player_id from player'))
-        missing = currids - allids
-        if missing:
-            np = [p for p in players if int(p['nbacom_player_id']) in missing]
-            for p in players_v2015_table(np):
-                logging.info('nbacom.agent.new_players: adding {}'.format(p))
-                self.db._insert_dict(p, 'player')
-            return np
-        else:
-            logging.info('nbacom.agent.new_players: no players to add')
-            return None
 
     def player_gamelogs(self, season_code, date_from=None, date_to=None):
         '''
@@ -148,18 +120,13 @@ class NBAComAgent(object):
         pgl_s = set(['{}-{}'.format(gl['GAME_ID'], gl['PLAYER_ID']) for gl in pgl])
 
         # compare to gamelogs in database: refresh view then compare
-        self.db.execute('refresh materialized view cs_player_gamelogs;')
-        dbpgl = self.db.select_dict('SELECT game_id, nbacom_player_id FROM cs_player_gamelogs')
-        dbpgl_s = set(['00{}-{}'.format(gl['game_id'], gl['nbacom_player_id']) for gl in dbpgl])
+        dbpgl = self.db.select_dict('SELECT nbacom_game_id, nbacom_player_id FROM cs_player_gamelogs')
+        dbpgl_s = set(['00{}-{}'.format(gl['nbacom_game_id'], gl['nbacom_player_id']) for gl in dbpgl])
 
         # only try to insert missing gamelogs
         missing = pgl_s - dbpgl_s
-        to_ins = [gl for gl in pgl if '00{}-{}'.format(gl['GAME_ID'], gl['PLAYER_ID']) in missing]
-        for gl in player_gamelogs_table(to_ins):
-            self.db._insert_dict(gl, 'player_gamelogs')
-
-        # update season_year column in database
-        self.db.execute('select player_gamelogs_season_year();')
+        to_ins = [gl for gl in pgl if '{}-{}'.format(gl['GAME_ID'], gl['PLAYER_ID']) in missing]
+        self.db.insert_dicts(player_gamelogs_table(to_ins), 'player_gamelogs')
         return pgl
 
     def playerstats(self, season_code, date_from=None, date_to=None, all_missing=False):
@@ -227,14 +194,12 @@ class NBAComAgent(object):
         tgl_s = set(['{}-{}'.format(gl['GAME_ID'], gl['TEAM_ID']) for gl in tgl])
 
         # compare team gamelogs to those already in database
-        self.db.execute('refresh materialized view cs_team_gamelogs;')
-        dbtgl_s = set(self.db.select_list("""SELECT '00'::text || game_id::text || '-' || team_id::text FROM cs_team_gamelogs"""))
+        dbtgl_s = set(self.db.select_list("""SELECT CONCAT(nbacom_game_id, '-', nbacom_team_id) FROM cs_team_gamelogs"""))
 
         # only try to insert missing gamelogs
         missing = tgl_s - dbtgl_s
         to_ins = [gl for gl in tgl if '{}-{}'.format(gl['GAME_ID'], gl['TEAM_ID']) in missing]
         for item in team_gamelogs_table(to_ins):
-            logging.info(item)
             self.db._insert_dict(item, self.table_names['tgl'])
         return tgl
 
@@ -259,7 +224,6 @@ class NBAComAgent(object):
             content = self.scraper.team_opponent_dashboard(season_code, DateFrom=date_from, DateTo=date_to)
             topp = self.parser.team_opponent_dashboard(content)
             self.db.insert_dicts(team_opponent_dashboards_table(topp, date_to), self.table_names.get('tod'))
-            self.db.execute('select tod_season_year();') # fill in season_year field in table
             return topp
         elif all_missing:
             topps = {}
@@ -271,7 +235,6 @@ class NBAComAgent(object):
                 topp = self.parser.team_opponent_dashboard(content)
                 self.db.insert_dicts(team_opponent_dashboards_table(topp, daystr), self.table_names.get('tod'))
                 topps[daystr] = topp
-            self.db.execute('select tod_season_year();') # fill in season_year field in table
             return topps
         else:
             raise ValueError('need to specify dates or set all_missing to true')
@@ -298,6 +261,7 @@ class NBAComAgent(object):
         elif all_missing:
             tstats = {}
             start = datetostr(d=season_start(season_code=season_code), fmt='nba')
+            logging.info('teamstats: getting {}'.format(start))
             for day in self.db.select_list(missing_teamstats()):
                 daystr = datetostr(day, 'nba')
                 ts_base = self.parser.teamstats(self.scraper.teamstats(season_code, DateFrom=start, DateTo=daystr))

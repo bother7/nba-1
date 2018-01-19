@@ -53,6 +53,30 @@ class NBAPostgres(object):
                 logging.exception('insert_dict failed: {0}'.format(e.pgerror))
                 self.conn.rollback()
 
+    def _silent_insert_dict(self, dict_to_insert, table_name):
+        '''
+        Generic routine to insert dictionary into table. Use as a backup when insert_dicts fails
+
+        Arguments:
+            dict_to_insert: list of dicts
+            table_name: string
+
+        Returns:
+            status (int)
+
+        '''
+        placeholders = ', '.join(['%s'] * len(dict_to_insert))
+        columns = ', '.join(list(dict_to_insert.keys()))
+        sql = 'INSERT INTO %s ( %s ) VALUES ( %s ) ON CONFLICT DO NOTHING;' % (table_name, columns, placeholders)
+        with self.conn.cursor() as cursor:
+            try:
+                cursor.execute(sql, list(dict_to_insert.values()))
+                self.conn.commit()
+                return 0
+            except psycopg2.Error as e:
+                self.conn.rollback()
+                return (1, e.message)
+
     def batch_update(self, statements):
         '''
         Generic routine to update table with multiple statements

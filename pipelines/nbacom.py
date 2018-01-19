@@ -41,6 +41,7 @@ def gamedetail(gds):
 
     return linescores
 
+
 def nba_to_pydfs(players):
     '''
     Takes results, make ready to create Player objects for pydfs_lineup_optimizer
@@ -57,6 +58,7 @@ def nba_to_pydfs(players):
             float(p.get('salary', 100000)),
             float(p.get('dk_points',0))) for p in players]
 
+
 def players_v2015_table(players):
     '''
     Converts data from v2015 API players for insertion into database
@@ -71,27 +73,22 @@ def players_v2015_table(players):
     for p in players:
         f = {}
         try:
-            pid = int(p['personId'])
-            f['nbacom_player_id'] = pid
+            f['nbacom_player_id'] = int(p['personId'])
+            f['first_name'] = p['firstName']
+            f['last_name'] = p['lastName']
+            f['display_first_last'] = '{} {}'.format(f['first_name'], f['last_name'])
+            f['nbacom_position'] = p['pos']
         except:
-            logging.error('could not add {}'.format(p))
+            logging.exception('could not add {}'.format(p))
             continue
-        f['first_name'] = p['firstName']
-        f['last_name'] = p['lastName']
-        fl = p['firstName'] + " " + p['lastName']
-        if len(fl) < 5:
-            logging.error('no first_last for {}'.format(p))
-            continue
-        else:
-            f['display_first_last'] = fl
-        f['nbacom_position'] = p['pos']
         try:
             f['birthdate'] = strtodate(p['dateOfBirthUTC'])
-        except:
+        except (KeyError, TypeError):
             f['birthdate'] = None
-        f['school'] = p['collegeName']
-        f['country'] = p['country']
-        f['last_affiliation'] = p['lastAffiliation']
+
+        f['school'] = p.get('collegeName', None)
+        f['country'] = p.get('country', None)
+        f['last_affiliation'] = p.get('lastAffiliation', None)
         try:
             f['height'] = int(p['heightFeet']) * 6 + int(p['heightInches'])
         except:
@@ -118,6 +115,7 @@ def players_v2015_table(players):
             f['draft_year'] = None
         fixed.append(f)
     return fixed
+
 
 def players_table(players):
     '''
@@ -170,6 +168,7 @@ def players_table(players):
         fixed.append(fp)
     return fixed
 
+
 def player_boxscores_table(pbs):
     '''
     Cleans merged list of player boxscores
@@ -181,14 +180,29 @@ def player_boxscores_table(pbs):
         cleaned_players: list of playerboxscore dictionaries
     '''
     omit = ['FG3_PCT', 'FG_PCT', 'FT_PCT', 'TEAM_CITY', 'TEAM_NAME']
-    cleaned_players = []
+    cls = []
     for player in pbs:
-        clean_player = {k.lower(): v for k, v in player.items() if k not in omit}
-        clean_player['tov'] = clean_player.get('to')
-        clean_player.pop('to', None)
-        clean_player.pop('team_abbreviation', None)
-        cleaned_players.append(clean_player)
-    return cleaned_players
+        cl = {k.lower(): v for k, v in player.items() if k not in omit}
+        # change to nbacom_player_id
+        if 'game_id' in cl:
+            cl['nbacom_game_id'] = cl['game_id']
+            cl.pop('game_id', None)
+        if 'player_id' in cl:
+            cl['nbacom_player_id'] = cl['player_id']
+            cl.pop('player_id', None)
+        if 'team_id' in cl:
+            cl['nbacom_team_id'] = cl['team_id']
+            cl.pop('team_id', None)
+        if 'team_abbreviation' in cl:
+            cl['team_code'] = cl['team_abbreviation']
+            cl.pop('team_abbreviation', None)
+        if 'to' in cl:
+            cl['tov'] = cl.get('to')
+            cl.pop('to', None)
+        cls.append(cl)
+    logging.info(cls)
+    return cls
+
 
 def player_gamelogs_table(gl):
     '''
@@ -212,14 +226,21 @@ def player_gamelogs_table(gl):
         cl['fd_points'] = fd_points(cl)
 
         # change to nbacom_player_id
+        if 'game_id' in cl:
+            cl['nbacom_game_id'] = cl['game_id']
+            cl.pop('game_id', None)
         if 'player_id' in cl:
             cl['nbacom_player_id'] = cl['player_id']
             cl.pop('player_id', None)
+        if 'team_id' in cl:
+            cl['nbacom_team_id'] = cl['team_id']
+            cl.pop('team_id', None)
         if 'team_abbreviation' in cl:
             cl['team_code'] = cl['team_abbreviation']
             cl.pop('team_abbreviation', None)
         fixed.append(cl)
     return fixed
+
 
 def playerstats_table(ps, as_of):
     '''
@@ -244,9 +265,13 @@ def playerstats_table(ps, as_of):
         if 'player_id' in clean_player:
             clean_player['nbacom_player_id'] = clean_player['player_id']
             clean_player.pop('player_id', None)
+        if 'team_id' in clean_player:
+            clean_player['nbacom_team_id'] = clean_player['team_id']
+            clean_player.pop('team_id', None)
         clean_player['as_of'] = as_of
         cleaned_players.append(clean_player)
     return cleaned_players
+
 
 def team_boxscores_table(tbs):
     '''
@@ -259,16 +284,27 @@ def team_boxscores_table(tbs):
         list of team boxscore dictionaries
     '''
     omit = ['COMMENT', 'FG3_PCT', 'FG_PCT', 'FT_PCT', 'TEAM_CITY', 'TEAM_NAME']
-    cl = []
+    cls = []
     for box in tbs:
-        clean = {k.lower(): v for k, v in box.items() if k not in omit}
-        if clean.get('to', None):
-            clean['tov'] = clean['to']
-            clean.pop('to', None)
-        clean.pop('team_abbreviation', None)
-        clean.pop('min', None)
-        cl.append(clean)
-    return cl
+        cl = {k.lower(): v for k, v in box.items() if k not in omit}
+        if 'min' in cl:
+            cl.pop('min', None)
+        if 'game_id' in cl:
+            cl['nbacom_game_id'] = cl['game_id']
+            cl.pop('game_id', None)
+        if 'team_id' in cl:
+            cl['nbacom_team_id'] = cl['team_id']
+            cl.pop('team_id', None)
+        if 'team_abbreviation' in cl:
+            cl['team_code'] = cl['team_abbreviation']
+            cl.pop('team_abbreviation', None)
+        if 'to' in cl:
+            cl['tov'] = cl.get('to')
+            cl.pop('to', None)
+        cls.append(cl)
+    logging.info(cls)
+    return cls
+
 
 def team_gamelogs_table(tgl):
     '''
@@ -289,6 +325,12 @@ def team_gamelogs_table(tgl):
             logging.info('did not add {}'.format(gl))
             continue
         cleaned_item = {k.lower(): v for k,v in gl.items() if k.lower() not in omit}
+        if 'game_id' in cleaned_item:
+            cleaned_item['nbacom_game_id'] = cleaned_item['game_id']
+            cleaned_item.pop('game_id', None)
+        if 'team_id' in cleaned_item:
+            cleaned_item['nbacom_team_id'] = cleaned_item['team_id']
+            cleaned_item.pop('team_id', None)
         if cleaned_item.get('team_abbreviation'):
             cleaned_item['team_code'] = cleaned_item['team_abbreviation']
             cleaned_item.pop('team_abbreviation', None)
@@ -297,6 +339,7 @@ def team_gamelogs_table(tgl):
             cleaned_item.pop('min', None)
         cleaned_items.append(cleaned_item)
     return cleaned_items
+
 
 def team_opponent_dashboards_table(dash, as_of):
     '''
@@ -310,11 +353,20 @@ def team_opponent_dashboards_table(dash, as_of):
     topp = []
     omit = ['CFID', 'CFPARAMS', 'COMMENT', 'TEAM_NAME']
     for team in dash:
-        fixed_team = {k.lower(): v for k, v in team.items() if k not in omit}
-        fixed_team.pop('team_name', None)
-        fixed_team['as_of'] = convert_format(as_of, 'nba')
-        topp.append(fixed_team)
+        cleaned_item = {k.lower(): v for k,v in team.items() if k.upper() not in omit}
+        if 'game_id' in cleaned_item:
+            cleaned_item['nbacom_game_id'] = cleaned_item['game_id']
+            cleaned_item.pop('game_id', None)
+        if 'team_id' in cleaned_item:
+            cleaned_item['nbacom_team_id'] = cleaned_item['team_id']
+            cleaned_item.pop('team_id', None)
+        if cleaned_item.get('team_abbreviation'):
+            cleaned_item['team_code'] = cleaned_item['team_abbreviation']
+            cleaned_item.pop('team_abbreviation', None)
+        cleaned_item['as_of'] = convert_format(as_of, 'nba')
+        topp.append(cleaned_item)
     return topp
+
 
 def teamstats_table(ts, as_of):
     '''
@@ -327,16 +379,22 @@ def teamstats_table(ts, as_of):
     Returns:
         cleaned_items(list): list of cleaned team dictionaries
     '''
+    cls = []
     omit = ['CFID', 'CFPARAMS', 'COMMENT', 'TEAM_CITY', 'TEAM_NAME']
-    if ts:
-        cleaned_items = [{k.lower(): v for k,v in iteritems(item) if k not in omit} for item in ts]
-        for idx, _ in enumerate(cleaned_items):
-            cleaned_items[idx]['as_of'] = as_of
-        return cleaned_items
-    else:
-        logging.error('teamstats_table: ts is None')
-        return None
-
+    for t in ts:
+        cl = {k.lower(): v for k, v in t.items() if k.upper() not in omit}
+        cl['as_of'] = as_of
+        if 'game_id' in cl:
+            cl['nbacom_game_id'] = cl['game_id']
+            cl.pop('game_id', None)
+        if 'team_id' in cl:
+            cl['nbacom_team_id'] = cl['team_id']
+            cl.pop('team_id', None)
+        if cl.get('team_abbreviation'):
+            cl['team_code'] = cl['team_abbreviation']
+            cl.pop('team_abbreviation', None)
+        cls.append(cl)
+    return cls
 
 if __name__ == '__main__':
     pass

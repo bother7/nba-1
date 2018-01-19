@@ -8,6 +8,7 @@ import sys
 from nba.agents.nbacom import NBAComAgent
 from nba.dates import today, yesterday, datetostr
 from nba.season import season_start
+from nba.scripts import nbadb_player_update
 from nba.utility import getdb
 
 
@@ -34,7 +35,7 @@ def run():
     # players uses 2017 as season_year if season_code is 2017-18
     # whereas nbadb calls that season_year 2018
     logging.info('starting update nba.com players')
-    a.new_players(season_year - 1)
+    nbadb_player_update.update_players()
     logging.info('finished update nba.com players')
 
     # player_gamelogs
@@ -48,7 +49,7 @@ def run():
     logging.info('starting playerstats daily')
     ps = a.playerstats(season_code, all_missing=True)
     logging.info('finished playerstats daily')
-
+    
     # player and team boxscores combined
     logging.info('starting player_boxscores_combined')
     pbs, tbs = a.combined_boxscores()
@@ -69,16 +70,15 @@ def run():
     a.team_opponent_dashboards(season_code, all_missing=True)
     logging.info('finished team_opponent_dashboards')
 
-    # v2015 boxscores - linescores, refs, etc.
-    logging.info('start linescores')
-    a.linescores()
-    logging.info('finished linescores')
+    # game boxscores - linescores, refs, etc.
+    logging.info('start game_boxscores')
+    a.game_boxscores()
+    logging.info('finished game_boxscores')
 
     # refresh all materialized views
     logging.info('start refresh materialized queries')
     a.refresh_materialized()
     logging.info('refreshed materialized queries')
-
 
 if __name__ == '__main__':
     run()

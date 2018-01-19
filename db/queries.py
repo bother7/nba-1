@@ -103,7 +103,7 @@ def missing_games_meta(tz='CST'):
         ORDER BY games.game_id;
     """.format(tz)
 
-def missing_linescores(tz='CST'):
+def missing_game_boxscores(tz='CST'):
     '''
     Query for missing linescores in boxv2015
     
@@ -113,9 +113,9 @@ def missing_linescores(tz='CST'):
     Returns:
         str: query
     '''
-    return """SELECT '00' || game_id as gid, to_char(game_date, 'YYYYmmdd') as gd FROM game
+    return """SELECT nbacom_game_id as gid, to_char(game_date, 'YYYYmmdd') as gd FROM game
         WHERE game_date < (now() AT TIME ZONE '{}')::date 
-        AND season_year > 2015 AND game_id NOT IN (SELECT DISTINCT game_id FROM boxv2015)
+        AND season_year > 2015 AND nbacom_game_id NOT IN (SELECT DISTINCT nbacom_game_id FROM game_boxscores)
         ORDER BY game_date DESC;""".format(tz)
 
 
@@ -181,12 +181,12 @@ def missing_player_boxscores(tz='CST'):
         query string
     """
     return """
-         SELECT '00' || games.game_id::text
+         SELECT games.nbacom_game_id
          FROM cs_games games
          WHERE games.game_date < (now() AT TIME ZONE '{}')::date
-         AND NOT (games.game_id IN (
-           SELECT DISTINCT player_boxscores_combined.game_id FROM player_boxscores_combined))
-        ORDER BY games.game_id;
+         AND NOT (games.nbacom_game_id IN (
+           SELECT DISTINCT player_boxscores_combined.nbacom_game_id FROM player_boxscores_combined))
+        ORDER BY games.nbacom_game_id;
     """.format(tz)
 
 
@@ -202,12 +202,11 @@ def missing_player_gamelogs(tz='CST'):
 
     """
     return """
-         SELECT '00' || games.game_id::text
+         SELECT games.nbacom_game_id
          FROM cs_games games
-         WHERE games.game_date < (now() AT TIME ZONE '{}')::date;
-         AND NOT (game_id IN (
-           SELECT DISTINCT game_id FROM cs_player_gamelogs))
-        ORDER BY games.game_id;
+         WHERE games.game_date < (now() AT TIME ZONE '{}')::date
+         AND nbacom_game_id NOT IN (SELECT DISTINCT nbacom_game_id FROM cs_player_gamelogs)
+         ORDER BY games.nbacom_game_id;
     """.format(tz)
 
 def missing_playerstats(tz='CST'):
@@ -280,10 +279,10 @@ def missing_team_gamelogs(tz='CST'):
         query string
     """
     return """
-        SELECT '00' || games.game_id::text
+        SELECT games.nbacom_game_id
         FROM cs_games games
-        WHERE NOT(games.game_id IN(SELECT DISTINCT game_id FROM team_gamelogs))
-        AND games.game_date < (now() AT TIME ZONE '{}')::date
+        WHERE games.game_date < (now() AT TIME ZONE '{}')::date
+        AND games.nbacom_game_id NOT IN(SELECT DISTINCT nbacom_game_id FROM team_gamelogs) 
     """.format(tz)
 
 
@@ -311,12 +310,12 @@ def missing_team_boxscores(tz='CST'):
         query string
     """
     return """
-        SELECT '00' || games.game_id::text
+        SELECT games.nbacom_game_id
          FROM cs_games games
          WHERE games.game_date < (now() AT TIME ZONE '{}')::date
-         AND NOT (games.game_id IN (
-           SELECT DISTINCT team_boxscores_combined.game_id FROM team_boxscores_combined))
-        ORDER BY games.game_id;
+         AND NOT (games.nbacom_game_id IN (
+           SELECT DISTINCT team_boxscores_combined.nbacom_game_id FROM team_boxscores_combined))
+        ORDER BY games.nbacom_game_id;
     """.format(tz)
 
 
