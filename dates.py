@@ -6,6 +6,28 @@ import logging
 import re
 
 
+def add_days_to_datestr(datestr, n):
+    '''
+    Add n days to a datestring
+
+    Args:
+        datestr (str): 
+        n (int): 
+
+    Returns:
+        str
+        
+    '''
+    fmt = format_type(datestr)
+    if not fmt:
+        raise ValueError('invalid datestring format: {}'.format(datestr))
+    if not isinstance(n, int):
+        raise ValueError('n={} must be an integer'.format(n))
+    d = strtodate(datestr)
+    d2 = d + datetime.timedelta(days=n)
+    return datetime.datetime.strftime(d2, format_type(datestr))
+
+
 def convert_format(d, site):
     '''
     Converts string from one date format to another

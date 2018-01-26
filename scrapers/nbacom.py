@@ -391,12 +391,13 @@ class NBAComScraper(BasketballScraper):
             logging.debug('got {}'.format(self.urls[-1]))
         return content
 
-    def playerstats(self, season_code, **kwargs):
+    def playerstats(self, season_code, per_mode='Totals', **kwargs):
         '''
         Document has one line of stats per player
 
         Arguments:
             season_code (str): such as 2015-16
+            per_mode (str): Totals, PerGame, Per36, etc.
 
         Returns:
             content: parsed json response from nba.com
@@ -422,7 +423,7 @@ class NBAComScraper(BasketballScraper):
           'OpponentTeamID': '0',
           'Outcome': '',
           'PaceAdjust': 'N',
-          'PerMode': 'Totals',
+          'PerMode': per_mode,
           'Period': '0',
           'PlayerExperience': '',
           'PlayerPosition': '',
@@ -501,13 +502,14 @@ class NBAComScraper(BasketballScraper):
 
         return self.get_json(base_url, payload=params)
 
-    def team_dashboard(self, team_id, season_code, **kwargs):
+    def team_dashboard(self, team_id, season_code, per_mode='Totals', **kwargs):
         '''
         Stats for single team in single season
 
         Args:
             team_id: int
             season_code (str): e.g. 2016-17
+            per_mode (str): Totals, PerGame, Per36, etc.
             **kwargs:
 
         Returns:
@@ -532,7 +534,7 @@ class NBAComScraper(BasketballScraper):
           'Outcome': '',
           'PORound': '0',
           'PaceAdjust': 'N',
-          'PerMode': 'PerGame',
+          'PerMode': per_mode,
           'Period': '0',
           'PlusMinus': 'N',
           'Rank': 'N',
@@ -556,12 +558,13 @@ class NBAComScraper(BasketballScraper):
             logging.debug('got {}'.format(self.urls[-1]))
         return content
 
-    def team_opponent_dashboard(self, season_code, **kwargs):
+    def team_opponent_dashboard(self, season_code, per_mode='Totals', **kwargs):
         '''
         Returns team_opponent stats for every team in league
 
         Args:
             season_code (str): e.g. 2016-17
+            per_mode (str): Totals, PerGame, Per36, etc.
             **kwargs:
 
         Returns:
@@ -582,7 +585,7 @@ class NBAComScraper(BasketballScraper):
           'Outcome': '',
           'PORound': '0',
           'PaceAdjust': 'N',
-          'PerMode': 'PerGame',
+          'PerMode': per_mode,
           'Period': '0',
           'PlusMinus': 'N',
           'Rank': 'N',
@@ -640,12 +643,13 @@ class NBAComScraper(BasketballScraper):
             logging.debug('got {}'.format(self.urls[-1]))
         return content
 
-    def teamstats(self, season_code, **kwargs):
+    def teamstats(self, season_code, per_mode='Totals', **kwargs):
         '''
         Stats for every team in single season
 
         Args:
             season_code (str): e.g. '2016-17'
+            per_mode (str): Totals, PerGame, Per36, etc.
             **kwargs:
 
         Returns:
@@ -671,7 +675,7 @@ class NBAComScraper(BasketballScraper):
           'OpponentTeamID': '0',
           'Outcome': '',
           'PaceAdjust': 'N',
-          'PerMode': 'PerGame',
+          'PerMode': per_mode,
           'Period': '0',
           'PlayerExperience': '',
           'PlayerPosition': '',

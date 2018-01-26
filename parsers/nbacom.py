@@ -21,6 +21,7 @@ class NBAComParser(object):
 
     def __init__(self):
         logging.getLogger(__name__).addHandler(logging.NullHandler())
+        self.per_modes = ['Totals', 'PerGame', 'Per100Possessions', 'Per36']
 
     def _fix_linescores(self, linescores):
         '''
@@ -432,7 +433,7 @@ class NBAComParser(object):
             logging.error('could not parse v2015 players')
             return None
 
-    def playerstats(self,content):
+    def playerstats(self,content, per_mode='Totals'):
         '''
         Document has one line of stats per player
 
@@ -443,6 +444,9 @@ class NBAComParser(object):
         Returns:
             ps(list): list of dictionaries, each one is a player's stats
         '''
+        if per_mode not in self.per_modes:
+            raise ValueError('invalid per_mode: {}'.format(per_mode))
+
         ps = []
         result_set = content['resultSets'][0]
         for row_set in result_set['rowSet']:
@@ -566,10 +570,12 @@ class NBAComParser(object):
 
         return dashboard
 
-    def team_opponent_dashboard(self, content):
+    def team_opponent_dashboard(self, content, per_mode='Totals'):
         '''
         Returns list of dictionaries, stats of opponents vs. each team
         '''
+        if per_mode not in self.per_modes:
+            raise ValueError('invalid per_mode: {}'.format(per_mode))
 
         teams = []
 
@@ -580,6 +586,7 @@ class NBAComParser(object):
             team = dict(list(zip(headers, row_set)))
             team.pop('cfid', None)
             team.pop('cfparams', None)
+            team.pop('opp_pfd1', None)
             teams.append(team)
 
         return teams
@@ -595,20 +602,26 @@ class NBAComParser(object):
 
         return {match[2]: match[1] for match in re.findall(pattern, content)}
 
-    def teamstats(self,content,stat_date=None):
+    def teamstats(self,content, stat_date=None, per_mode='Totals'):
+        '''
+        
+        Args:
+            content: 
+            stat_date: 
 
+        Returns:
+
+        '''
+        if per_mode not in self.per_modes:
+            raise ValueError('invalid per_mode: {}'.format(per_mode))
         ts = []
-
-        result_set = content['resultSets'][0]
-
-        for row_set in result_set['rowSet']:
-            t = dict(list(zip(result_set['headers'], row_set)))
-
+        headers = content['resultSets'][0]['headers']
+        for row_set in content['resultSets'][0]['rowSet']:
+            t = dict(list(zip(headers, row_set)))
             if stat_date:
                 t['STATDATE'] = stat_date
-
+            t['per_mode'] = per_mode
             ts.append(t)
-
         return ts
 
 

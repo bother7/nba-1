@@ -34,7 +34,6 @@ def nbacom_xref(db, players):
     '''
     # recent players is a table view - has 2 columns
     nbap = nbacom_dict(db)
-    logging.info(nbap)
     for idx, p in enumerate(players):
         name = match_player(p['source_player_name'], nbap.keys())
         if name:

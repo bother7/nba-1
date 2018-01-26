@@ -1,15 +1,50 @@
 # pipelines.py
 # functions to transform nbacom list of dict
 # for insertion into database, use in optimizer, etc.
-from __future__ import print_function
 from future.utils import iteritems
 import logging
 
-from nba.dates import convert_format, datetostr, strtodate, today
+from nba.dates import add_days_to_datestr, convert_format, strtodate, today
 from nba.dfs import dk_points, fd_points
-from pydfs_lineup_optimizer import Player
 
 logging.getLogger(__name__).addHandler(logging.NullHandler())
+
+
+def games_table(games):
+    '''
+    
+    Args:
+        games: 
+
+    Returns:
+
+    TODO:
+        implement this function
+    '''
+    pass
+    '''
+    for item in data['lscd']:
+        mscd = item['mscd']
+        for game in mscd['g']:
+            g = {'season': 2018}
+            g['game_id'] = game['gid']
+            g['gamecode'] = game['gcode']
+            g['game_date'] = game['gdte']
+            if 'AS1' in game['gcode'] or 'WLDUSA' in game['gcode']:
+                continue   
+            elif (subtract_datestr(g['game_date'], '2017-10-17') >= 0):
+                g['game_type'] = 'regular'
+            else:
+                continue
+            v = game['v']
+            g['visitor_team_id'] = v['tid']
+            g['visitor_team_code'] = v['ta']
+            h = game['h']
+            g['home_team_id'] = h['tid']
+            g['home_team_code'] = h['ta']
+            nbadb._insert_dict(g, 'games')
+            games.append(g)
+    '''
 
 
 def gamedetail(gds):
@@ -52,11 +87,16 @@ def nba_to_pydfs(players):
     Returns:
         players (list): list of players, fixed for use in pydfs_lineup_optimizer
     '''
-    return [Player(p['nbacom_player_id'], p['first_name'], p['last_name'],
-            p.get('dfs_position').split('/'),
-            p.get('team_code'),
-            float(p.get('salary', 100000)),
-            float(p.get('dk_points',0))) for p in players]
+    try:
+        from pydfs_lineup_optimizer import Player
+        return [Player(p['nbacom_player_id'], p['first_name'], p['last_name'],
+                p.get('dfs_position').split('/'),
+                p.get('team_code'),
+                float(p.get('salary', 100000)),
+                float(p.get('dk_points',0))) for p in players]
+
+    except ImportError:
+        logging.exception('could not import pydfs_lineup_optimizer')
 
 
 def players_v2015_table(players):
@@ -90,7 +130,7 @@ def players_v2015_table(players):
         f['country'] = p.get('country', None)
         f['last_affiliation'] = p.get('lastAffiliation', None)
         try:
-            f['height'] = int(p['heightFeet']) * 6 + int(p['heightInches'])
+            f['height'] = int(p['heightFeet']) * 12 + int(p['heightInches'])
         except:
             f['height'] = None
         try:
@@ -200,7 +240,6 @@ def player_boxscores_table(pbs):
             cl['tov'] = cl.get('to')
             cl.pop('to', None)
         cls.append(cl)
-    logging.info(cls)
     return cls
 
 
@@ -242,20 +281,24 @@ def player_gamelogs_table(gl):
     return fixed
 
 
-def playerstats_table(ps, as_of):
+def playerstats_table(ps, as_of, per_mode='Totals'):
     '''
     Cleans merged list of player base + advanced stats
 
     Arguments:
-        ps: list of player dictionaries
+        ps (list): of dict
+        as_of (str): in YYYY-MM-DD format
+        per_mode (str): 'Totals', 'PerGame', etc.
 
     Returns:
-        cleaned_players: list of player dictionaries
+        list: of dict
+        
     '''
     omit = ['CFID', 'CFPARAMS', 'COMMENT', 'TEAM_NAME']
     cleaned_players = []
     for player in ps:
         clean_player = {k.lower(): v for k, v in iteritems(player) if k not in omit}
+        clean_player['per_mode'] = per_mode
         if 'to' in clean_player:
             clean_player['tov'] = clean_player['to']
             clean_player.pop('to', None)
@@ -268,7 +311,7 @@ def playerstats_table(ps, as_of):
         if 'team_id' in clean_player:
             clean_player['nbacom_team_id'] = clean_player['team_id']
             clean_player.pop('team_id', None)
-        clean_player['as_of'] = as_of
+        clean_player['as_of'] = add_days_to_datestr(as_of, 1)
         cleaned_players.append(clean_player)
     return cleaned_players
 
@@ -302,7 +345,6 @@ def team_boxscores_table(tbs):
             cl['tov'] = cl.get('to')
             cl.pop('to', None)
         cls.append(cl)
-    logging.info(cls)
     return cls
 
 
@@ -341,11 +383,12 @@ def team_gamelogs_table(tgl):
     return cleaned_items
 
 
-def team_opponent_dashboards_table(dash, as_of):
+def team_opponent_dashboards_table(dash, as_of, per_mode='Totals'):
     '''
     Args:
-        dash:
-        as_of:
+        dash (list): of dict
+        as_of (str): in YYYY-MM-DD format
+        per_mode (str): 'Totals', 'PerGame', etc.
 
     Returns:
 
@@ -354,6 +397,7 @@ def team_opponent_dashboards_table(dash, as_of):
     omit = ['CFID', 'CFPARAMS', 'COMMENT', 'TEAM_NAME']
     for team in dash:
         cleaned_item = {k.lower(): v for k,v in team.items() if k.upper() not in omit}
+        cleaned_item['per_mode'] = per_mode
         if 'game_id' in cleaned_item:
             cleaned_item['nbacom_game_id'] = cleaned_item['game_id']
             cleaned_item.pop('game_id', None)
@@ -363,27 +407,30 @@ def team_opponent_dashboards_table(dash, as_of):
         if cleaned_item.get('team_abbreviation'):
             cleaned_item['team_code'] = cleaned_item['team_abbreviation']
             cleaned_item.pop('team_abbreviation', None)
-        cleaned_item['as_of'] = convert_format(as_of, 'nba')
+        cleaned_item['as_of'] = add_days_to_datestr(as_of, 1)
         topp.append(cleaned_item)
     return topp
 
 
-def teamstats_table(ts, as_of):
+def teamstats_table(ts, as_of, per_mode='Totals'):
     '''
     Cleans merged list of team base + advanced stats
 
     Arguments:
-        ts: list of dictionaries
-        as_of(str): in YYYY-MM-DD format
+        ts (list): of dict
+        as_of (str): in YYYY-MM-DD format
+        per_mode (str): 'Totals', 'PerGame', etc.
 
     Returns:
-        cleaned_items(list): list of cleaned team dictionaries
+        list: of dict
+        
     '''
     cls = []
     omit = ['CFID', 'CFPARAMS', 'COMMENT', 'TEAM_CITY', 'TEAM_NAME']
     for t in ts:
         cl = {k.lower(): v for k, v in t.items() if k.upper() not in omit}
-        cl['as_of'] = as_of
+        cl['per_mode'] = per_mode
+        cl['as_of'] = add_days_to_datestr(as_of, 1)
         if 'game_id' in cl:
             cl['nbacom_game_id'] = cl['game_id']
             cl.pop('game_id', None)
@@ -395,6 +442,7 @@ def teamstats_table(ts, as_of):
             cl.pop('team_abbreviation', None)
         cls.append(cl)
     return cls
+
 
 if __name__ == '__main__':
     pass

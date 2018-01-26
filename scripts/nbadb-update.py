@@ -35,8 +35,9 @@ def run():
     # players uses 2017 as season_year if season_code is 2017-18
     # whereas nbadb calls that season_year 2018
     logging.info('starting update nba.com players')
-    nbadb_player_update.update_players()
+    nbadb_player_update.run()
     logging.info('finished update nba.com players')
+
 
     # player_gamelogs
     logging.info('starting nba.com player gamelogs')
@@ -46,6 +47,8 @@ def run():
     logging.info('finished nba.com player gamelogs')
 
     # playerstats_daily
+    # TODO: add different per_modes (Totals, PerGame, Per36, Per100Possessions)
+    # TODO: fix missing query b/c as_of is 1 day later than before
     logging.info('starting playerstats daily')
     ps = a.playerstats(season_code, all_missing=True)
     logging.info('finished playerstats daily')
@@ -61,11 +64,15 @@ def run():
     logging.info('finished team gamelogs')
 
     # teamstats_daily
+    # TODO: add different per_modes (Totals, PerGame, Per36, Per100Possessions)
+    # TODO: fix missing query b/c as_of is 1 day later than before
     logging.info('starting teamstats daily')
     a.teamstats(season_code, all_missing=True)
     logging.info('finished teamstats daily')
 
     # team_opponent_dashboards
+    # TODO: add different per_modes (Totals, PerGame, Per36, Per100Possessions)
+    # TODO: fix missing query b/c as_of is 1 day later than before
     logging.info('start team_opponent_dashboards')
     a.team_opponent_dashboards(season_code, all_missing=True)
     logging.info('finished team_opponent_dashboards')
@@ -76,9 +83,10 @@ def run():
     logging.info('finished game_boxscores')
 
     # refresh all materialized views
-    logging.info('start refresh materialized queries')
+    logging.info('start refresh materialized views')
     a.refresh_materialized()
-    logging.info('refreshed materialized queries')
+    logging.info('refreshed materialized views')
+
 
 if __name__ == '__main__':
     run()

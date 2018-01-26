@@ -23,7 +23,7 @@ class BBRefScraper(BasketballScraper):
         logging.getLogger(__name__).addHandler(logging.NullHandler())
         BasketballScraper.__init__(self, headers=headers, cookies=cookies, cache_name=cache_name)
 
-    def players(self):
+    def players(self, initial):
         '''
 
         Returns:
@@ -31,33 +31,22 @@ class BBRefScraper(BasketballScraper):
         '''
 
         base_url = 'http://www.basketball-reference.com/players/{}/'
+        return self.get(base_url.format(initial.lower()))
 
-        content = {}
-        for l in string.ascii_lowercase:
-            try:
-                content[l] = self.get(base_url.format(l))
-            except:
-                continue
+    def player_page(self, pid):
         '''
-            soup = BeautifulSoup(content, 'lxml')
-            t = soup.find('table', {'id': 'players'})
-            tb = t.find('tbody')
-            for tr in tb.find_all('tr'):
-                vals = {td['data-stat']: td.text for td in tr.find_all('td')}
+        Gets page for individual player
+        
+        Args:
+            pid(str): 'smithje01'
 
-                th = tr.find('th')
-                if th.find('strong'):
-                    vals['active'] = True
-                else:
-                    vals['active'] = False
-
-                if th.find('a'):
-                    a = th.find('a')
-                    vals['player_name'] = a.text
-                    vals['player_url'] = a['href']
-
-                players.append(vals)
+        Returns:
+            str: HTML of page
         '''
+
+        base_url = 'http://www.basketball-reference.com/players/{}/{}.html'
+        return self.get(base_url.format(pid[0].lower(), pid))
+
 
 if __name__ == "__main__":
     pass

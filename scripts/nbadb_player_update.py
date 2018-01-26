@@ -1,78 +1,165 @@
-#!/usr/bin/env python3
+# nba-player-update.py
 
-# nbadb_player_update.py
-# updates nbadb player tables
-# can run on daily or periodic basis
-
+import json
 import logging
-from collections import defaultdict
 import sys
-import time
 
+from nba.agents.bbref import BBRefAgent
 from nba.agents.nbacom import NBAComAgent
-from nba.dates import today
-from nba.parsers.pfr import PfrNBAParser
-from nba.pipelines.bref import position_player
+from nba.dates import datetostr, today
+from nba.pipelines.bbref import *
 from nba.pipelines.nbacom import players_v2015_table
-from nba.scrapers.pfr import PfrNBAScraper
+from nba.season import season_start
 from nba.utility import getdb
 
 
-def update_players():
-    '''
-    Gets nba players and updates data if position missing
-    '''
-    logging.basicConfig(stream=sys.stdout, level=logging.INFO)
-    cn = 'nba-agent-{}'.format(today())
-    a = NBAComAgent(db=getdb(), cache_name=cn)
-    scraper = PfrNBAScraper(cache_name='pfr-nba-scraper')
-    parser = PfrNBAParser()
-    bref_players = defaultdict(list)
-    upq = """
-            UPDATE player SET nbacom_position = '{}', primary_position = '{}', position_group = '{}'
-            WHERE nbacom_player_id = {}
-        """
+logging.basicConfig(stream=sys.stdout, level=logging.INFO)
+season_code = '2017-18'
+a = NBAComAgent(db=getdb(), cache_name='nbacom-agent')
+bbrefa = BBRefAgent(db=getdb(), cache_name='bbref-agent')
 
-    # get list of nba players
-    content = a.scraper.players_v2015(2017)
-    players = players_v2015_table(a.parser.players_v2015(content))
 
-    # use set difference to identify missing ids
-    # then list comprehension to filter players
-    currids = set([p['nbacom_player_id'] for p in players if p.get('nbacom_player_id')])
+def add_gamelog_player(gamelog_player):
+    '''
+    Adds player to player table
+
+    Args:
+        gamelog_player (dict):
+
+    Returns:
+        None
+
+    '''
+    bbref_player = bbrefa.match_gamelog_player(gamelog_player)
+    try:
+        pos = bbref_to_nbacom_positions(bbref_player.get('source_player_position'), 'long')
+        if pos:
+            fn, ln = gamelog_player['PLAYER_NAME'].split()
+            logging.info('add_gamelog_player: pos is {}'.format(pos))
+            toins = {
+                'nbacom_player_id': gamelog_player['PLAYER_ID'],
+                'first_name': fn, 'last_name': ln,
+                'display_first_last': gamelog_player['PLAYER_NAME'],
+                'nbacom_position': pos[0],
+                'primary_position': pos[1],
+                'position_group': pos[2]}
+            a.db._insert_dict(toins, 'player')
+    except:
+        logging.exception('add_gamelog_player: could not add player {}'.format(gamelog_player['PLAYER_NAME']))
+        d = {'table_name': 'player',
+             'nbacom_player_id': gamelog_player['PLAYER_ID'],
+             'error_message': 'could not match player',
+             'player_data': json.dumps(gamelog_player)}
+        a.db._insert_dict(d, 'player_errors')
+
+
+def add_nbacom_player(nbacom_player):
+    '''
+    Adds player to player table
+
+    Args:
+        nbacom_player (dict):
+
+    Returns:
+        status (int): 0 for success, 1 for failure
+
+    '''
+    bbref_player = bbrefa.match_nbacom_player(nbacom_player)
+    try:
+        pos = bbref_to_nbacom_positions(bbref_player.get('source_player_position'), 'long')
+        if pos:
+            logging.info('add_gamelog_player: pos is {}'.format(pos))
+            toins = {
+                'nbacom_player_id': nbacom_player['nbacom_player_id'],
+                'first_name': nbacom_player['first_name'], 'last_name': nbacom_player['last_name'],
+                'display_first_last': nbacom_player['display_first_last'],
+                'nbacom_position': pos[0],
+                'primary_position': pos[1],
+                'position_group': pos[2]}
+            a.db._insert_dict(toins, 'player')
+    except:
+        logging.exception('add_gamelog_player: could not add player {}'.format(nbacom_player['display_first_last']))
+        d = {'table_name': 'player',
+             'nbacom_player_id': nbacom_player['nbacom_player_id'],
+             'error_message': 'could not match player',
+             'player_data': json.dumps(nbacom_player)}
+        a.db._insert_dict(d, 'player_errors')
+
+
+def missing_gamelog_players(season_code):
+    '''
+    Gets list of players from gamelogs that are not in player table
+
+    Args:
+        a (NBAComAgent): object instance 
+
+    Returns:
+        list: of players from gamelogs that are not in player table
+
+    '''
+    start = datetostr(season_start(season_code=season_code), fmt='nba')
+    content = a.scraper.season_gamelogs(
+        season_code, 'P',
+        date_from=start,
+        date_to=today(fmt='nba'))
+    gamelogs = a.parser.season_gamelogs(content, 'P')
+    wanted = ["PLAYER_ID", "PLAYER_NAME", "TEAM_ID", "TEAM_ABBREVIATION",
+              "GAME_ID", "GAME_DATE", "MATCHUP"]
+    players = [{k: v for k, v in p.items() if k in wanted} for p in gamelogs]
+    currids = set([p['PLAYER_ID'] for p in players])
     allids = set(a.db.select_list('SELECT nbacom_player_id from player'))
     missing = currids - allids
-    for player in [p for p in players if p.get('nbacom_player_id') in missing]:
-        if (not player.get('nbacom_position') or not player.get('primary_position') or
-            not player.get('position_group')):
-            logging.info('updating positional info for {}'.format(player.get('display_first_last')))
-            nm = player.get('display_first_last')
-            letter = player['last_name'][0].lower()
-            if not bref_players.get(letter):
-                bref_players[letter] = parser.players(scraper.players(letter))
-            # test if there is a match for player in basketball reference
-            # if item['display_first_last'] in players:
-            # if there is a match, then put the updated information in the player dict
-            matches = [p for p in bref_players.get(letter) if
-                       p['source_player_name'] == player['display_first_last']]
+    msg = 'there are {} mising players from gamelogs'.format(len(missing))
+    logging.info(msg)
+    return [p for p in players if p.get('PLAYER_ID') in missing]
 
-            if matches:
-                logging.info('found b-ref match for {}'.format(player.get('display_first_last')))
-                pid = matches[0].get('source_player_id')
-                if pid:
-                    logging.info('getting b-ref info for {}'.format(player.get('display_first_last')))
-                    brplayer = parser.player_page(scraper.player_page(pid), pid)
-                    pos = position_player(brplayer.get('source_player_position'))
-                    if pos:
-                        player['nbacom_position'] = pos[0]
-                        player['primary_position'] = pos[1]
-                        player['position_group'] = pos[2]
-                
-                    a.db._insert_dict(player, 'player')
-                    logging.info('finished {}'.format(player))
-            else:
-                logging.info('could not add player\n{}'.format(player))
-    logging.info('finished')
+
+def missing_nbacom_players():
+    '''
+    Gets list of current players from nba.com that are not in player table
+
+    Args:
+        a (NBAComAgent): object instance 
+
+    Returns:
+        list: of players that are not in player table
+
+    '''
+    content = a.scraper.players_v2015(2017)
+    players = players_v2015_table(a.parser.players_v2015(content))
+    currids = set([p['nbacom_player_id'] for p in players if
+                   p.get('nbacom_player_id')])
+    allids = set(a.db.select_list('SELECT nbacom_player_id from player'))
+    missing = currids - allids
+    logging.debug('there are {} missing nbacom players'.format(len(missing)))
+    return [p for p in players if p.get('nbacom_player_id') in missing]
+
+
+def run():
+    # step one: nbacom players
+    # get list of missing ids (compare nba json to player table)
+    # then add the players, making sure they have
+    # position, position_group, and primary_position
+    # if you can't find, then insert into error table for manual update
+    logging.info('starting nbacom players')
+    for player in missing_nbacom_players():
+        nm = '{} {}'.format(player.get('firstName'), player.get('lastName'))
+        msg = 'missing_nbacom_players: starting {}'.format(nm)
+        logging.info(msg)
+        logging.debug(player)
+        add_nbacom_player(player)
+
+    # step two: gamelog players
+    # get list of missing ids (compare nba gamelogs to player table)
+    # then add the players, making sure they have
+    # position, position_group, and primary_position
+    logging.info('starting gamelog players')
+    for player in missing_gamelog_players(season_code):
+        msg = 'missing_gamelog_players: {}'.format(player.get('PLAYER_NAME'))
+        logging.info(msg)
+        logging.debug(player)
+        add_gamelog_player(player)
+
 
 if __name__ == '__main__':
-    pass
+    run()

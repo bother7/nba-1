@@ -209,7 +209,8 @@ def missing_player_gamelogs(tz='CST'):
          ORDER BY games.nbacom_game_id;
     """.format(tz)
 
-def missing_playerstats(tz='CST'):
+
+def missing_playerstats(season_start, tz='CST'):
     """
     Query to determine gamedays in current season where no data for playerstats table
 
@@ -220,9 +221,11 @@ def missing_playerstats(tz='CST'):
          SELECT DISTINCT games.game_date
          FROM cs_games games
          WHERE games.game_date < (now() AT TIME ZONE '{}')::date
-         AND NOT (games.game_date IN ( SELECT DISTINCT playerstats_daily.as_of FROM playerstats_daily))
+         AND games.game_date > '{}'
+         AND NOT (games.game_date IN ( SELECT DISTINCT playerstats_daily.as_of FROM playerstats_daily))        
          ORDER BY games.game_date DESC;
-    """.format(tz)
+    """.format(tz, season_start)
+
 
 def missing_salaries(tz='CST'):
     """
@@ -286,7 +289,7 @@ def missing_team_gamelogs(tz='CST'):
     """.format(tz)
 
 
-def missing_teamstats(tz='CST'):
+def missing_teamstats(season_start, tz='CST'):
     """
     Query to determine gamedays in current season where no data for teamstats table
 
@@ -296,10 +299,11 @@ def missing_teamstats(tz='CST'):
     return """
         SELECT DISTINCT games.game_date
         FROM cs_games games
-        WHERE NOT(games.game_date IN(SELECT DISTINCT as_of FROM teamstats_daily))
+        WHERE games.game_date > '{}'
         AND games.game_date < (now() AT TIME ZONE '{}')::date
+        AND NOT(games.game_date IN(SELECT DISTINCT as_of FROM teamstats_daily))
         ORDER BY games.game_date DESC;
-    """.format(tz)
+    """.format(season_start, tz)
 
 
 def missing_team_boxscores(tz='CST'):
@@ -319,7 +323,7 @@ def missing_team_boxscores(tz='CST'):
     """.format(tz)
 
 
-def missing_team_opponent_dashboard(tz='CST'):
+def missing_team_opponent_dashboard(season_start, tz='CST'):
     """
         Query to determine gamedays in current season where no data for team_opponent_dashboard table
 
@@ -329,12 +333,13 @@ def missing_team_opponent_dashboard(tz='CST'):
     return """
         SELECT DISTINCT games.game_date
         FROM cs_games games
-        WHERE games.game_date < (now() AT TIME ZONE '{}')::date
+        WHERE games.game_date > '{}'
+        AND games.game_date < (now() AT TIME ZONE '{}')::date
         AND NOT (games.game_date IN (
             SELECT DISTINCT team_opponent_dashboard.as_of
             FROM team_opponent_dashboard))
         ORDER BY games.game_date DESC;
-    """.format(tz)
+    """.format(season_start, tz)
 
 
 def optimal_lineups():
