@@ -50,7 +50,8 @@ def run():
     # TODO: add different per_modes (Totals, PerGame, Per36, Per100Possessions)
     # TODO: fix missing query b/c as_of is 1 day later than before
     logging.info('starting playerstats daily')
-    ps = a.playerstats(season_code, all_missing=True)
+    a.playerstats(season_code, all_missing=True, per_mode='Totals')
+    a.playerstats(season_code, all_missing=True, per_mode='PerGame')
     logging.info('finished playerstats daily')
     
     # player and team boxscores combined
@@ -67,14 +68,16 @@ def run():
     # TODO: add different per_modes (Totals, PerGame, Per36, Per100Possessions)
     # TODO: fix missing query b/c as_of is 1 day later than before
     logging.info('starting teamstats daily')
-    a.teamstats(season_code, all_missing=True)
+    a.teamstats(season_code, all_missing=True, per_mode='Totals')
+    a.teamstats(season_code, all_missing=True, per_mode='PerGame')
     logging.info('finished teamstats daily')
 
     # team_opponent_dashboards
     # TODO: add different per_modes (Totals, PerGame, Per36, Per100Possessions)
     # TODO: fix missing query b/c as_of is 1 day later than before
     logging.info('start team_opponent_dashboards')
-    a.team_opponent_dashboards(season_code, all_missing=True)
+    a.team_opponent_dashboards(season_code, all_missing=True, per_mode='Totals')
+    a.team_opponent_dashboards(season_code, all_missing=True, per_mode='PerGame')
     logging.info('finished team_opponent_dashboards')
 
     # game boxscores - linescores, refs, etc.

@@ -1,9 +1,15 @@
+import datetime
 import logging
+from string import ascii_lowercase
 
 from nba.dates import datetostr
+from nba.names import fuzzy_match
 from nba.parsers.bbref import BBRefParser
 from nba.pipelines.bbref import *
+from nba.player.nbacom import *
 from nba.scrapers.bbref import BBRefScraper
+
+from dateutil.parser import *
 
 
 class BBRefAgent(object):
@@ -18,6 +24,7 @@ class BBRefAgent(object):
             cookies: cookie jar
             db (NBAPostgres): instance
             table_names (dict): Database table names
+
         '''
         logging.getLogger(__name__).addHandler(logging.NullHandler())
         self.scraper = BBRefScraper(cache_name=cache_name, cookies=cookies)
@@ -165,5 +172,92 @@ class BBRefAgent(object):
             logging.info('no match for {}'.format(nbacom_player['display_first_last']))
             return None
 
+    def update_player_xref(self):
+        '''
+        Updates player_xref table with bbref players
+        
+        Args:
+            None
+            
+        Returns:
+            None
+            
+        '''
+        nbacom_players_d = nbacom_xref(self.db)
+        nbacom_players_d2 = nbacom_xref(self.db, with_pos=True)
+        wanted = ['source', 'source_player_id', 'source_player_name', 'source_player_position']
+
+        # loop through each 'letter' page of players
+        for letter in ascii_lowercase:
+            if letter == 'x':
+                continue
+            logging.info('starting {}'.format(letter))
+            content = self.scraper.players(letter)
+            for p in self.parser.players(content):
+                # try direct name match first
+                # if no match, then use fuzzy matching
+                # if 1 match, then add to database
+                # if more then 1 result, then consider positions as well
+                match = nbacom_players_d.get(p['source_player_name'].lower())
+                if not match:
+                    # try fuzzy matching
+                    # TODO: implement fuzzy match
+                    if p.get('active'):
+                        logging.error('could not match {}'.format(p))
+                elif len(match) == 1:
+                    toins = {k: v for k, v in p.items() if k in wanted}
+                    toins['source'] = 'bbref'
+                    toins['nbacom_player_id'] = match[0]['nbacom_player_id']
+                    toins['source_player_dob'] = datetime.datetime.strftime(parse(p['birth_date']),
+                                                                            '%Y-%m-%d')
+                    self.db._insert_dict(toins, 'extra_misc.player_xref')
+                else:
+                    key = '{}_{}'.format(p['source_player_name'], p['source_player_position']).lower()
+                    match2 = nbacom_players_d2.get(key)
+                    if not match2:
+                        if p.get('active'):
+                            match3 = fuzzy_match(key, list(nbacom_players_d2.keys()))
+                            if match3:
+                                try:
+                                    toins = {k: v for k, v in p.items() if k in wanted}
+                                    toins['source'] = 'bbref'
+                                    toins['nbacom_player_id'] = nbacom_players_d2.get(match3).get('nbacom_player_id')
+                                    toins['source_player_dob'] = datetime.datetime.strftime(parse(p['birth_date']),
+                                                                                        '%Y-%m-%d')
+                                    self.db._insert_dict(toins, 'extra_misc.player_xref')
+                                except:
+                                    logging.error('could not match {}'.format(p))
+                        else:
+                            logging.error('could not match {}'.format(p))
+                    elif match2 and len(match2) == 1:
+                        toins = {k: v for k, v in p.items() if k in wanted}
+                        toins['source'] = 'bbref'
+                        toins['nbacom_player_id'] = match2[0]['nbacom_player_id']
+                        toins['source_player_dob'] = datetime.datetime.strftime(parse(p['birth_date']),
+                                                                                '%Y-%m-%d')
+                        self.db._insert_dict(toins, 'extra_misc.player_xref')
+                    else:
+                        if p.get('active'):
+                            logging.error('could not match {}'.format(p))
+
+        '''
+        TODO: can match DOB for multiple players
+        more accurate than fuzzy match
+        wanted = ['source_player_id', 'source_player_position', 'source_player_name']
+        for m in tomatch:
+            dob = parse(m.get('birth_date')).date()
+            nbap = nbadb2.select_scalar(q.format(m['source_player_name'].split()[-1] , dob))
+            if nbap:
+                toins = {k:v for k,v in m.items() if k in wanted}
+                toins['source'] = 'bbref'
+                toins['nbacom_player_id'] = nbap
+                toins['source_player_dob'] = m['birth_date']
+                nbadb2._insert_dict(toins, 'extra_misc.player_xref') 
+        '''
+
+
 if __name__ == '__main__':
-    pass
+    a = BBRefAgent(db=getdb())
+    a.update_player_xref()
+
+    #pass

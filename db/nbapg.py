@@ -286,7 +286,6 @@ class NBAPostgres(object):
                 cursor.execute(sql)
                 return cursor.fetchone()[0]
             except Exception as e:
-                logging.error('sql statement failed: {0}'.format(sql))
                 return None
 
 

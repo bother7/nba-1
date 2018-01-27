@@ -64,9 +64,30 @@ def espn_doug (self, espn_names, doug_names):
     return matched_names
 
 
+def fuzzy_match (to_match, match_from, threshold = .8):
+    '''
+    Matches player with fuzzy match
+
+    Args:
+        to_match (str): player name to match
+        match_from (list): list of player names to match against
+        threshold (float): default 0.8, closer to 1 means match must be more exact
+
+    Returns:
+        name (str): matched name from match_from list
+
+    '''
+    fuzzy, confidence = process.extractOne(to_match, match_from)
+    if confidence >= threshold:
+        return fuzzy
+    else:
+        return None
+
+
 def match_player (to_match, match_from, threshold = .8):
     '''
     Matches player with direct or fuzzy match
+
     Args:
         to_match (str): player name to match
         match_from (list): list of player names to match against

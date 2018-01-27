@@ -3,43 +3,41 @@ nbacom.py
 nba player data
 '''
 
+from collections import defaultdict
+
 import logging
+import sys
 
-from nba.names import match_player
+from nba.utility import getdb
 
-
-def nbacom_dict(db):
-    '''
-    Gets dict of nbacom player and id
-    Args:
-        db: NBAPostgres object
-
-    Returns:
-        dict: name is key, nbacom_id is value
-    '''
-    # recent players is a table view - has 2 columns
-    q = """SELECT * FROM recent_players"""
-    return {item['display_first_last']: item['id'] for item in db.select_dict(q)}
+logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 
 
-def nbacom_xref(db, players):
+def nbacom_xref(db=None, with_pos=False):
     '''
     Adds nbacom_player_id to list of player dict
+
     Args:
-        db: NBAPostgres object
-        players: list of dict
+        db (NBAPostgres): instance
+        with_pos (bool): default false, set True to get key with position + name
 
     Returns:
-        players: list of dict
+        dict: key is str, val is list
+        
     '''
-    # recent players is a table view - has 2 columns
-    nbap = nbacom_dict(db)
-    for idx, p in enumerate(players):
-        name = match_player(p['source_player_name'], nbap.keys())
-        if name:
-            players[idx]['nbacom_player_id'] = nbap.get(name)
-            logging.info('matched {}'.format(p))
-    return players
+    if not db:
+        db = getdb()
+    q = """SELECT * FROM player"""
+    nbacom_players = defaultdict(list)
+    if with_pos:
+        for p in db.select_dict(q):
+            key = '{}_{}'.format(p['display_first_last'], p['nbacom_position']).lower()
+            nbacom_players[key].append(p)
+    else:
+        for p in db.select_dict(q):
+            key = p['display_first_last'].lower()
+            nbacom_players[key].append(p)
+    return nbacom_players
 
 
 if __name__ == '__main__':
