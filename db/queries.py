@@ -69,11 +69,13 @@ def missing_playerstats(per_mode):
         
     """
     return """
-        SELECT day FROM cs_season_todate
-        WHERE day < (SELECT MAX(day) FROM cs_season_todate)
-        AND day NOT IN(
-            SELECT DISTINCT as_of FROM playerstats_daily    
-            WHERE per_mode='{}')
+        WITH t AS (
+          SELECT day, (day + interval '1 day')::date AS as_of 
+          FROM cs_season_todate
+          WHERE day < (SELECT MAX(day) FROM cs_season_todate)
+        )
+        SELECT day FROM t
+        WHERE as_of NOT IN(SELECT DISTINCT as_of FROM playerstats_daily WHERE per_mode='{}');
     """.format(per_mode)
 
 
@@ -98,11 +100,17 @@ def missing_teamstats(per_mode):
 
     Returns:
         query string
+        
     """
+    # need to address 1 day gap between game_days and as_of
     return """
-        SELECT day FROM cs_season_todate
-        WHERE day < (SELECT MAX(day) FROM cs_season_todate)
-        AND day NOT IN(SELECT DISTINCT as_of FROM teamstats_daily WHERE per_mode='{}');
+        WITH t AS (
+          SELECT day, (day + interval '1 day')::date AS as_of 
+          FROM cs_season_todate
+          WHERE day < (SELECT MAX(day) FROM cs_season_todate)
+        )
+        SELECT day FROM t
+        WHERE as_of NOT IN(SELECT DISTINCT as_of FROM teamstats_daily WHERE per_mode='{}');
     """.format(per_mode)
 
 
@@ -141,12 +149,13 @@ def missing_team_opponent_dashboard(per_mode):
             
     """
     return """
-        SELECT day FROM cs_season_todate
-        WHERE day < (SELECT MAX(day) FROM cs_season_todate)
-        AND day NOT IN(
-            SELECT DISTINCT as_of
-            FROM team_opponent_dashboard
-            WHERE per_mode='{}')
+        WITH t AS (
+          SELECT day, (day + interval '1 day')::date AS as_of 
+          FROM cs_season_todate
+          WHERE day < (SELECT MAX(day) FROM cs_season_todate)
+        )
+        SELECT day FROM t
+        WHERE as_of NOT IN(SELECT DISTINCT as_of FROM team_opponent_dashboard WHERE per_mode='{}');
     """.format(per_mode)
 
 
