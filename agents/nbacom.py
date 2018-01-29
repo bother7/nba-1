@@ -102,6 +102,22 @@ class NBAComAgent(object):
                 logging.error('could not get {}'.format(g))
                 logging.exception(e)
 
+    def gleague_players(self, year):
+        '''
+        Updates player table with g-league players
+
+        Args:
+            year (int): 2017, etc.
+
+        Returns:
+            None
+
+        '''
+        content = self.scraper.gleague_players(year)
+        players = self.parser.gleague_players(content)
+        for glp in gleague_player_table(players):
+            self.db._insert_dict(glp, self.table_names['pl'])
+
     def player_gamelogs(self, season_code, date_from=None, date_to=None):
         '''
         Fetches player_gamelogs and updates player_gamelogs table
@@ -154,10 +170,12 @@ class NBAComAgent(object):
             self.db.insert_dicts(vals, self.table_names['ps'])
         elif all_missing:
             start = datetostr(d=season_start(season_code=season_code), fmt='nba')
-            for day in self.db.select_list(missing_playerstats(start)):
+            for day in self.db.select_list(missing_playerstats(per_mode)):
                 daystr = datetostr(day, 'nba')
-                ps_base = self.parser.playerstats(self.scraper.playerstats(season_code, per_mode=per_mode, DateFrom=start, DateTo=daystr))
-                ps_advanced = self.parser.playerstats(self.scraper.playerstats(season_code, per_mode=per_mode, DateFrom=start, DateTo=daystr, MeasureType='Advanced'))
+                base_content = self.scraper.playerstats(season_code, per_mode=per_mode, DateFrom=start, DateTo=daystr)
+                ps_base = self.parser.playerstats(base_content, per_mode=per_mode)
+                adv_content = self.scraper.playerstats(season_code, per_mode=per_mode, DateFrom=start, DateTo=daystr, MeasureType='Advanced')
+                ps_advanced = self.parser.playerstats(adv_content, per_mode)
                 ps = [merge_two(psadv, psb) for psb, psadv in zip(ps_base, ps_advanced)]
                 self.db.insert_dicts(playerstats_table(ps, daystr, per_mode), self.table_names['ps'])
                 logging.info('completed {}'.format(daystr))
@@ -202,7 +220,7 @@ class NBAComAgent(object):
             self.db._insert_dict(item, self.table_names['tgl'])
         return tgl
 
-    def team_opponent_dashboards(self, season_code, per_mode='Totals', date_from=None, date_to=None, all_missing=False):
+    def team_opponent_dashboards(self, season_code, per_mode, date_from=None, date_to=None, all_missing=False):
         '''
         Downloads and parses range of team_opponents
 
@@ -218,23 +236,24 @@ class NBAComAgent(object):
             
         '''
         if date_from and date_to:
-            content = self.scraper.team_opponent_dashboard(season_code, per_mode=per_mode, DateFrom=date_from, DateTo=date_to)
+            content = self.scraper.team_opponent_dashboard(season_code, per_mode=per_mode,
+                                                           date_from=date_from, date_to=date_to)
             topp = self.parser.team_opponent_dashboard(content)
             self.db.insert_dicts(team_opponent_dashboards_table(topp, date_to), self.table_names.get('tod'))
         elif all_missing:
             topps = {}
             start = datetostr(d=season_start(season_code=season_code), fmt='nba')
-            for day in self.db.select_list(missing_team_opponent_dashboard(start)):
+            for day in self.db.select_list(missing_team_opponent_dashboard(per_mode)):
                 daystr = datetostr(day, 'nba')
                 logging.info('starting dashboards for {}'.format(daystr))
-                content = self.scraper.team_opponent_dashboard(season_code, DateFrom=start, DateTo=daystr)
-                topp = self.parser.team_opponent_dashboard(content)
+                content = self.scraper.team_opponent_dashboard(season_code, date_from=start, date_to=date_to)
+                topp = self.parser.team_opponent_dashboard(content, per_mode)
                 self.db.insert_dicts(team_opponent_dashboards_table(topp, daystr, per_mode), self.table_names.get('tod'))
             return topps
         else:
             raise ValueError('need to specify dates or set all_missing to true')
 
-    def teamstats(self, season_code, per_mode='Totals', date_from=None, date_to=None, all_missing=False):
+    def teamstats(self, season_code, per_mode, date_from=None, date_to=None, all_missing=False):
         '''
         Fetches teamstats and updates database table
 
@@ -250,26 +269,26 @@ class NBAComAgent(object):
 
         '''
         if date_from and date_to:
-            content_base = self.scraper.teamstats(season_code, per_mode=per_mode, DateFrom=date_from, DateTo=date_to)
-            ts_base = self.parser.teamstats(content_base)
+            content_base = self.scraper.teamstats(season_code, per_mode=per_mode, date_from=date_from, date_to=date_to)
+            ts_base = self.parser.teamstats(content_base, per_mode)
             content_adv = self.scraper.teamstats(season_code, per_mode=per_mode,
-                                                 DateFrom=date_from, DateTo=date_to, MeasureType='Advanced')
-            ts_advanced = self.parser.teamstats(content_adv)
+                                                 date_from=date_from, date_to=date_to, MeasureType='Advanced')
+            ts_advanced = self.parser.teamstats(content_adv, per_mode)
             ts_merged = [merge_two(tsb, tsadv) for tsb, tsadv in zip(ts_base, ts_advanced)]
-            self.db.insert_dicts(teamstats_table(ts_merged, date_to), self.table_names['ts'])
+            self.db.insert_dicts(teamstats_table(ts_merged, date_to, per_mode), self.table_names['ts'])
         elif all_missing:
             start = datetostr(d=season_start(season_code=season_code), fmt='nba')
-            for day in self.db.select_list(missing_teamstats(start)):
+            for day in self.db.select_list(missing_teamstats(per_mode)):
                 logging.info('teamstats: getting {}'.format(day))
                 daystr = datetostr(day, 'nba')
-                content_base = self.scraper.teamstats(season_code, per_mode=per_mode, DateFrom=date_from,
-                                                      DateTo=daystr)
-                ts_base = self.parser.teamstats(content_base)
+                content_base = self.scraper.teamstats(season_code, per_mode=per_mode,
+                                                      date_from=start, date_to=daystr)
+                ts_base = self.parser.teamstats(content_base, per_mode)
                 content_adv = self.scraper.teamstats(season_code, per_mode=per_mode,
-                                                     DateFrom=date_from, DateTo=daystr, MeasureType='Advanced')
-                ts_advanced = self.parser.teamstats(content_adv)
+                                                     date_from=start, date_to=daystr, MeasureType='Advanced')
+                ts_advanced = self.parser.teamstats(content_adv, per_mode)
                 ts = [merge_two(tsb, tsadv) for tsb, tsadv in zip(ts_base, ts_advanced)]
-                self.db.insert_dicts(teamstats_table(ts, daystr), self.table_names['ts'])
+                self.db.insert_dicts(teamstats_table(ts, daystr, per_mode), self.table_names['ts'])
                 logging.debug('teamstats: completed {}'.format(daystr))
         else:
             raise ValueError('need to specify dates or set all_missing to true')

@@ -1,8 +1,4 @@
-from __future__ import print_function
-
-from collections import defaultdict
 import logging
-import os
 
 from nba.scrapers.scraper import BasketballScraper
 
@@ -21,9 +17,11 @@ class NBAComScraper(BasketballScraper):
             cache_name: str 'nbacomscraper'
             expire_hours: how long to cache requests
             as_string: return as raw string rather than json parsed into python data structure
+
         '''
         logging.getLogger(__name__).addHandler(logging.NullHandler())
-        BasketballScraper.__init__(self, headers=headers, cookies=cookies, cache_name=cache_name, expire_hours=expire_hours, as_string=as_string)
+        BasketballScraper.__init__(self, headers=headers, cookies=cookies, cache_name=cache_name,
+                                   expire_hours=expire_hours, as_string=as_string)
 
     def boxscore_v2015(self, game_id, game_date):
         '''
@@ -201,7 +199,7 @@ class NBAComScraper(BasketballScraper):
 
         '''
         # traditional, advanced, misc, scoring, usage
-        boxes = defaultdict(dict)
+        boxes = {}
 
         # transform to string with leading zeroes
         if len(gid) == 8:
@@ -253,6 +251,20 @@ class NBAComScraper(BasketballScraper):
         else:
             logging.debug('got {}'.format(self.urls[-1]))
         return content
+
+    def gleague_players(self, year):
+        '''
+        Gets all of the "g-league" (aka "d-league") players
+
+        Args:
+            year (int): season code 2017-18 -> 2017, or season_year - 1
+
+        Returns:
+            dict
+
+        '''
+        url = 'http://data.nba.com/data/10s/v2015/json/mobile_teams/dleague/{}/players/20_player_info.json'
+        return self.get_json(url.format(year))
 
     def league_schedule(self, season_year):
         '''
@@ -643,7 +655,7 @@ class NBAComScraper(BasketballScraper):
             logging.debug('got {}'.format(self.urls[-1]))
         return content
 
-    def teamstats(self, season_code, per_mode='Totals', **kwargs):
+    def teamstats(self, season_code, per_mode, date_from, date_to, **kwargs):
         '''
         Stats for every team in single season
 
@@ -663,8 +675,8 @@ class NBAComScraper(BasketballScraper):
         base_url = 'http://stats.nba.com/stats/leaguedashteamstats?'
 
         params = {
-          'DateFrom': '',
-          'DateTo': '',
+          'DateFrom': date_from,
+          'DateTo': date_to,
           'GameScope': '',
           'GameSegment': '',
           'LastNGames': '0',

@@ -77,6 +77,86 @@ def gamedetail(gds):
     return linescores
 
 
+def gleague_player_table(players):
+    '''
+    Formats gleague players to insert in player table
+
+    Args:
+        players (list): of dict
+
+    Returns:
+        list: of dict
+
+    '''
+    results = []
+
+    xref = {'sn': 'school', 'ln': 'last_name', 'wt': 'weight',
+            'dy': 'draft_year', 'fn': 'first_name', 'pid': 'nbacom_player_id',
+            'num': 'jersey', 'dob': 'birthdate', 'ht': 'height',
+            'pos': 'nbacom_position', 'la': 'last_affiliation'}
+
+    for player in players:
+
+        # convert field names to columns in player table
+        p = {xref.get(k): v for k, v in player.items() if v and xref.get(k)}
+        p['display_first_last'] = '{} {}'.format(p['first_name'], p['last_name'])
+        # need to convert height to int
+        height = None
+        try:
+            f, i = [int(val) for val in player['height'].split('-')]
+            p['height'] = f * 12 + i
+        except:
+            p['height'] = None
+
+        # need to get primary_position and position_group
+        if p.get('nbacom_position') == 'G':
+            if player.get('height', 0) > 75:
+                p['primary_position'] = 'SG'
+                p['position_group'] = 'Wing'
+                results.append(p)
+            else:
+                p['primary_position'] = 'PG'
+                p['position_group'] = 'Point'
+                results.append(p)
+        elif p.get('nbacom_position') == 'F':
+            if player.get('height', 0) > 79:
+                p['primary_position'] = 'PF'
+                p['position_group'] = 'Big'
+                results.append(p)
+            else:
+                p['primary_position'] = 'SF'
+                p['position_group'] = 'Wing'
+                results.append(p)
+        elif p.get('nbacom_position') == 'C':
+            p['primary_position'] = 'C'
+            p['position_group'] = 'Big'
+            results.append(p)
+        elif p.get('height'):
+            if player.get('height', 0) > 83:
+                p['primary_position'] = 'C'
+                p['position_group'] = 'Big'
+                results.append(p)
+            elif player.get('height', 0) > 80:
+                p['primary_position'] = 'PF'
+                p['position_group'] = 'Big'
+                results.append(p)
+            elif player.get('height', 0) > 77:
+                p['primary_position'] = 'SF'
+                p['position_group'] = 'Wing'
+                results.append(p)
+            elif player.get('height', 0) > 74:
+                p['primary_position'] = 'SG'
+                p['position_group'] = 'Wing'
+                results.append(p)
+            else:
+                p['primary_position'] = 'PG'
+                p['position_group'] = 'Point'
+                results.append(p)
+        else:
+            logging.error('could not guess position {}'.format(player))
+    return results
+
+
 def nba_to_pydfs(players):
     '''
     Takes results, make ready to create Player objects for pydfs_lineup_optimizer
@@ -281,13 +361,13 @@ def player_gamelogs_table(gl):
     return fixed
 
 
-def playerstats_table(ps, as_of, per_mode='Totals'):
+def playerstats_table(ps, datestr, per_mode):
     '''
     Cleans merged list of player base + advanced stats
 
     Arguments:
         ps (list): of dict
-        as_of (str): in YYYY-MM-DD format
+        datestr (str): in YYYY-MM-DD format
         per_mode (str): 'Totals', 'PerGame', etc.
 
     Returns:
@@ -311,7 +391,7 @@ def playerstats_table(ps, as_of, per_mode='Totals'):
         if 'team_id' in clean_player:
             clean_player['nbacom_team_id'] = clean_player['team_id']
             clean_player.pop('team_id', None)
-        clean_player['as_of'] = add_days_to_datestr(as_of, 1)
+        clean_player['as_of'] = add_days_to_datestr(datestr, 1)
         cleaned_players.append(clean_player)
     return cleaned_players
 
@@ -362,10 +442,7 @@ def team_gamelogs_table(tgl):
     cleaned_items = []
 
     # skip today - no reliable way of testing if game is over
-    for gl in tgl:
-        if gl.get('GAME_DATE') == today():
-            logging.info('did not add {}'.format(gl))
-            continue
+    for gl in [l for l in tgl if l['GAME_DATE'] != today()]:
         cleaned_item = {k.lower(): v for k,v in gl.items() if k.lower() not in omit}
         if 'game_id' in cleaned_item:
             cleaned_item['nbacom_game_id'] = cleaned_item['game_id']
@@ -412,7 +489,7 @@ def team_opponent_dashboards_table(dash, as_of, per_mode='Totals'):
     return topp
 
 
-def teamstats_table(ts, as_of, per_mode='Totals'):
+def teamstats_table(ts, as_of, per_mode):
     '''
     Cleans merged list of team base + advanced stats
 

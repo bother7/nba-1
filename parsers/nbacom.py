@@ -313,6 +313,19 @@ class NBAComParser(object):
                     logging.exception(e)
         return results
 
+    def gleague_players(self, content):
+        '''
+        Parses page of all the "g-league" (aka "d-league") players
+
+        Args:
+            content (dict): parsed JSON response
+
+        Returns:
+            list: of player dict
+
+        '''
+        return content['pls']['pl']
+
     def merge_boxscores(self, base_boxscore, advanced_boxscore):
         '''
         Base and player advanced boxscores from same game
@@ -433,7 +446,7 @@ class NBAComParser(object):
             logging.error('could not parse v2015 players')
             return None
 
-    def playerstats(self,content, per_mode='Totals'):
+    def playerstats(self,content, per_mode):
         '''
         Document has one line of stats per player
 
@@ -570,7 +583,7 @@ class NBAComParser(object):
 
         return dashboard
 
-    def team_opponent_dashboard(self, content, per_mode='Totals'):
+    def team_opponent_dashboard(self, content, per_mode):
         '''
         Returns list of dictionaries, stats of opponents vs. each team
         '''
@@ -602,7 +615,7 @@ class NBAComParser(object):
 
         return {match[2]: match[1] for match in re.findall(pattern, content)}
 
-    def teamstats(self,content, stat_date=None, per_mode='Totals'):
+    def teamstats(self, content, per_mode):
         '''
         
         Args:
@@ -618,8 +631,6 @@ class NBAComParser(object):
         headers = content['resultSets'][0]['headers']
         for row_set in content['resultSets'][0]['rowSet']:
             t = dict(list(zip(headers, row_set)))
-            if stat_date:
-                t['STATDATE'] = stat_date
             t['per_mode'] = per_mode
             ts.append(t)
         return ts

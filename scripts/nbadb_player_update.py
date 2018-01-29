@@ -149,7 +149,12 @@ def run():
         logging.debug(player)
         add_nbacom_player(player)
 
-    # step two: gamelog players
+    # step two: gleague players
+    logging.info('starting gleague players')
+    year = season_code[0:4]
+    a.gleague_players(year)
+
+    # step three: gamelog players
     # get list of missing ids (compare nba gamelogs to player table)
     # then add the players, making sure they have
     # position, position_group, and primary_position

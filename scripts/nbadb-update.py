@@ -31,6 +31,7 @@ def run():
     season_year = 2018
     season_code = '2017-18'
 
+    '''
     # ensures players table is up-to-date before inserting gamelogs, etc.
     # players uses 2017 as season_year if season_code is 2017-18
     # whereas nbadb calls that season_year 2018
@@ -71,7 +72,7 @@ def run():
     a.teamstats(season_code, all_missing=True, per_mode='Totals')
     a.teamstats(season_code, all_missing=True, per_mode='PerGame')
     logging.info('finished teamstats daily')
-
+    '''
     # team_opponent_dashboards
     # TODO: add different per_modes (Totals, PerGame, Per36, Per100Possessions)
     # TODO: fix missing query b/c as_of is 1 day later than before
