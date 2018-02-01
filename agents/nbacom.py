@@ -81,7 +81,7 @@ class NBAComAgent(object):
                 self.db.safe_insert_dicts(team_boxscores_table(teams_combined), self.table_names['tbs'])
             return (player_boxscores, team_boxscores)
 
-    def game_boxscores(self):
+    def game_boxscores(self, game_ids=None):
         '''
         Updates table with game_information
         
@@ -91,16 +91,21 @@ class NBAComAgent(object):
         Returns:
             None
         '''
-        for g in self.db.select_dict(missing_game_boxscores()):
+        if not game_ids:
+            game_ids = self.db.select_dict(missing_game_boxscores())
+
+        for g in game_ids:
             try:
                 content = self.scraper.boxscore_v2015(g['gid'], g['gd'])
                 v, h = self.parser.boxscore_v2015(content)
                 self.db._insert_dict(v, self.table_names['box2'])
                 self.db._insert_dict(h, self.table_names['box2'])
                 logging.info('finished {} - {}'.format(g['gd'], g['gid']))
+                return [v,h]
             except Exception as e:
                 logging.error('could not get {}'.format(g))
                 logging.exception(e)
+                return None
 
     def gleague_players(self, year):
         '''
@@ -117,6 +122,7 @@ class NBAComAgent(object):
         players = self.parser.gleague_players(content)
         for glp in gleague_player_table(players):
             self.db._insert_dict(glp, self.table_names['pl'])
+        return players
 
     def player_gamelogs(self, season_code, date_from=None, date_to=None):
         '''

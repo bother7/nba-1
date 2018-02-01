@@ -28,7 +28,6 @@ class ESPNNBAScraper(BasketballScraper):
         idx = [0, 40, 80, 120, 160, 200, 240, 280, 320, 360]
         self.projection_urls = [base_url.format(x) for x in idx]
 
-
     def carmelo (self, player_code):
         '''
         Gets CARMELO data for player
@@ -42,6 +41,22 @@ class ESPNNBAScraper(BasketballScraper):
         url = 'http://projects.fivethirtyeight.com/carmelo/{0}.json'
         return self.get_json(url.format(player_code))
 
+    def fantasy_players(self, idx):
+        '''
+        
+        Args:
+            idx (int): 0 through 700
+
+        Returns:
+            str
+            
+        '''
+        url = 'http://games.espn.com/fba/playerrater?&startIndex={}'
+        return self.get(url.format(idx))
+
+    def linescores(self, d):
+        url = 'http://www.espn.com/nba/scoreboard/_/date/{}'
+        return self.get(url.format(d))
 
     def players(self, pages=range(1,11)):
         '''
@@ -51,8 +66,6 @@ class ESPNNBAScraper(BasketballScraper):
         '''
         url = 'http://espn.go.com/nba/salaries/_/page/{0}/seasontype/1'
         return [self.get(url.format(page_number)) for page_number in pages]
-
-
 
     def projections(self, subset=None):
         '''
@@ -68,10 +81,6 @@ class ESPNNBAScraper(BasketballScraper):
             return [self.get(self.projection_urls[idx]) for idx in subset]
         else:
             return [self.get(url) for url in self.projection_urls]
-
-    def linescores(self, d):
-        url = 'http://www.espn.com/nba/scoreboard/_/date/{}'
-        return self.get(url.format(d))
 
 
 if __name__ == "__main__":

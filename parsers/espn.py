@@ -38,7 +38,44 @@ class ESPNNBAParser():
         years = content.get('years')
         return (comps, ps, years)
 
+    def fantasy_players(self, content):
+        '''
+        
+        Args:
+            content (str): HTML page 
+
+        Returns:
+            list: of dict
+            
+        '''
+        players = []
+        soup = BeautifulSoup(content, 'lxml')
+        tbl = soup.find('table', {'id': 'playertable_0'})
+        for tr in tbl.find_all('tr'):
+            p = {'source': 'espn_fantasy'}
+            if tr.attrs.get('id'):
+                td = tr.find_all('td')[1]
+                a = td.find('a')
+                player_name = a.text
+                pid = a['playerid']
+                parts = td.text.split(',')
+                team, pos = parts[1].split()[0:2]
+                p['source_player_name'] = player_name
+                p['source_player_id'] = pid
+                p['source_player_position'] = pos
+                players.append(p)
+        return players
+
     def linescores(self, content, d):
+        '''
+        
+        Args:
+            content: 
+            d: 
+
+        Returns:
+
+        '''
         ls = []
         patt = re.compile(r'scoreboardData\s+=\s+({"leagues":.*?});window\.espn\.scoreboardSettings',
                           re.MULTILINE | re.DOTALL)
