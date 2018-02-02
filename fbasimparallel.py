@@ -12,12 +12,13 @@ from nba.parsers.nbacom import NBAComParser
 
 
 @lru_cache(maxsize=None)
-def load_data(per_mode, playerpool_size):
+def load_data(per_mode, playerpool_size, lastn=0):
     '''
 
     Args:
-        per_mode (str): 'Totals' or 'PerGame'
+        per_mode (str): 'Totals', 'PerGame', 'Per48'
         player_thresh (int): number of players in pool
+        lastn (int): last number of games, default 0
 
     Returns:
         DataFrame
@@ -25,7 +26,7 @@ def load_data(per_mode, playerpool_size):
     '''
     scraper = NBAComScraper(cache_name='fbasim')
     parser = NBAComParser()
-    content = scraper.playerstats(season_code='2017-18', per_mode=per_mode)
+    content = scraper.playerstats(season_code='2017-18', per_mode=per_mode, lastn=lastn)
     df = pd.DataFrame(parser.playerstats(content, per_mode=per_mode))
     return df.sort_values('NBA_FANTASY_PTS', ascending=False)[0:playerpool_size]
 

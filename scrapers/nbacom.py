@@ -22,6 +22,7 @@ class NBAComScraper(BasketballScraper):
         logging.getLogger(__name__).addHandler(logging.NullHandler())
         BasketballScraper.__init__(self, headers=headers, cookies=cookies, cache_name=cache_name,
                                    expire_hours=expire_hours, as_string=as_string)
+        self.per_modes = ['Totals', 'PerGame', 'Per48']
 
     def boxscore_v2015(self, game_id, game_date):
         '''
@@ -403,7 +404,7 @@ class NBAComScraper(BasketballScraper):
             logging.debug('got {}'.format(self.urls[-1]))
         return content
 
-    def playerstats(self, season_code, per_mode='Totals', **kwargs):
+    def playerstats(self, season_code, per_mode='Totals', lastn=0, **kwargs):
         '''
         Document has one line of stats per player
 
@@ -427,7 +428,7 @@ class NBAComScraper(BasketballScraper):
           'DateTo': '',
           'GameScope': '',
           'GameSegment': '',
-          'LastNGames': '0',
+          'LastNGames': lastn,
           'LeagueID': '00',
           'Location': '',
           'MeasureType': 'Base',
